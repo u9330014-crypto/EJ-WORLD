@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f7efe2">
-<title>待會吃什麼？｜EJ 家的美食轉盤</title>
+<title>待會吃什麼</title>
 <style>
 :root{--bg:#f7efe2;--card:#fffaf2;--brown:#8b5a2b;--brown-d:#5e3a1a;--caramel:#c98a4b;--line:#ead9c0;--muted:#9a7b5c;--green:#5f9e5a;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--brown-d);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;padding:env(safe-area-inset-top) 0 40px}
+button,input{font-family:inherit}
 .wrap{max-width:480px;margin:0 auto;padding:16px}
 header{text-align:center;margin:6px 0 10px}
 header h1{margin:0;font-size:28px;letter-spacing:2px}
@@ -27,11 +28,11 @@ canvas{width:100%;height:100%;display:block}
 .spin:active{transform:translateY(3px);box-shadow:0 2px 0 var(--brown-d)}
 .spin:disabled{opacity:.5}
 h2{font-size:18px;margin:0 0 10px}
-.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px dashed var(--line)}
 .row:last-child{border-bottom:0}
 .row .info{flex:1;min-width:0}
-.row .name{font-weight:700}
-.row .note{font-size:13px;color:var(--muted);margin-top:2px}
+.row .name{font-weight:700;word-break:break-word}
+.row .note{font-size:13px;color:var(--muted);margin-top:2px;word-break:break-word}
 .row.off .name,.row.off .note{opacity:.45;text-decoration:line-through}
 .tag{font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;background:#e4f1df;color:#3d6b39;vertical-align:middle;font-weight:600}
 .tag.mon{background:#f6dcdc;color:#a33}
@@ -43,7 +44,7 @@ h2{font-size:18px;margin:0 0 10px}
 .sw input:checked+span:before{transform:translateX(18px)}
 .del{border:0;background:none;font-size:18px;color:#c0a080;cursor:pointer;padding:4px}
 form{display:flex;flex-direction:column;gap:8px}
-input[type=text]{border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;background:#fff;color:var(--brown-d)}
+input[type=text]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;background:#fff;color:var(--brown-d)}
 .chk{font-size:14px;color:var(--brown);display:flex;gap:14px;flex-wrap:wrap}
 .btn{border:0;border-radius:12px;padding:11px;font-size:16px;font-weight:700;background:var(--brown);color:#fff;cursor:pointer}
 .btn.ghost{background:none;color:var(--muted);border:1.5px dashed var(--line);font-weight:500;width:100%;margin-top:4px}
@@ -59,15 +60,50 @@ input[type=text]{border:1.5px solid var(--line);border-radius:12px;padding:11px 
 .result .acts button{flex:1}
 .small{font-size:12px;color:var(--muted);text-align:center}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:11}
+.picks{display:flex;flex-direction:column;gap:12px}
+.pick{display:flex;align-items:center;gap:14px;width:100%;min-height:92px;border:0;border-radius:22px;background:var(--card);box-shadow:0 4px 14px rgba(139,90,43,.12);padding:16px;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.pick:active{transform:translateY(2px)}
+.pick .emo{flex:none;width:68px;height:68px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;background:linear-gradient(180deg,#fde3c2,var(--caramel));box-shadow:inset 0 -4px 0 rgba(94,58,26,.12)}
+.pick .t{display:block;font-size:22px;font-weight:800;letter-spacing:1px}
+.pick .d{display:block;margin-top:4px;font-size:14px;color:var(--muted);font-weight:500}
+.pick .go{margin-left:auto;font-size:28px;color:var(--caramel);line-height:1}
+.pick.is-last{box-shadow:0 0 0 2.5px var(--caramel),0 4px 14px rgba(139,90,43,.12)}
+.back{border:0;background:transparent;color:var(--brown);font:inherit;font-weight:700;font-size:16px;padding:4px 0 8px;cursor:pointer}
+.back:disabled{opacity:.4}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px}
+.tab{flex:1 1 calc(50% - 8px);border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:10px 6px;font:inherit;font-size:14px;font-weight:700;color:var(--brown);cursor:pointer}
+.tab.on{background:var(--brown);color:#fff;border-color:var(--brown)}
+.tab:disabled{opacity:.45}
+.edit{flex:none;border:1.5px solid var(--line);background:#fff;color:var(--brown);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.row.editing{flex-direction:column;align-items:stretch}
+.editform{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0}
+.editacts{display:flex;gap:8px}
+.editacts .btn,.editacts .btn.ghost{width:auto;flex:1;margin-top:0}
+button:focus-visible,input:focus-visible{outline:2px solid var(--caramel);outline-offset:2px}
 </style>
 </head>
 <body>
 <canvas id="confetti"></canvas>
-<div class="wrap">
-  <header><h1>🍜 今天吃什麼？</h1><p>EJ 家的美食轉盤・豐樂公園一帶</p></header>
+
+<div class="wrap" id="picker">
+  <header>
+    <h1>🍜 待會吃什麼</h1>
+    <p>先選一個轉盤</p>
+  </header>
+  <div class="picks" id="picks"></div>
+  <p class="small">資料只存在這支手機的瀏覽器裡</p>
+</div>
+
+<div class="wrap" id="wheelView" hidden>
+  <button type="button" class="back" id="backBtn">← 回選單</button>
+  <div class="tabs" id="tabs"></div>
+  <header>
+    <h1 id="title"></h1>
+    <p id="sub"></p>
+  </header>
 
   <div class="card">
-    <div class="chips">
+    <div class="chips" id="placeChips">
       <div class="chip" id="vegChip">🥬 只轉素食友善</div>
       <div class="chip" id="monChip">📅 週一自動排除公休</div>
     </div>
@@ -78,10 +114,10 @@ input[type=text]{border:1.5px solid var(--line);border-radius:12px;padding:11px 
       <div class="hub" id="hub">轉!</div>
       <div class="empty" id="empty"></div>
     </div>
-    <button class="spin" id="spinBtn">🎯 轉一下！</button>
+    <button type="button" class="spin" id="spinBtn">🎯 轉一下！</button>
   </div>
 
-  <div class="card">
+  <div class="card" id="placeAdd">
     <h2>➕ 新增店家</h2>
     <form id="addForm">
       <input type="text" id="newName" placeholder="店名（必填）" maxlength="20" required>
@@ -96,11 +132,19 @@ input[type=text]{border:1.5px solid var(--line);border-radius:12px;padding:11px 
     </form>
   </div>
 
+  <div class="card" id="itemAdd" hidden>
+    <h2>➕ 新增</h2>
+    <form id="itemForm">
+      <input type="text" id="itemName" placeholder="名稱（必填）" maxlength="20" required>
+      <button class="btn" type="submit">加入轉盤</button>
+    </form>
+  </div>
+
   <div class="card">
-    <h2>📋 店家清單 <span class="small" id="count"></span></h2>
-    <div class="small" style="text-align:left;margin-bottom:6px">右邊開關關掉＝暫時不轉（例如昨天剛吃過），不會刪除。</div>
+    <h2><span id="listHeading">📋 店家清單</span> <span class="small" id="count"></span></h2>
+    <div class="small" id="listHint" style="text-align:left;margin-bottom:6px">右邊開關關掉＝暫時不轉（例如昨天剛吃過），不會刪除。點「編輯」可改名稱。</div>
     <div id="list"></div>
-    <button class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
+    <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
 </div>
@@ -112,14 +156,15 @@ input[type=text]{border:1.5px solid var(--line);border-radius:12px;padding:11px 
     <div class="rname" id="rName"></div>
     <div class="rnote" id="rNote"></div>
     <div class="acts">
-      <button class="btn ghost" id="againBtn" style="margin:0">再轉一次</button>
-      <button class="btn" id="okBtn">就吃這個！</button>
+      <button type="button" class="btn ghost" id="againBtn" style="margin:0">再轉一次</button>
+      <button type="button" class="btn" id="okBtn">就吃這個！</button>
     </div>
   </div>
 </div>
 
 <script>
-const KEY='ej-food-wheel-v1';
+const V1='ej-food-wheel-v1';
+const V2='ej-food-wheel-v2';
 const DEFAULTS=[
  {name:'大埔',note:'兩間分店都有素食，離家約 1 公里',veg:'素OK'},
  {name:'胖貓',note:'走路可到。爸爸豆皮烏龍麵、媽媽其他麵、姐姐蝦仁蓋飯、弟弟豬排蓋飯',veg:'素OK'},
@@ -142,13 +187,51 @@ const DEFAULTS=[
  {name:'阿宏麵線+臭豆腐',note:'麵線和臭豆腐',veg:''},
  {name:'文心秀泰拉麵',note:'文心秀泰的拉麵店',veg:''}
 ];
+const CATS=[
+ {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
+ {id:'cook',label:'自己煮',emoji:'🍳',kind:'item',blurb:'家裡自己做',defaults:['水餃','烏龍麵','咖哩','蛋煎']},
+ {id:'breakfast',label:'早餐吃什麼',emoji:'🥐',kind:'item',blurb:'早上這一餐',defaults:['蛋餅','麵包','燕麥片','泡飯','蛋煎']},
+ {id:'night',label:'宵夜吃什麼',emoji:'🌙',kind:'item',blurb:'晚上再來一口',defaults:['泡麵','蛋煎','鬆餅']}
+];
 const COLORS=['#f4a259','#e76f51','#f6bd60','#84a59d','#f28482','#b5838d','#90be6d','#e9c46a','#c98a4b','#6d9dc5','#f7a072','#a3c4bc'];
-let S=load();
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.places))return s;}catch(e){}return fresh();}
-function fresh(){return{places:DEFAULTS.map((p,i)=>({id:'d'+i,on:true,mon:false,link:'',...p})),vegOnly:false,autoMon:true};}
-function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+function freshEat(){return{places:DEFAULTS.map((p,i)=>({id:'d'+i,on:true,mon:false,link:'',...p})),vegOnly:false,autoMon:true};}
+function freshItems(names){return{items:names.map((name,i)=>({id:'d'+i,name,on:true}))};}
+function readV1(){
+  try{
+    const s=JSON.parse(localStorage.getItem(V1));
+    if(s&&Array.isArray(s.places))return{places:s.places,vegOnly:!!s.vegOnly,autoMon:!!s.autoMon};
+  }catch(e){}
+  return null;
+}
+function validDB(s){
+  return !!(s&&s.eat&&Array.isArray(s.eat.places)&&s.cook&&Array.isArray(s.cook.items)&&s.breakfast&&Array.isArray(s.breakfast.items)&&s.night&&Array.isArray(s.night.items));
+}
+function loadDB(){
+  try{const s=JSON.parse(localStorage.getItem(V2));if(validDB(s))return s;}catch(e){}
+  const db={
+    last:null,screen:'picker',
+    eat:freshEat(),
+    cook:freshItems(CATS[1].defaults),
+    breakfast:freshItems(CATS[2].defaults),
+    night:freshItems(CATS[3].defaults)
+  };
+  const old=readV1();
+  if(old)db.eat=old;
+  localStorage.setItem(V2,JSON.stringify(db));
+  return db;
+}
+let DB=loadDB();
+let catId=null,S=null,editingId=null;
+function persist(){localStorage.setItem(V2,JSON.stringify(DB));}
+function save(){DB[catId]=S;persist();}
+function current(){return CATS.find(c=>c.id===catId);}
+function kind(){return current().kind;}
+function listItems(){return kind()==='place'?S.places:S.items;}
 const isMon=()=>new Date().getDay()===1;
-function active(){return S.places.filter(p=>p.on&&(!S.vegOnly||p.veg)&&!(S.autoMon&&isMon()&&p.mon));}
+function active(){
+  if(kind()==='place')return S.places.filter(p=>p.on&&(!S.vegOnly||p.veg)&&!(S.autoMon&&isMon()&&p.mon));
+  return S.items.filter(p=>p.on);
+}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const cv=document.getElementById('wheel'),ctx=cv.getContext('2d');
@@ -157,11 +240,15 @@ function draw(){
   cur=active();const n=cur.length,R=360;
   ctx.clearRect(0,0,720,720);
   const empty=document.getElementById('empty');
-  document.getElementById('spinBtn').disabled=n<2;
+  document.getElementById('spinBtn').disabled=spinning||n<2;
   if(n<2){
     ctx.beginPath();ctx.arc(R,R,R-8,0,7);ctx.fillStyle='#f1e4cf';ctx.fill();
     empty.style.display='flex';document.getElementById('hub').style.display='none';
-    empty.innerHTML=n===0?'轉盤空空的 🥲<br>把下面清單的開關打開，或新增一家店吧！':'只剩一家：<b>'+esc(cur[0].name)+'</b><br>不用轉了，就吃這家吧 😋<br><small>（再打開一家才能轉）</small>';
+    if(kind()==='place'){
+      empty.innerHTML=n===0?'轉盤空空的 🥲<br>把下面清單的開關打開，或新增一家店吧！':'只剩一家：<b>'+esc(cur[0].name)+'</b><br>不用轉了，就吃這家吧 😋<br><small>（再打開一家才能轉）</small>';
+    }else{
+      empty.innerHTML=n===0?'轉盤空空的 🥲<br>把下面清單的開關打開，或新增一項吧！':'只剩一項：<b>'+esc(cur[0].name)+'</b><br>不用轉了，就吃這個吧 😋<br><small>（再打開一項才能轉）</small>';
+    }
     return;
   }
   empty.style.display='none';document.getElementById('hub').style.display='flex';
@@ -183,8 +270,9 @@ function draw(){
 }
 function spin(){
   if(spinning||cur.length<2)return;spinning=true;
+  document.getElementById('backBtn').disabled=true;
+  document.querySelectorAll('.tab').forEach(t=>t.disabled=true);
   const n=cur.length,a=2*Math.PI/n,pick=Math.floor(Math.random()*n);
-  // pointer at top (-PI/2): want slice center at -PI/2
   const target=-Math.PI/2-(pick*a+a/2)+(Math.random()-.5)*a*0.7;
   const base=rot-(rot%(2*Math.PI));
   let end=base+6*2*Math.PI+((target-base)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
@@ -193,7 +281,12 @@ function spin(){
   (function step(now){
     const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,4);
     rot=start+(end-start)*e;draw();
-    if(p<1)requestAnimationFrame(step);else{spinning=false;rot%=2*Math.PI;draw();show(cur[pick]);}
+    if(p<1)requestAnimationFrame(step);else{
+      spinning=false;
+      document.getElementById('backBtn').disabled=false;
+      document.querySelectorAll('.tab').forEach(t=>t.disabled=false);
+      rot%=2*Math.PI;draw();show(cur[pick]);
+    }
   })(t0);
 }
 const EMO=['🍜','🍲','🥢','🍱','🥟','😋','🎉'];
@@ -205,37 +298,147 @@ function show(p){
   document.getElementById('rNote').innerHTML=h||'好好享受！';
   document.getElementById('mask').classList.add('show');confetti();
 }
+function renderPicker(){
+  document.getElementById('picks').innerHTML=CATS.map(c=>{
+    const last=DB.last===c.id;
+    return '<button type="button" class="pick'+(last?' is-last':'')+'" data-cat="'+c.id+'">'+
+      '<span class="emo" aria-hidden="true">'+c.emoji+'</span>'+
+      '<span class="ptxt"><span class="t">'+c.label+'</span><span class="d">'+c.blurb+(last?'・上次選的':'')+'</span></span>'+
+      '<span class="go" aria-hidden="true">›</span></button>';
+  }).join('');
+}
+function renderTabs(){
+  document.getElementById('tabs').innerHTML=CATS.map(c=>
+    '<button type="button" class="tab'+(c.id===catId?' on':'')+'" data-cat="'+c.id+'">'+c.emoji+' '+c.label+'</button>'
+  ).join('');
+}
+function rowNameText(p){
+  if(kind()!=='place')return esc(p.name);
+  const mon=isMon(),monSkip=mon&&S.autoMon&&p.mon;
+  return esc(p.name)+(p.veg?'<span class="tag">'+esc(p.veg)+'</span>':'')+(p.mon?'<span class="tag mon">'+(monSkip?'今天公休':'週一休')+'</span>':'');
+}
+function editHTML(p){
+  const note=kind()==='place'?'<input type="text" class="edit-note" maxlength="200" placeholder="備註／地址" value="'+esc(p.note||'')+'">':'';
+  return '<div class="row editing"><form class="editform" data-edit-id="'+esc(p.id)+'">'+
+    '<input type="text" class="edit-name" maxlength="20" required placeholder="名稱" value="'+esc(p.name)+'">'+
+    note+
+    '<div class="editacts"><button type="submit" class="btn">儲存</button>'+
+    '<button type="button" class="btn ghost" data-cancel>取消</button></div></form></div>';
+}
+function rowHTML(p){
+  if(p.id===editingId)return editHTML(p);
+  const note=kind()==='place'&&p.note?'<div class="note">'+esc(p.note)+'</div>':'';
+  return '<div class="row'+(p.on?'':' off')+'" data-id="'+esc(p.id)+'"><div class="info"><div class="name">'+rowNameText(p)+'</div>'+note+'</div>'+
+    '<button type="button" class="edit" data-e="'+esc(p.id)+'">編輯</button>'+
+    '<label class="sw"><input type="checkbox" data-t="'+esc(p.id)+'"'+(p.on?' checked':'')+'><span></span></label>'+
+    '<button type="button" class="del" data-d="'+esc(p.id)+'" aria-label="刪除">🗑</button></div>';
+}
 function render(){
-  document.getElementById('vegChip').classList.toggle('on',S.vegOnly);
-  document.getElementById('monChip').classList.toggle('on',S.autoMon);
-  const mon=isMon(),skipped=S.places.filter(p=>p.on&&p.mon).length;
-  let st='轉盤上 '+active().length+' 家';
-  if(mon&&S.autoMon&&skipped)st+='・今天週一，已略過 '+skipped+' 家公休';
-  if(S.vegOnly)st+='・只轉素食友善';
-  document.getElementById('status').textContent=st;
-  document.getElementById('count').textContent='（共 '+S.places.length+' 家）';
-  document.getElementById('list').innerHTML=S.places.map(p=>{
-    const monSkip=mon&&S.autoMon&&p.mon;
-    return '<div class="row'+(p.on?'':' off')+'"><div class="info"><div class="name">'+esc(p.name)+
-    (p.veg?'<span class="tag">'+p.veg+'</span>':'')+(p.mon?'<span class="tag mon">'+(monSkip?'今天公休':'週一休')+'</span>':'')+
-    '</div>'+(p.note?'<div class="note">'+esc(p.note)+'</div>':'')+'</div>'+
-    '<label class="sw"><input type="checkbox" data-t="'+p.id+'"'+(p.on?' checked':'')+'><span></span></label>'+
-    '<button class="del" data-d="'+p.id+'" aria-label="刪除">🗑</button></div>';}).join('');
+  const c=current(),place=c.kind==='place';
+  renderTabs();
+  document.getElementById('title').textContent=c.emoji+' '+c.label;
+  document.getElementById('sub').textContent=place?'EJ 家的美食轉盤・豐樂公園一帶':c.blurb;
+  document.getElementById('placeChips').hidden=!place;
+  document.getElementById('placeAdd').hidden=!place;
+  document.getElementById('itemAdd').hidden=place;
+  document.getElementById('listHeading').textContent=place?'📋 店家清單':'📋 清單';
+  if(place){
+    document.getElementById('vegChip').classList.toggle('on',!!S.vegOnly);
+    document.getElementById('monChip').classList.toggle('on',!!S.autoMon);
+    const mon=isMon(),skipped=S.places.filter(p=>p.on&&p.mon).length;
+    let st='轉盤上 '+active().length+' 家';
+    if(mon&&S.autoMon&&skipped)st+='・今天週一，已略過 '+skipped+' 家公休';
+    if(S.vegOnly)st+='・只轉素食友善';
+    document.getElementById('status').textContent=st;
+    document.getElementById('count').textContent='（共 '+S.places.length+' 家）';
+  }else{
+    document.getElementById('status').textContent='轉盤上 '+active().length+' 項';
+    document.getElementById('count').textContent='（共 '+S.items.length+' 項）';
+  }
+  document.getElementById('list').innerHTML=listItems().map(rowHTML).join('');
   draw();
 }
+function openCat(id){
+  if(spinning)return;
+  const c=CATS.find(x=>x.id===id);if(!c||!DB[id])return;
+  catId=id;S=DB[id];DB.last=id;DB.screen='wheel';editingId=null;rot=0;
+  document.getElementById('mask').classList.remove('show');
+  persist();
+  document.getElementById('picker').hidden=true;
+  document.getElementById('wheelView').hidden=false;
+  render();
+}
+function showPicker(){
+  if(spinning)return;
+  DB.screen='picker';editingId=null;
+  document.getElementById('mask').classList.remove('show');
+  persist();
+  document.getElementById('wheelView').hidden=true;
+  document.getElementById('picker').hidden=false;
+  renderPicker();
+}
+document.getElementById('picks').addEventListener('click',e=>{
+  const b=e.target.closest('[data-cat]');if(b)openCat(b.dataset.cat);
+});
+document.getElementById('tabs').addEventListener('click',e=>{
+  const b=e.target.closest('[data-cat]');if(b)openCat(b.dataset.cat);
+});
+document.getElementById('backBtn').onclick=showPicker;
 document.getElementById('list').addEventListener('click',e=>{
-  const t=e.target.dataset.t,d=e.target.dataset.d;
-  if(t){const p=S.places.find(x=>x.id===t);p.on=e.target.checked;save();render();}
-  if(d){const p=S.places.find(x=>x.id===d);if(confirm('確定刪除「'+p.name+'」？')){S.places=S.places.filter(x=>x.id!==d);save();render();}}
+  if(e.target.closest('[data-cancel]')){editingId=null;render();return;}
+  const eb=e.target.closest('[data-e]');
+  if(eb){
+    editingId=eb.dataset.e;render();
+    const input=document.querySelector('.edit-name');
+    if(input){input.focus();input.select();}
+    return;
+  }
+  const db=e.target.closest('[data-d]');
+  if(db){
+    const p=listItems().find(x=>x.id===db.dataset.d);
+    if(p&&confirm('確定刪除「'+p.name+'」？')){
+      if(kind()==='place')S.places=S.places.filter(x=>x.id!==p.id);
+      else S.items=S.items.filter(x=>x.id!==p.id);
+      if(editingId===p.id)editingId=null;
+      save();render();
+    }
+  }
+});
+document.getElementById('list').addEventListener('change',e=>{
+  const t=e.target.dataset.t;if(!t)return;
+  const p=listItems().find(x=>x.id===t);if(!p)return;
+  p.on=e.target.checked;save();render();
+});
+document.getElementById('list').addEventListener('submit',e=>{
+  const form=e.target;if(!form.classList||!form.classList.contains('editform'))return;
+  e.preventDefault();
+  const name=form.querySelector('.edit-name').value.trim();
+  if(!name)return;
+  const p=listItems().find(x=>x.id===form.dataset.editId);if(!p)return;
+  p.name=name;
+  const noteEl=form.querySelector('.edit-note');
+  if(noteEl)p.note=noteEl.value.trim();
+  editingId=null;save();render();
 });
 document.getElementById('addForm').addEventListener('submit',e=>{
   e.preventDefault();const name=document.getElementById('newName').value.trim();if(!name)return;
-  S.places.push({id:'u'+Date.now(),name,note:document.getElementById('newNote').value.trim(),veg:document.querySelector('input[name=veg]:checked').value,mon:document.getElementById('newMon').checked,on:true,link:''});
+  S.places.push({id:'u'+Date.now(),name,note:document.getElementById('newNote').value.trim(),veg:document.querySelector('#addForm input[name=veg]:checked').value,mon:document.getElementById('newMon').checked,on:true,link:''});
   save();e.target.reset();render();
 });
-document.getElementById('vegChip').onclick=()=>{S.vegOnly=!S.vegOnly;save();render();};
-document.getElementById('monChip').onclick=()=>{S.autoMon=!S.autoMon;save();render();};
-document.getElementById('resetBtn').onclick=()=>{if(confirm('恢復預設清單？你新增或刪除的店家會被重設。')){S=fresh();save();render();}};
+document.getElementById('itemForm').addEventListener('submit',e=>{
+  e.preventDefault();const name=document.getElementById('itemName').value.trim();if(!name)return;
+  S.items.push({id:'u'+Date.now(),name,on:true});
+  save();e.target.reset();render();
+});
+document.getElementById('vegChip').onclick=()=>{if(kind()!=='place')return;S.vegOnly=!S.vegOnly;save();render();};
+document.getElementById('monChip').onclick=()=>{if(kind()!=='place')return;S.autoMon=!S.autoMon;save();render();};
+document.getElementById('resetBtn').onclick=()=>{
+  const place=kind()==='place';
+  const msg=place?'恢復預設清單？你新增、修改或刪除的店家會被重設。':'恢復預設清單？你新增、修改或刪除的項目會被重設。';
+  if(!confirm(msg))return;
+  S=place?freshEat():freshItems(current().defaults);
+  DB[catId]=S;editingId=null;save();render();
+};
 document.getElementById('spinBtn').onclick=spin;document.getElementById('hub').onclick=spin;
 document.getElementById('okBtn').onclick=()=>document.getElementById('mask').classList.remove('show');
 document.getElementById('againBtn').onclick=()=>{document.getElementById('mask').classList.remove('show');setTimeout(spin,250);};
@@ -248,7 +451,12 @@ function confetti(){
     ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.4;p.r+=.2;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*1.6);cx.restore();});
     if(++f<110)requestAnimationFrame(tick);else cx.clearRect(0,0,cc.width,cc.height);})();
 }
-render();
+if(DB.screen==='wheel'&&DB.last&&DB[DB.last]&&CATS.some(c=>c.id===DB.last)){
+  catId=DB.last;S=DB[catId];
+  document.getElementById('picker').hidden=true;
+  document.getElementById('wheelView').hidden=false;
+  render();
+}else renderPicker();
 </script>
 </body>
 </html>
