@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7efe2">
+<title>待會吃什麼？｜EJ 家的美食轉盤</title>
+<style>
+:root{--bg:#f7efe2;--card:#fffaf2;--brown:#8b5a2b;--brown-d:#5e3a1a;--caramel:#c98a4b;--line:#ead9c0;--muted:#9a7b5c;--green:#5f9e5a;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--brown-d);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;padding:env(safe-area-inset-top) 0 40px}
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+header{text-align:center;margin:6px 0 10px}
+header h1{margin:0;font-size:28px;letter-spacing:2px}
+header p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.card{background:var(--card);border-radius:22px;box-shadow:0 4px 14px rgba(139,90,43,.12);padding:16px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;color:var(--brown);cursor:pointer;user-select:none}
+.chip.on{background:var(--brown);color:#fff;border-color:var(--brown)}
+.badge{display:inline-block;background:#fde3c2;color:var(--brown-d);border-radius:999px;padding:4px 10px;font-size:13px;margin:0 auto 8px}
+.wheelbox{position:relative;width:100%;max-width:360px;margin:0 auto;aspect-ratio:1}
+canvas{width:100%;height:100%;display:block}
+.pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:30px solid var(--brown-d);filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));z-index:2}
+.hub{position:absolute;inset:0;margin:auto;width:22%;height:22%;border-radius:50%;background:var(--card);border:4px solid var(--brown);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--brown);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--muted);font-size:16px;line-height:1.6}
+.spin{display:block;width:100%;margin-top:14px;border:0;border-radius:18px;padding:16px;font-size:20px;font-weight:700;letter-spacing:2px;color:#fff;background:linear-gradient(180deg,var(--caramel),var(--brown));box-shadow:0 5px 0 var(--brown-d);cursor:pointer}
+.spin:active{transform:translateY(3px);box-shadow:0 2px 0 var(--brown-d)}
+.spin:disabled{opacity:.5}
+h2{font-size:18px;margin:0 0 10px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border-bottom:0}
+.row .info{flex:1;min-width:0}
+.row .name{font-weight:700}
+.row .note{font-size:13px;color:var(--muted);margin-top:2px}
+.row.off .name,.row.off .note{opacity:.45;text-decoration:line-through}
+.tag{font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;background:#e4f1df;color:#3d6b39;vertical-align:middle;font-weight:600}
+.tag.mon{background:#f6dcdc;color:#a33}
+.sw{position:relative;width:46px;height:28px;flex:none}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:#d8c6ae;border-radius:999px;transition:.2s;cursor:pointer}
+.sw span:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked+span{background:var(--green)}
+.sw input:checked+span:before{transform:translateX(18px)}
+.del{border:0;background:none;font-size:18px;color:#c0a080;cursor:pointer;padding:4px}
+form{display:flex;flex-direction:column;gap:8px}
+input[type=text]{border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;background:#fff;color:var(--brown-d)}
+.chk{font-size:14px;color:var(--brown);display:flex;gap:14px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:11px;font-size:16px;font-weight:700;background:var(--brown);color:#fff;cursor:pointer}
+.btn.ghost{background:none;color:var(--muted);border:1.5px dashed var(--line);font-weight:500;width:100%;margin-top:4px}
+.mask{position:fixed;inset:0;background:rgba(60,35,15,.45);display:none;align-items:center;justify-content:center;z-index:10;padding:24px}
+.mask.show{display:flex}
+.result{background:var(--card);border-radius:26px;padding:26px 20px;text-align:center;max-width:360px;width:100%;animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.result .emo{font-size:52px}
+.result .rname{font-size:30px;font-weight:800;margin:6px 0}
+.result .rnote{color:var(--muted);line-height:1.6;font-size:15px}
+.result a{color:var(--brown);font-weight:700}
+.result .acts{display:flex;gap:8px;margin-top:18px}
+.result .acts button{flex:1}
+.small{font-size:12px;color:var(--muted);text-align:center}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:11}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="wrap">
+  <header><h1>🍜 今天吃什麼？</h1><p>EJ 家的美食轉盤・豐樂公園一帶</p></header>
+
+  <div class="card">
+    <div class="chips">
+      <div class="chip" id="vegChip">🥬 只轉素食友善</div>
+      <div class="chip" id="monChip">📅 週一自動排除公休</div>
+    </div>
+    <div style="text-align:center"><span class="badge" id="status"></span></div>
+    <div class="wheelbox">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="720" height="720"></canvas>
+      <div class="hub" id="hub">轉!</div>
+      <div class="empty" id="empty"></div>
+    </div>
+    <button class="spin" id="spinBtn">🎯 轉一下！</button>
+  </div>
+
+  <div class="card">
+    <h2>➕ 新增店家</h2>
+    <form id="addForm">
+      <input type="text" id="newName" placeholder="店名（必填）" maxlength="20" required>
+      <input type="text" id="newNote" placeholder="備註，例如：弟弟愛吃、要訂位" maxlength="60">
+      <div class="chk">
+        <label><input type="radio" name="veg" value="" checked> 一般</label>
+        <label><input type="radio" name="veg" value="素OK"> 素OK</label>
+        <label><input type="radio" name="veg" value="全素"> 全素</label>
+        <label><input type="checkbox" id="newMon"> 週一公休</label>
+      </div>
+      <button class="btn" type="submit">加入轉盤</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>📋 店家清單 <span class="small" id="count"></span></h2>
+    <div class="small" style="text-align:left;margin-bottom:6px">右邊開關關掉＝暫時不轉（例如昨天剛吃過），不會刪除。</div>
+    <div id="list"></div>
+    <button class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
+  </div>
+  <p class="small">資料只存在這支手機的瀏覽器裡</p>
+</div>
+
+<div class="mask" id="mask">
+  <div class="result">
+    <div class="emo" id="rEmo">🎉</div>
+    <div class="small">今天就吃</div>
+    <div class="rname" id="rName"></div>
+    <div class="rnote" id="rNote"></div>
+    <div class="acts">
+      <button class="btn ghost" id="againBtn" style="margin:0">再轉一次</button>
+      <button class="btn" id="okBtn">就吃這個！</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY='ej-food-wheel-v1';
+const DEFAULTS=[
+ {name:'大埔',note:'兩間分店都有素食，離家約 1 公里',veg:'素OK'},
+ {name:'胖貓',note:'走路可到。爸爸豆皮烏龍麵、媽媽其他麵、姐姐蝦仁蓋飯、弟弟豬排蓋飯',veg:'素OK'},
+ {name:'螞蟻鍋',note:'胖貓對面的臭豆腐，全家點無肉版本',veg:'素OK'},
+ {name:'金井澤火鍋',note:'走路可到，素葷都能點，禮拜天常去',veg:'素OK'},
+ {name:'空也',note:'素食餐廳，很好吃，當天停車免費',veg:'全素'},
+ {name:'見晴蔬食',note:'素食，純真年代社區（外公外婆家）附近',veg:'全素'},
+ {name:'春成臭豆腐',note:'純真年代附近，常常沒開，週一公休',veg:'',mon:true},
+ {name:'臭大叔',note:'臭豆腐料理，純真年代附近',veg:''},
+ {name:'一碗牛肉麵',note:'家對面走過去，爸爸吃湯麵',veg:''},
+ {name:'八方雲集',note:'爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點',veg:'',link:'https://ezorder.8way.com.tw/0091'},
+ {name:'三禾手打麵',note:'烏日，媽媽推薦（比較遠）',veg:''},
+ {name:'熱浪小島',note:'',veg:''},
+ {name:'輕井澤',note:'火鍋',veg:''},
+ {name:'麻一鍋',note:'火鍋，週一公休',veg:'',mon:true},
+ {name:'素食脆皮素圓',note:'素食',veg:'全素'},
+ {name:'附近滷味',note:'豐樂公園附近',veg:''},
+ {name:'附近自助餐',note:'豐樂公園附近',veg:''},
+ {name:'涓豆腐',note:'文心秀泰，韓式豆腐鍋，吃大餐的好地方',veg:''},
+ {name:'阿宏麵線+臭豆腐',note:'麵線和臭豆腐',veg:''},
+ {name:'文心秀泰拉麵',note:'文心秀泰的拉麵店',veg:''}
+];
+const COLORS=['#f4a259','#e76f51','#f6bd60','#84a59d','#f28482','#b5838d','#90be6d','#e9c46a','#c98a4b','#6d9dc5','#f7a072','#a3c4bc'];
+let S=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.places))return s;}catch(e){}return fresh();}
+function fresh(){return{places:DEFAULTS.map((p,i)=>({id:'d'+i,on:true,mon:false,link:'',...p})),vegOnly:false,autoMon:true};}
+function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+const isMon=()=>new Date().getDay()===1;
+function active(){return S.places.filter(p=>p.on&&(!S.vegOnly||p.veg)&&!(S.autoMon&&isMon()&&p.mon));}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const cv=document.getElementById('wheel'),ctx=cv.getContext('2d');
+let rot=0,spinning=false,cur=[];
+function draw(){
+  cur=active();const n=cur.length,R=360;
+  ctx.clearRect(0,0,720,720);
+  const empty=document.getElementById('empty');
+  document.getElementById('spinBtn').disabled=n<2;
+  if(n<2){
+    ctx.beginPath();ctx.arc(R,R,R-8,0,7);ctx.fillStyle='#f1e4cf';ctx.fill();
+    empty.style.display='flex';document.getElementById('hub').style.display='none';
+    empty.innerHTML=n===0?'轉盤空空的 🥲<br>把下面清單的開關打開，或新增一家店吧！':'只剩一家：<b>'+esc(cur[0].name)+'</b><br>不用轉了，就吃這家吧 😋<br><small>（再打開一家才能轉）</small>';
+    return;
+  }
+  empty.style.display='none';document.getElementById('hub').style.display='flex';
+  const a=2*Math.PI/n;
+  ctx.save();ctx.translate(R,R);ctx.rotate(rot);
+  for(let i=0;i<n;i++){
+    ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R-8,i*a,(i+1)*a);ctx.closePath();
+    ctx.fillStyle=COLORS[(i+(n%COLORS.length===1&&i===n-1?1:0))%COLORS.length];ctx.fill();
+    ctx.strokeStyle='#fffaf2';ctx.lineWidth=4;ctx.stroke();
+    ctx.save();ctx.rotate(i*a+a/2);ctx.fillStyle='#fff';
+    const fs=n>14?26:n>9?30:36;ctx.font='bold '+fs+'px "PingFang TC","Noto Sans TC",sans-serif';
+    ctx.textAlign='right';ctx.textBaseline='middle';ctx.shadowColor='rgba(0,0,0,.25)';ctx.shadowBlur=3;
+    let t=cur[i].name;if(t.length>7)t=t.slice(0,6)+'…';
+    ctx.fillText(t,R-34,0);ctx.restore();
+  }
+  ctx.restore();
+  ctx.beginPath();ctx.arc(R,R,R-6,0,7);ctx.lineWidth=12;ctx.strokeStyle='#8b5a2b';ctx.stroke();
+  for(let i=0;i<24;i++){const t=i/24*2*Math.PI;ctx.beginPath();ctx.arc(R+(R-6)*Math.cos(t),R+(R-6)*Math.sin(t),4,0,7);ctx.fillStyle=i%2?'#ffe8a3':'#fff';ctx.fill();}
+}
+function spin(){
+  if(spinning||cur.length<2)return;spinning=true;
+  const n=cur.length,a=2*Math.PI/n,pick=Math.floor(Math.random()*n);
+  // pointer at top (-PI/2): want slice center at -PI/2
+  const target=-Math.PI/2-(pick*a+a/2)+(Math.random()-.5)*a*0.7;
+  const base=rot-(rot%(2*Math.PI));
+  let end=base+6*2*Math.PI+((target-base)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+  const start=rot,dur=4200,t0=performance.now();
+  document.getElementById('spinBtn').disabled=true;
+  (function step(now){
+    const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,4);
+    rot=start+(end-start)*e;draw();
+    if(p<1)requestAnimationFrame(step);else{spinning=false;rot%=2*Math.PI;draw();show(cur[pick]);}
+  })(t0);
+}
+const EMO=['🍜','🍲','🥢','🍱','🥟','😋','🎉'];
+function show(p){
+  document.getElementById('rEmo').textContent=EMO[Math.floor(Math.random()*EMO.length)];
+  document.getElementById('rName').textContent=p.name;
+  let h=esc(p.note||'');if(p.veg)h+=' <span class="tag">'+p.veg+'</span>';
+  if(p.link)h+='<br><a href="'+esc(p.link)+'" target="_blank" rel="noopener">👉 線上點餐</a>';
+  document.getElementById('rNote').innerHTML=h||'好好享受！';
+  document.getElementById('mask').classList.add('show');confetti();
+}
+function render(){
+  document.getElementById('vegChip').classList.toggle('on',S.vegOnly);
+  document.getElementById('monChip').classList.toggle('on',S.autoMon);
+  const mon=isMon(),skipped=S.places.filter(p=>p.on&&p.mon).length;
+  let st='轉盤上 '+active().length+' 家';
+  if(mon&&S.autoMon&&skipped)st+='・今天週一，已略過 '+skipped+' 家公休';
+  if(S.vegOnly)st+='・只轉素食友善';
+  document.getElementById('status').textContent=st;
+  document.getElementById('count').textContent='（共 '+S.places.length+' 家）';
+  document.getElementById('list').innerHTML=S.places.map(p=>{
+    const monSkip=mon&&S.autoMon&&p.mon;
+    return '<div class="row'+(p.on?'':' off')+'"><div class="info"><div class="name">'+esc(p.name)+
+    (p.veg?'<span class="tag">'+p.veg+'</span>':'')+(p.mon?'<span class="tag mon">'+(monSkip?'今天公休':'週一休')+'</span>':'')+
+    '</div>'+(p.note?'<div class="note">'+esc(p.note)+'</div>':'')+'</div>'+
+    '<label class="sw"><input type="checkbox" data-t="'+p.id+'"'+(p.on?' checked':'')+'><span></span></label>'+
+    '<button class="del" data-d="'+p.id+'" aria-label="刪除">🗑</button></div>';}).join('');
+  draw();
+}
+document.getElementById('list').addEventListener('click',e=>{
+  const t=e.target.dataset.t,d=e.target.dataset.d;
+  if(t){const p=S.places.find(x=>x.id===t);p.on=e.target.checked;save();render();}
+  if(d){const p=S.places.find(x=>x.id===d);if(confirm('確定刪除「'+p.name+'」？')){S.places=S.places.filter(x=>x.id!==d);save();render();}}
+});
+document.getElementById('addForm').addEventListener('submit',e=>{
+  e.preventDefault();const name=document.getElementById('newName').value.trim();if(!name)return;
+  S.places.push({id:'u'+Date.now(),name,note:document.getElementById('newNote').value.trim(),veg:document.querySelector('input[name=veg]:checked').value,mon:document.getElementById('newMon').checked,on:true,link:''});
+  save();e.target.reset();render();
+});
+document.getElementById('vegChip').onclick=()=>{S.vegOnly=!S.vegOnly;save();render();};
+document.getElementById('monChip').onclick=()=>{S.autoMon=!S.autoMon;save();render();};
+document.getElementById('resetBtn').onclick=()=>{if(confirm('恢復預設清單？你新增或刪除的店家會被重設。')){S=fresh();save();render();}};
+document.getElementById('spinBtn').onclick=spin;document.getElementById('hub').onclick=spin;
+document.getElementById('okBtn').onclick=()=>document.getElementById('mask').classList.remove('show');
+document.getElementById('againBtn').onclick=()=>{document.getElementById('mask').classList.remove('show');setTimeout(spin,250);};
+
+const cc=document.getElementById('confetti'),cx=cc.getContext('2d');
+function confetti(){
+  cc.width=innerWidth;cc.height=innerHeight;
+  const ps=Array.from({length:120},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*14,vy:-Math.random()*14-4,s:Math.random()*6+4,c:COLORS[Math.floor(Math.random()*COLORS.length)],r:Math.random()*6}));
+  let f=0;(function tick(){cx.clearRect(0,0,cc.width,cc.height);
+    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.4;p.r+=.2;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*1.6);cx.restore();});
+    if(++f<110)requestAnimationFrame(tick);else cx.clearRect(0,0,cc.width,cc.height);})();
+}
+render();
+</script>
+</body>
+</html>
