@@ -227,7 +227,8 @@ const DEFAULTS=[
  {name:'涓豆腐',note:'文心秀泰，韓式豆腐鍋，吃大餐的好地方',veg:'',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng},
  {name:'阿宏麵線+臭豆腐',note:'麵線和臭豆腐',veg:''},
  {name:'文心秀泰拉麵',note:'文心秀泰的拉麵店',veg:'',address:SHOWTIME.address,lat:SHOWTIME.lat,lng:SHOWTIME.lng},
- {name:'五花馬',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'}
+ {name:'五花馬',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'},
+ {name:'大埔永春總店',note:'鐵板燒、永春總店',veg:'素OK',address:'台中市南屯區永春東七路607號',maps:'https://maps.app.goo.gl/G28nkzW68Mq7ft8j8'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -310,6 +311,20 @@ function applyPlaceFix(p){
   if(fix.note&&(p.note==null||fix.notes.indexOf(p.note)>=0)){p.note=fix.note;changed=true;}
   return changed;
 }
+function ensureYongchun(list){
+  if(!Array.isArray(list))return false;
+  const found=list.find(p=>p&&p.name==='大埔永春總店');
+  if(found){
+    let changed=false;
+    if(!found.address){found.address='台中市南屯區永春東七路607號';changed=true;}
+    if(!found.maps){found.maps='https://maps.app.goo.gl/G28nkzW68Mq7ft8j8';changed=true;}
+    return changed;
+  }
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  list.push({id:used.d21?'yongchun':'d21',name:'大埔永春總店',on:true,mon:false,link:'',note:'鐵板燒、永春總店',veg:'素OK',address:'台中市南屯區永春東七路607號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/G28nkzW68Mq7ft8j8'});
+  return true;
+}
 function ensureWuhua(list){
   if(!Array.isArray(list)||list.some(p=>p&&p.name==='五花馬'))return false;
   const used={};
@@ -330,6 +345,7 @@ function migrateKnownPlaces(db){
       if(applyPlaceFix(p))changed=true;
     });
     if(ensureWuhua(list))changed=true;
+    if(ensureYongchun(list))changed=true;
   });
   return changed;
 }
