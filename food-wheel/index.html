@@ -208,7 +208,7 @@ const LOC_KEY='ej-food-wheel-loc';
 const SHOWTIME={address:'台中市南屯區文心南路289號文心秀泰',lat:24.1301471,lng:120.6456843};
 const DEFAULTS=[
  {name:'大埔',note:'兩間分店都有素食，離家約 1 公里',veg:'素OK'},
- {name:'胖貓',note:'走路可到。爸爸豆皮烏龍麵、媽媽其他麵、姐姐蝦仁蓋飯、弟弟豬排蓋飯',veg:'素OK'},
+ {name:'胖貓',note:'走路可到。爸爸豆皮烏龍麵、媽媽其他麵、姐姐蝦仁蓋飯、弟弟豬排蓋飯',veg:'素OK',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
  {name:'螞蟻鍋',note:'胖貓對面的臭豆腐，全家點無肉版本',veg:'素OK'},
  {name:'金井澤火鍋',note:'走路可到，素葷都能點，禮拜天常去',veg:'素OK'},
  {name:'空也',note:'素食餐廳，很好吃，當天停車免費',veg:'全素'},
@@ -216,17 +216,18 @@ const DEFAULTS=[
  {name:'春成臭豆腐',note:'純真年代附近，常常沒開，週一公休',veg:'',mon:true},
  {name:'臭大叔',note:'臭豆腐料理，純真年代附近',veg:''},
  {name:'一碗牛肉麵',note:'家對面走過去，爸爸吃湯麵',veg:''},
- {name:'八方雲集',note:'爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點',veg:'',link:'https://ezorder.8way.com.tw/0091'},
+ {name:'八方雲集',note:'台中南屯店。爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點',veg:'',link:'https://ezorder.8way.com.tw/0091',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7'},
  {name:'三禾手打麵',note:'烏日，媽媽推薦（比較遠）',veg:'',address:'台中市烏日區公園路282號',lat:24.1026601,lng:120.6244841,dailyHours:['11:00','20:30']},
  {name:'熱浪小島',note:'',veg:''},
- {name:'輕井澤',note:'火鍋',veg:''},
- {name:'麻一鍋',note:'火鍋，週一公休',veg:'',mon:true},
- {name:'素食脆皮素圓',note:'素食',veg:'全素'},
+ {name:'輕井澤',note:'文心南二店、火鍋',veg:'',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17'},
+ {name:'麻一鍋',note:'向心店、火鍋，週一公休',veg:'',mon:true,address:'台中市南屯區向心南路897號',maps:'https://maps.app.goo.gl/4m4mUEYoSnYxsujQ9'},
+ {name:'素食脆皮素圓',note:'明祖素圓，素食',veg:'全素',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9'},
  {name:'附近滷味',note:'豐樂公園附近',veg:'',address:'台中市南屯區向心南路915號',lat:24.1356468,lng:120.6439209,maps:'https://maps.app.goo.gl/G1KZMc33PukLmEm36'},
  {name:'上豪自助餐',note:'豐樂公園附近的自助餐',veg:'',address:'台中市南屯區向心南路931號',lat:24.1360111,lng:120.6439056,maps:'https://maps.app.goo.gl/A7okPNodrnVTVpX77'},
  {name:'涓豆腐',note:'文心秀泰，韓式豆腐鍋，吃大餐的好地方',veg:'',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng},
  {name:'阿宏麵線+臭豆腐',note:'麵線和臭豆腐',veg:''},
- {name:'文心秀泰拉麵',note:'文心秀泰的拉麵店',veg:'',address:SHOWTIME.address,lat:SHOWTIME.lat,lng:SHOWTIME.lng}
+ {name:'文心秀泰拉麵',note:'文心秀泰的拉麵店',veg:'',address:SHOWTIME.address,lat:SHOWTIME.lat,lng:SHOWTIME.lng},
+ {name:'五花馬',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -282,6 +283,31 @@ function applyLuwei(p){
   if(!p.maps){p.maps='https://maps.app.goo.gl/G1KZMc33PukLmEm36';changed=true;}
   return changed;
 }
+const PLACE_FIXES=[
+ {name:'麻一鍋',address:'台中市南屯區向心南路897號',maps:'https://maps.app.goo.gl/4m4mUEYoSnYxsujQ9',notes:['','火鍋，週一公休'],note:'向心店、火鍋，週一公休'},
+ {name:'胖貓',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
+ {name:'八方雲集',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7',notes:['','爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點'],note:'台中南屯店。爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點'},
+ {name:'輕井澤',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17',notes:['','火鍋'],note:'文心南二店、火鍋'},
+ {name:'素食脆皮素圓',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9',notes:['','素食'],note:'明祖素圓，素食'}
+];
+function applyPlaceFix(p){
+  const fix=PLACE_FIXES.find(f=>p&&p.name===f.name);
+  if(!fix)return false;
+  let changed=false;
+  if(!p.address){p.address=fix.address;changed=true;}
+  if(!p.maps){p.maps=fix.maps;changed=true;}
+  if(fix.lat!=null&&(p.lat==null||p.lat==='')){p.lat=fix.lat;p.lng=fix.lng;changed=true;}
+  if(fix.note&&(p.note==null||fix.notes.indexOf(p.note)>=0)){p.note=fix.note;changed=true;}
+  return changed;
+}
+function ensureWuhua(list){
+  if(!Array.isArray(list)||list.some(p=>p&&p.name==='五花馬'))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.d20?'wuhua':'d20';
+  list.push({id:id,name:'五花馬',on:true,mon:false,link:'',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'});
+  return true;
+}
 function migrateKnownPlaces(db){
   let changed=false;
   ['eat','delivery'].forEach(key=>{
@@ -290,7 +316,9 @@ function migrateKnownPlaces(db){
     list.forEach(p=>{
       if(applyShanghao(p))changed=true;
       if(applyLuwei(p))changed=true;
+      if(applyPlaceFix(p))changed=true;
     });
+    if(ensureWuhua(list))changed=true;
   });
   return changed;
 }
