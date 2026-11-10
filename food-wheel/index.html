@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10p</p>
+  <p class="small">版本 2026-11-10q</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10p</p>
+  <p class="small">版本 2026-11-10q</p>
 </div>
 
 <div class="mask" id="mask">
@@ -247,7 +247,8 @@ const DEFAULTS=[
  {name:'蔬想起蔬食料理',note:'素食小館，北屯雷中街，有全素和蛋素。網路資料寫週四公休',veg:'全素',address:'台中市北屯區雷中街2-15號',maps:SHUXIANG_MAPS},
  {name:'三津制麵',note:'釀善 三津制麵 台中249老宅店，純素麵館，週一公休',veg:'全素',mon:true,address:'台中市中區中山路249號',maps:SANJIN_MAPS},
  {name:'三院和食蔬食拉麵',note:'Google 名稱：三院和食（蔬食、素食拉麵專賣），北區',veg:'全素',address:'台中市北區大義街112號',maps:'https://maps.app.goo.gl/BuzfKPim8DK69MFn9'},
- {name:'16號廚房素食斗六店',note:'Google 名稱：16號廚房素食餐廳 斗六店。在雲林斗六，不在台中，適合外出途中',veg:'全素',address:'雲林縣斗六市上海路244號',maps:'https://maps.app.goo.gl/huA9f8uzk4FHGWrP9'}
+ {name:'16號廚房素食斗六店',note:'Google 名稱：16號廚房素食餐廳 斗六店。在雲林斗六，不在台中，適合外出途中',veg:'全素',address:'雲林縣斗六市上海路244號',maps:'https://maps.app.goo.gl/huA9f8uzk4FHGWrP9'},
+ {name:'16號廚房素食虎尾店',note:'Google 名稱：16號廚房素食餐廳 虎尾店。在雲林虎尾，不在台中。好停車',veg:'全素',address:'雲林縣虎尾鎮清雲路507之1號',maps:'https://maps.app.goo.gl/Q1b4ueRDb1VkPy3c9'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -421,6 +422,15 @@ function ensureMiaoshan(list){
   return true;
 }
 const ZHUYE_MAPS='https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d';
+function ensureHuwei(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('16號廚房')>=0&&String(p.name||'').indexOf('虎尾')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.huwei?'huwei2':'huwei';
+  list.push({id:id,name:'16號廚房素食虎尾店',on:true,mon:false,link:'',note:'Google 名稱：16號廚房素食餐廳 虎尾店。在雲林虎尾，不在台中。好停車',veg:'全素',address:'雲林縣虎尾鎮清雲路507之1號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/Q1b4ueRDb1VkPy3c9'});
+  return true;
+}
 function ensureOnce(list,key,idBase,place){
   if(!Array.isArray(list))return false;
   if(list.some(p=>p&&String(p.name||'').indexOf(key)>=0))return false;
@@ -585,6 +595,7 @@ function migrateKnownPlaces(db){
     if(ensureOnce(list,'三津','sanjin',{name:'三津制麵',note:'釀善 三津制麵 台中249老宅店，純素麵館，週一公休',veg:'全素',mon:true,address:'台中市中區中山路249號',maps:SANJIN_MAPS}))changed=true;
     if(ensureOnce(list,'三院','sanyuan',{name:'三院和食蔬食拉麵',note:'Google 名稱：三院和食（蔬食、素食拉麵專賣），北區',veg:'全素',address:'台中市北區大義街112號',maps:'https://maps.app.goo.gl/BuzfKPim8DK69MFn9'}))changed=true;
     if(ensureOnce(list,'16號廚房','kitchen16',{name:'16號廚房素食斗六店',note:'Google 名稱：16號廚房素食餐廳 斗六店。在雲林斗六，不在台中，適合外出途中',veg:'全素',address:'雲林縣斗六市上海路244號',maps:'https://maps.app.goo.gl/huA9f8uzk4FHGWrP9'}))changed=true;
+    if(ensureHuwei(list))changed=true;
   });
   return changed;
 }
