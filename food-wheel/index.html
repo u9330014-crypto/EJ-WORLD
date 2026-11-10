@@ -207,7 +207,7 @@ const SOUND_KEY='ej-food-wheel-sound';
 const LOC_KEY='ej-food-wheel-loc';
 const SHOWTIME={address:'台中市南屯區文心南路289號文心秀泰',lat:24.1301471,lng:120.6456843};
 const DEFAULTS=[
- {name:'大埔',note:'兩間分店都有素食，離家約 1 公里',veg:'素OK'},
+ {name:'大埔大墩店',note:'鐵板燒、大墩店，兩間都有素食，離家約 1 公里',veg:'素OK',address:'台中市南屯區大墩路177號',lat:24.1418152,lng:120.6496811,maps:'https://maps.app.goo.gl/B94tsShjqYBULTrg9'},
  {name:'胖貓',note:'走路可到。爸爸豆皮烏龍麵、媽媽其他麵、姐姐蝦仁蓋飯、弟弟豬排蓋飯',veg:'素OK',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
  {name:'螞蟻鍋',note:'胖貓對面的臭豆腐，全家點無肉版本',veg:'素OK'},
  {name:'金井澤火鍋',note:'走路可到，素葷都能點，禮拜天常去',veg:'素OK'},
@@ -264,6 +264,16 @@ function readV1(){
 function validDB(s){
   return !!(s&&s.eat&&Array.isArray(s.eat.places)&&s.cook&&Array.isArray(s.cook.items)&&s.breakfast&&Array.isArray(s.breakfast.items)&&s.night&&Array.isArray(s.night.items));
 }
+function applyDapu(p){
+  if(!p||p.name!=='大埔')return false;
+  p.name='大埔大墩店';
+  if(!p.address)p.address='台中市南屯區大墩路177號';
+  if(p.lat==null||p.lat==='')p.lat=24.1418152;
+  if(p.lng==null||p.lng==='')p.lng=120.6496811;
+  if(!p.maps)p.maps='https://maps.app.goo.gl/B94tsShjqYBULTrg9';
+  if(!p.note||p.note==='兩間分店都有素食，離家約 1 公里')p.note='鐵板燒、大墩店，兩間都有素食，離家約 1 公里';
+  return true;
+}
 function applyShanghao(p){
   if(!p||p.name!=='附近自助餐')return false;
   p.name='上豪自助餐';
@@ -314,6 +324,7 @@ function migrateKnownPlaces(db){
     const list=db[key]&&db[key].places;
     if(!Array.isArray(list))return;
     list.forEach(p=>{
+      if(applyDapu(p))changed=true;
       if(applyShanghao(p))changed=true;
       if(applyLuwei(p))changed=true;
       if(applyPlaceFix(p))changed=true;
