@@ -211,7 +211,7 @@ const DEFAULTS=[
  {name:'胖貓',note:'走路可到。爸爸豆皮烏龍麵、媽媽其他麵、姐姐蝦仁蓋飯、弟弟豬排蓋飯',veg:'素OK',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
  {name:'螞蟻鍋',note:'胖貓對面的臭豆腐，全家點無肉版本',veg:'素OK'},
  {name:'金井澤火鍋',note:'走路可到，素葷都能點，禮拜天常去',veg:'素OK'},
- {name:'空也',note:'素食餐廳，很好吃，當天停車免費',veg:'全素'},
+ {name:'空也永春店',note:'素麵食、永春店。素食餐廳，很好吃，當天停車免費',veg:'全素',address:'台中市南屯區永春東七路855號',maps:'https://maps.app.goo.gl/hQZyNQFz9kJ91HE67'},
  {name:'見晴蔬食',note:'素食，純真年代社區（外公外婆家）附近',veg:'全素',address:'台中市西區向上南路一段220號'},
  {name:'春成臭豆腐',note:'純真年代附近，常常沒開，週一公休',veg:'',mon:true},
  {name:'臭大叔',note:'臭豆腐料理，純真年代附近',veg:''},
@@ -264,6 +264,21 @@ function readV1(){
 }
 function validDB(s){
   return !!(s&&s.eat&&Array.isArray(s.eat.places)&&s.cook&&Array.isArray(s.cook.items)&&s.breakfast&&Array.isArray(s.breakfast.items)&&s.night&&Array.isArray(s.night.items));
+}
+function applyKongye(p){
+  if(!p)return false;
+  if(p.name==='空也永春店'){
+    let changed=false;
+    if(!p.address){p.address='台中市南屯區永春東七路855號';changed=true;}
+    if(!p.maps){p.maps='https://maps.app.goo.gl/hQZyNQFz9kJ91HE67';changed=true;}
+    return changed;
+  }
+  if(p.name!=='空也')return false;
+  p.name='空也永春店';
+  if(!p.address)p.address='台中市南屯區永春東七路855號';
+  if(!p.maps)p.maps='https://maps.app.goo.gl/hQZyNQFz9kJ91HE67';
+  if(!p.note||p.note==='素食餐廳，很好吃，當天停車免費')p.note='素麵食、永春店。素食餐廳，很好吃，當天停車免費';
+  return true;
 }
 function applyDapu(p){
   if(!p||p.name!=='大埔')return false;
@@ -350,6 +365,7 @@ function migrateKnownPlaces(db){
     const list=db[key]&&db[key].places;
     if(!Array.isArray(list))return;
     list.forEach(p=>{
+      if(applyKongye(p))changed=true;
       if(applyDapu(p))changed=true;
       if(applyShanghao(p))changed=true;
       if(applyLuwei(p))changed=true;

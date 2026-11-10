@@ -1,4 +1,4 @@
-const CACHE = 'ej-food-wheel-shell-9';
+const CACHE = 'ej-food-wheel-shell-10';
 const ASSETS = [
   './',
   './index.html',
