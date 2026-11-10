@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10i</p>
+  <p class="small">版本 2026-11-10j</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10i</p>
+  <p class="small">版本 2026-11-10j</p>
 </div>
 
 <div class="mask" id="mask">
@@ -234,7 +234,8 @@ const DEFAULTS=[
  {name:'品撰蔬食',note:'品饌蔬食館，大里',veg:'全素',address:'台中市大里區瑞城一街118號',maps:'https://maps.app.goo.gl/ND8ikk127BHvnx9r8'},
  {name:'頂日竹葉飯蔬食館',note:'鼎日竹葉蒸飯，台中南區，網路資料寫週六公休',veg:'全素',address:'台中市南區仁義街89號',maps:'https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d'},
  {name:'花悅蔬香素食火鍋',note:'素食火鍋，北屯中清路',veg:'全素',address:'台中市北屯區中清路二段982號',maps:'https://maps.app.goo.gl/415a9TaGNBVzpv9t5'},
- {name:'熊的蔬食壽司',note:'蔬食壽司，西屯青海路',veg:'全素',address:'台中市西屯區青海路一段9-8號',maps:'https://maps.app.goo.gl/jXEBWgzqyXorDps4A'}
+ {name:'熊的蔬食壽司',note:'蔬食壽司，西屯青海路',veg:'全素',address:'台中市西屯區青海路一段9-8號',maps:'https://maps.app.goo.gl/jXEBWgzqyXorDps4A'},
+ {name:'論石間火鍋自助吧',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -408,6 +409,15 @@ function ensureMiaoshan(list){
   return true;
 }
 const ZHUYE_MAPS='https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d';
+function ensureLunshi(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('論石間')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.lunshi?'lunshi2':'lunshi';
+  list.push({id:id,name:'論石間火鍋自助吧',on:true,mon:false,link:'',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'});
+  return true;
+}
 function ensureXiong(list){
   if(!Array.isArray(list))return false;
   if(list.some(p=>p&&String(p.name||'').indexOf('熊的')>=0))return false;
@@ -518,6 +528,7 @@ function migrateKnownPlaces(db){
     if(ensureZhuye(list))changed=true;
     if(ensureHuayue(list))changed=true;
     if(ensureXiong(list))changed=true;
+    if(ensureLunshi(list))changed=true;
   });
   return changed;
 }
