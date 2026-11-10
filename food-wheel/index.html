@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10b</p>
+  <p class="small">版本 2026-11-10c</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10b</p>
+  <p class="small">版本 2026-11-10c</p>
 </div>
 
 <div class="mask" id="mask">
@@ -217,7 +217,7 @@ const DEFAULTS=[
  {name:'臭大蔬',note:'臭豆腐料理，精誠店，純真年代附近',veg:'全素',address:'台中市西區精誠路269號',maps:'https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6'},
  {name:'一碗牛肉麵',note:'臺中南屯店，家對面走過去，爸爸吃湯麵',veg:'',address:'台中市南屯區永春東路363號',maps:'https://maps.app.goo.gl/5UjGBLtSYz7U5AH16'},
  {name:'八方雲集',note:'台中南屯店。爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點',veg:'',link:'https://ezorder.8way.com.tw/0091',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7'},
- {name:'三禾手打麵',note:'烏日，媽媽推薦（比較遠）',veg:'',address:'台中市烏日區公園路282號',lat:24.1026601,lng:120.6244841,dailyHours:['11:00','20:30']},
+ {name:'三禾手打麵',note:'烏日店，媽媽推薦（比較遠）',veg:'',address:'台中市烏日區公園路282號',lat:24.1026601,lng:120.6244841,dailyHours:['11:00','20:30'],maps:'https://maps.app.goo.gl/hcd4CkGZWKuKnr4D7'},
  {name:'熱浪小島',note:'大墩店',veg:'',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5'},
  {name:'輕井澤',note:'文心南二店、火鍋。走路可到，素葷都能點，禮拜天常去',veg:'素OK',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17'},
  {name:'麻一鍋',note:'向心店、火鍋，週一公休。全家點無肉版本',veg:'素OK',mon:true,address:'台中市南屯區向心南路897號',maps:'https://maps.app.goo.gl/4m4mUEYoSnYxsujQ9'},
@@ -337,7 +337,8 @@ const PLACE_FIXES=[
  {name:'春成臭豆腐',address:'台中市南屯區東興路二段353號',maps:'https://maps.app.goo.gl/bqfU6demYFKnTdgcA',notes:['','純真年代附近，常常沒開，週一公休'],note:'台中旗艦店，蔬食臭豆腐專賣。常常沒開，週一公休',vegIfEmpty:'全素'},
  {name:'一碗牛肉麵',address:'台中市南屯區永春東路363號',maps:'https://maps.app.goo.gl/5UjGBLtSYz7U5AH16',notes:['','家對面走過去，爸爸吃湯麵'],note:'臺中南屯店，家對面走過去，爸爸吃湯麵'},
  {name:'涓豆腐',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/Mo5fJ1xrbctNpK6F7'},
- {name:'阿宏麵線+臭豆腐',address:'台中市南屯區向心路71號',maps:'https://maps.app.goo.gl/iHF1kMioboDyUtPF6',notes:['','麵線和臭豆腐'],note:'阿宏臭豆腐，麵線和臭豆腐'}
+ {name:'阿宏麵線+臭豆腐',address:'台中市南屯區向心路71號',maps:'https://maps.app.goo.gl/iHF1kMioboDyUtPF6',notes:['','麵線和臭豆腐'],note:'阿宏臭豆腐，麵線和臭豆腐'},
+ {name:'三禾手打麵',address:'台中市烏日區公園路282號',maps:'https://maps.app.goo.gl/hcd4CkGZWKuKnr4D7',notes:['','烏日，媽媽推薦（比較遠）'],note:'烏日店，媽媽推薦（比較遠）'}
 ];
 function applyShowtimeRamen(p){
   if(!p||p.name!=='文心秀泰拉麵')return false;
@@ -361,6 +362,7 @@ function fixForPlace(p){
   if(!n)return null;
   if(n.indexOf('阿宏')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('阿宏')>=0)||null;
   if(n.indexOf('春成')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('春成')>=0)||null;
+  if(n.indexOf('三禾')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('三禾')>=0)||null;
   return PLACE_FIXES.find(f=>normName(f.name)===n)||null;
 }
 function applyPlaceFix(p){
