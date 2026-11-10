@@ -1,4 +1,4 @@
-const CACHE = 'ej-food-wheel-shell-12';
+const CACHE = 'ej-food-wheel-shell-13';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,16 @@ const ASSETS = [
   './icon-512.png',
   './apple-touch-icon.png'
 ];
+
+function isDocument(req, url) {
+  if (req.mode === 'navigate') return true;
+  const path = url.pathname;
+  return /\/food-wheel\/?$/.test(path) || path.endsWith('/food-wheel/index.html') || path.endsWith('/index.html');
+}
+
+function isShellAsset(url) {
+  return /\/(manifest\.webmanifest|icon-192\.png|icon-512\.png|apple-touch-icon\.png)$/.test(url.pathname);
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -25,16 +35,31 @@ self.addEventListener('fetch', (event) => {
   try { url = new URL(req.url); } catch (e) { return; }
   if (url.origin !== self.location.origin) return;
   if (!url.pathname.includes('/food-wheel/')) return;
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      const fresh = fetch(req).then((res) => {
+
+  if (isDocument(req, url)) {
+    event.respondWith(
+      fetch(req).then((res) => {
         if (res && res.ok) {
           const copy = res.clone();
           caches.open(CACHE).then((cache) => cache.put(req, copy));
         }
         return res;
-      }).catch(() => cached);
-      return cached || fresh;
+      }).catch(() => caches.match(req).then((cached) => cached || caches.match('./index.html') || caches.match('./')))
+    );
+    return;
+  }
+
+  if (!isShellAsset(url)) return;
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req).then((res) => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then((cache) => cache.put(req, copy));
+        }
+        return res;
+      });
     })
   );
 });

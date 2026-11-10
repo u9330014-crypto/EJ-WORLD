@@ -121,6 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
+  <p class="small">版本 2026-11-10b</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -185,6 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
+  <p class="small">版本 2026-11-10b</p>
 </div>
 
 <div class="mask" id="mask">
@@ -347,12 +349,26 @@ function applyShowtimeRamen(p){
   if(!p.note||p.note==='文心秀泰的拉麵店'){p.note='花月嵐拉麺，文心秀泰B1';changed=true;}
   return changed;
 }
+function normName(s){
+  return String(s==null?'':s).trim().replace(/\s+/g,'').replace(/＋/g,'+');
+}
+function blankField(s){
+  return s==null||String(s).trim()==='';
+}
+function fixForPlace(p){
+  if(!p)return null;
+  const n=normName(p.name);
+  if(!n)return null;
+  if(n.indexOf('阿宏')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('阿宏')>=0)||null;
+  if(n.indexOf('春成')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('春成')>=0)||null;
+  return PLACE_FIXES.find(f=>normName(f.name)===n)||null;
+}
 function applyPlaceFix(p){
-  const fix=PLACE_FIXES.find(f=>p&&p.name===f.name);
+  const fix=fixForPlace(p);
   if(!fix)return false;
   let changed=false;
-  if(!p.address){p.address=fix.address;changed=true;}
-  if(!p.maps){p.maps=fix.maps;changed=true;}
+  if(fix.address&&blankField(p.address)){p.address=fix.address;changed=true;}
+  if(fix.maps&&blankField(p.maps)){p.maps=fix.maps;changed=true;}
   if(fix.lat!=null&&(p.lat==null||p.lat==='')){p.lat=fix.lat;p.lng=fix.lng;changed=true;}
   if(fix.note&&(p.note==null||(fix.notes&&fix.notes.indexOf(p.note)>=0))){p.note=fix.note;changed=true;}
   if(fix.vegIfEmpty&&!p.veg){p.veg=fix.vegIfEmpty;changed=true;}
@@ -989,7 +1005,16 @@ function confetti(){
     if(++f<110)requestAnimationFrame(tick);else cx.clearRect(0,0,cc.width,cc.height);})();
 }
 if('serviceWorker' in navigator && location.protocol!=='file:'){
-  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  let reloading=false;
+  const hadController=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!hadController||reloading)return;
+    reloading=true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
+    if(reg&&reg.update)reg.update().catch(()=>{});
+  }).catch(()=>{});
 }
 if(DB.screen==='wheel'&&DB.last&&DB[DB.last]&&CATS.some(c=>c.id===DB.last)){
   catId=DB.last;S=DB[DB.last];
