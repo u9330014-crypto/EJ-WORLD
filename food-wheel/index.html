@@ -212,10 +212,10 @@ const DEFAULTS=[
  {name:'螞蟻鍋',note:'胖貓對面的臭豆腐，全家點無肉版本',veg:'素OK'},
  {name:'金井澤火鍋',note:'走路可到，素葷都能點，禮拜天常去',veg:'素OK'},
  {name:'空也永春店',note:'素麵食、永春店。素食餐廳，很好吃，當天停車免費',veg:'全素',address:'台中市南屯區永春東七路855號',maps:'https://maps.app.goo.gl/hQZyNQFz9kJ91HE67'},
- {name:'見晴蔬食',note:'素食，純真年代社區（外公外婆家）附近',veg:'全素',address:'台中市西區向上南路一段220號'},
- {name:'春成臭豆腐',note:'純真年代附近，常常沒開，週一公休',veg:'',mon:true},
- {name:'臭大叔',note:'臭豆腐料理，純真年代附近',veg:''},
- {name:'一碗牛肉麵',note:'家對面走過去，爸爸吃湯麵',veg:''},
+ {name:'見晴蔬食',note:'素食，純真年代社區（外公外婆家）附近。平日中午僅供外帶',veg:'全素',address:'台中市西區向上南路一段220號',maps:'https://maps.app.goo.gl/bbcCXZQD1UPXLirv8'},
+ {name:'春成臭豆腐',note:'台中旗艦店，蔬食臭豆腐專賣。常常沒開，週一公休',veg:'全素',mon:true,address:'台中市南屯區東興路二段353號',maps:'https://maps.app.goo.gl/bqfU6demYFKnTdgcA'},
+ {name:'臭大蔬',note:'臭豆腐料理，精誠店，純真年代附近',veg:'',address:'台中市西區精誠路269號',maps:'https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6'},
+ {name:'一碗牛肉麵',note:'臺中南屯店，家對面走過去，爸爸吃湯麵',veg:'',address:'台中市南屯區永春東路363號',maps:'https://maps.app.goo.gl/5UjGBLtSYz7U5AH16'},
  {name:'八方雲集',note:'台中南屯店。爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點',veg:'',link:'https://ezorder.8way.com.tw/0091',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7'},
  {name:'三禾手打麵',note:'烏日，媽媽推薦（比較遠）',veg:'',address:'台中市烏日區公園路282號',lat:24.1026601,lng:120.6244841,dailyHours:['11:00','20:30']},
  {name:'熱浪小島',note:'大墩店',veg:'',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5'},
@@ -224,7 +224,7 @@ const DEFAULTS=[
  {name:'素食脆皮素圓',note:'明祖素圓，素食',veg:'全素',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9'},
  {name:'附近滷味',note:'豐樂公園附近',veg:'',address:'台中市南屯區向心南路915號',lat:24.1356468,lng:120.6439209,maps:'https://maps.app.goo.gl/G1KZMc33PukLmEm36'},
  {name:'上豪自助餐',note:'豐樂公園附近的自助餐',veg:'',address:'台中市南屯區向心南路931號',lat:24.1360111,lng:120.6439056,maps:'https://maps.app.goo.gl/A7okPNodrnVTVpX77'},
- {name:'涓豆腐',note:'文心秀泰，韓式豆腐鍋，吃大餐的好地方',veg:'',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng},
+ {name:'涓豆腐',note:'文心秀泰，韓式豆腐鍋，吃大餐的好地方',veg:'',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/Mo5fJ1xrbctNpK6F7'},
  {name:'阿宏麵線+臭豆腐',note:'麵線和臭豆腐',veg:''},
  {name:'文心秀泰拉麵',note:'花月嵐拉麺，文心秀泰B1',veg:'',address:'台中市南屯區文心南路289號 B1',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/QRgXfomQNSxUv7j79'},
  {name:'五花馬',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'},
@@ -280,6 +280,21 @@ function applyKongye(p){
   if(!p.note||p.note==='素食餐廳，很好吃，當天停車免費')p.note='素麵食、永春店。素食餐廳，很好吃，當天停車免費';
   return true;
 }
+function applyChou(p){
+  if(!p)return false;
+  if(p.name==='臭大蔬'){
+    let changed=false;
+    if(!p.address){p.address='台中市西區精誠路269號';changed=true;}
+    if(!p.maps){p.maps='https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6';changed=true;}
+    return changed;
+  }
+  if(p.name!=='臭大叔')return false;
+  p.name='臭大蔬';
+  if(!p.address)p.address='台中市西區精誠路269號';
+  if(!p.maps)p.maps='https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6';
+  if(!p.note||p.note==='臭豆腐料理，純真年代附近')p.note='臭豆腐料理，精誠店，純真年代附近';
+  return true;
+}
 function applyDapu(p){
   if(!p||p.name!=='大埔')return false;
   p.name='大埔大墩店';
@@ -315,7 +330,11 @@ const PLACE_FIXES=[
  {name:'八方雲集',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7',notes:['','爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點'],note:'台中南屯店。爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點'},
  {name:'輕井澤',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17',notes:['','火鍋'],note:'文心南二店、火鍋'},
  {name:'素食脆皮素圓',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9',notes:['','素食'],note:'明祖素圓，素食'},
- {name:'熱浪小島',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5',notes:[''],note:'大墩店'}
+ {name:'熱浪小島',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5',notes:[''],note:'大墩店'},
+ {name:'見晴蔬食',address:'台中市西區向上南路一段220號',maps:'https://maps.app.goo.gl/bbcCXZQD1UPXLirv8',notes:['','素食，純真年代社區（外公外婆家）附近'],note:'素食，純真年代社區（外公外婆家）附近。平日中午僅供外帶'},
+ {name:'春成臭豆腐',address:'台中市南屯區東興路二段353號',maps:'https://maps.app.goo.gl/bqfU6demYFKnTdgcA',notes:['','純真年代附近，常常沒開，週一公休'],note:'台中旗艦店，蔬食臭豆腐專賣。常常沒開，週一公休',vegIfEmpty:'全素'},
+ {name:'一碗牛肉麵',address:'台中市南屯區永春東路363號',maps:'https://maps.app.goo.gl/5UjGBLtSYz7U5AH16',notes:['','家對面走過去，爸爸吃湯麵'],note:'臺中南屯店，家對面走過去，爸爸吃湯麵'},
+ {name:'涓豆腐',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/Mo5fJ1xrbctNpK6F7'}
 ];
 function applyShowtimeRamen(p){
   if(!p||p.name!=='文心秀泰拉麵')return false;
@@ -334,7 +353,8 @@ function applyPlaceFix(p){
   if(!p.address){p.address=fix.address;changed=true;}
   if(!p.maps){p.maps=fix.maps;changed=true;}
   if(fix.lat!=null&&(p.lat==null||p.lat==='')){p.lat=fix.lat;p.lng=fix.lng;changed=true;}
-  if(fix.note&&(p.note==null||fix.notes.indexOf(p.note)>=0)){p.note=fix.note;changed=true;}
+  if(fix.note&&(p.note==null||(fix.notes&&fix.notes.indexOf(p.note)>=0))){p.note=fix.note;changed=true;}
+  if(fix.vegIfEmpty&&!p.veg){p.veg=fix.vegIfEmpty;changed=true;}
   return changed;
 }
 function ensureYongchun(list){
@@ -365,6 +385,7 @@ function migrateKnownPlaces(db){
     const list=db[key]&&db[key].places;
     if(!Array.isArray(list))return;
     list.forEach(p=>{
+      if(applyChou(p))changed=true;
       if(applyKongye(p))changed=true;
       if(applyDapu(p))changed=true;
       if(applyShanghao(p))changed=true;
