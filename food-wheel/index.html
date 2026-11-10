@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10n</p>
+  <p class="small">版本 2026-11-10o</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10n</p>
+  <p class="small">版本 2026-11-10o</p>
 </div>
 
 <div class="mask" id="mask">
@@ -245,7 +245,8 @@ const DEFAULTS=[
  {name:'樹院子蔬食火鍋',note:'蔬食火鍋，北屯',veg:'全素',address:'台中市北屯區和祥五街188號',maps:'https://maps.app.goo.gl/aUx3VzzaMAVwqShV7'},
  {name:'繡球麵店',note:'必比登麵店，葤素都有（素食可點松露白胡麻拌麵）。只開週五到週日，不接受訂位',veg:'素OK',address:'台中市西區中興街102號',maps:XIUQIU_MAPS},
  {name:'蔬想起蔬食料理',note:'素食小館，北屯雷中街，有全素和蛋素。網路資料寫週四公休',veg:'全素',address:'台中市北屯區雷中街2-15號',maps:SHUXIANG_MAPS},
- {name:'三津制麵',note:'釀善 三津制麵 台中249老宅店，純素麵館，週一公休',veg:'全素',mon:true,address:'台中市中區中山路249號',maps:SANJIN_MAPS}
+ {name:'三津制麵',note:'釀善 三津制麵 台中249老宅店，純素麵館，週一公休',veg:'全素',mon:true,address:'台中市中區中山路249號',maps:SANJIN_MAPS},
+ {name:'三院和食蔬食拉麵',note:'Google 名稱：三院和食（蔬食、素食拉麵專賣），北區',veg:'全素',address:'台中市北區大義街112號',maps:'https://maps.app.goo.gl/BuzfKPim8DK69MFn9'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -581,6 +582,7 @@ function migrateKnownPlaces(db){
     if(ensureOnce(list,'繡球','xiuqiu',{name:'繡球麵店',note:'必比登麵店，葤素都有（素食可點松露白胡麻拌麵）。只開週五到週日，不接受訂位',veg:'素OK',address:'台中市西區中興街102號',maps:XIUQIU_MAPS}))changed=true;
     if(ensureOnce(list,'蔬想起','shuxiang',{name:'蔬想起蔬食料理',note:'素食小館，北屯雷中街，有全素和蛋素。網路資料寫週四公休',veg:'全素',address:'台中市北屯區雷中街2-15號',maps:SHUXIANG_MAPS}))changed=true;
     if(ensureOnce(list,'三津','sanjin',{name:'三津制麵',note:'釀善 三津制麵 台中249老宅店，純素麵館，週一公休',veg:'全素',mon:true,address:'台中市中區中山路249號',maps:SANJIN_MAPS}))changed=true;
+    if(ensureOnce(list,'三院','sanyuan',{name:'三院和食蔬食拉麵',note:'Google 名稱：三院和食（蔬食、素食拉麵專賣），北區',veg:'全素',address:'台中市北區大義街112號',maps:'https://maps.app.goo.gl/BuzfKPim8DK69MFn9'}))changed=true;
   });
   return changed;
 }
