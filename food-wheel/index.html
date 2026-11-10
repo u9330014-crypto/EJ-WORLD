@@ -222,8 +222,8 @@ const DEFAULTS=[
  {name:'輕井澤',note:'火鍋',veg:''},
  {name:'麻一鍋',note:'火鍋，週一公休',veg:'',mon:true},
  {name:'素食脆皮素圓',note:'素食',veg:'全素'},
- {name:'附近滷味',note:'豐樂公園附近',veg:''},
- {name:'附近自助餐',note:'豐樂公園附近',veg:''},
+ {name:'附近滷味',note:'豐樂公園附近',veg:'',address:'台中市南屯區向心南路915號',lat:24.1356468,lng:120.6439209,maps:'https://maps.app.goo.gl/G1KZMc33PukLmEm36'},
+ {name:'上豪自助餐',note:'豐樂公園附近的自助餐',veg:'',address:'台中市南屯區向心南路931號',lat:24.1360111,lng:120.6439056,maps:'https://maps.app.goo.gl/A7okPNodrnVTVpX77'},
  {name:'涓豆腐',note:'文心秀泰，韓式豆腐鍋，吃大餐的好地方',veg:'',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng},
  {name:'阿宏麵線+臭豆腐',note:'麵線和臭豆腐',veg:''},
  {name:'文心秀泰拉麵',note:'文心秀泰的拉麵店',veg:'',address:SHOWTIME.address,lat:SHOWTIME.lat,lng:SHOWTIME.lng}
@@ -238,7 +238,7 @@ const CATS=[
 const COLORS=['#f4a259','#e76f51','#f6bd60','#84a59d','#f28482','#b5838d','#90be6d','#e9c46a','#c98a4b','#6d9dc5','#f7a072','#a3c4bc'];
 const DAY_LABELS=['日','一','二','三','四','五','六'];
 function expandPlace(p,i){
-  const o=Object.assign({id:'d'+i,on:true,mon:false,link:'',address:'',lat:null,lng:null,hours:null,uber:'',panda:''},p);
+  const o=Object.assign({id:'d'+i,on:true,mon:false,link:'',address:'',lat:null,lng:null,hours:null,uber:'',panda:'',maps:''},p);
   o.id=p.id||('d'+i);
   if(p.on===false)o.on=false;
   if(p.dailyHours){
@@ -263,6 +263,37 @@ function readV1(){
 function validDB(s){
   return !!(s&&s.eat&&Array.isArray(s.eat.places)&&s.cook&&Array.isArray(s.cook.items)&&s.breakfast&&Array.isArray(s.breakfast.items)&&s.night&&Array.isArray(s.night.items));
 }
+function applyShanghao(p){
+  if(!p||p.name!=='附近自助餐')return false;
+  p.name='上豪自助餐';
+  p.address='台中市南屯區向心南路931號';
+  p.lat=24.1360111;
+  p.lng=120.6439056;
+  p.maps='https://maps.app.goo.gl/A7okPNodrnVTVpX77';
+  if(!p.note||p.note==='豐樂公園附近')p.note='豐樂公園附近的自助餐';
+  return true;
+}
+function applyLuwei(p){
+  if(!p||p.name!=='附近滷味')return false;
+  let changed=false;
+  if(!p.address){p.address='台中市南屯區向心南路915號';changed=true;}
+  if(p.lat==null||p.lat===''){p.lat=24.1356468;changed=true;}
+  if(p.lng==null||p.lng===''){p.lng=120.6439209;changed=true;}
+  if(!p.maps){p.maps='https://maps.app.goo.gl/G1KZMc33PukLmEm36';changed=true;}
+  return changed;
+}
+function migrateKnownPlaces(db){
+  let changed=false;
+  ['eat','delivery'].forEach(key=>{
+    const list=db[key]&&db[key].places;
+    if(!Array.isArray(list))return;
+    list.forEach(p=>{
+      if(applyShanghao(p))changed=true;
+      if(applyLuwei(p))changed=true;
+    });
+  });
+  return changed;
+}
 function loadDB(){
   try{
     const s=JSON.parse(localStorage.getItem(V2));
@@ -270,6 +301,7 @@ function loadDB(){
       if(!s.delivery||!Array.isArray(s.delivery.places))s.delivery=freshDelivery();
       if(s.delivery.vegOnly===undefined)s.delivery.vegOnly=false;
       if(s.delivery.autoMon===undefined)s.delivery.autoMon=true;
+      if(migrateKnownPlaces(s))localStorage.setItem(V2,JSON.stringify(s));
       return s;
     }
   }catch(e){}
@@ -283,6 +315,7 @@ function loadDB(){
   };
   const old=readV1();
   if(old)db.eat=old;
+  migrateKnownPlaces(db);
   localStorage.setItem(V2,JSON.stringify(db));
   return db;
 }
@@ -502,6 +535,7 @@ function show(p){
     if(p.address)h+='<br>'+esc(p.address);
     const dt=distText(p);
     if(dt)h+='<br>'+esc(dt);
+    if(p.maps)h+='<br><a href="'+esc(p.maps)+'" target="_blank" rel="noopener">📍 Google 地圖</a>';
     if(p.link)h+='<br><a href="'+esc(p.link)+'" target="_blank" rel="noopener">👉 線上點餐</a>';
     const exts=[];
     if(p.uber)exts.push('<a href="'+esc(p.uber)+'" target="_blank" rel="noopener">Uber Eats</a>');
@@ -564,6 +598,7 @@ function editHTML(p){
       '<div class="pair"><label>緯度<input type="number" class="edit-lat" step="any" placeholder="lat" value="'+(p.lat==null?'':esc(p.lat))+'"></label>'+
       '<label>經度<input type="number" class="edit-lng" step="any" placeholder="lng" value="'+(p.lng==null?'':esc(p.lng))+'"></label></div>'+
       hoursFields(p)+
+      '<input type="url" class="edit-maps" placeholder="Google 地圖網址" value="'+esc(p.maps||'')+'">'+
       '<input type="url" class="edit-uber" placeholder="Uber Eats 店家網址" value="'+esc(p.uber||'')+'">'+
       '<input type="url" class="edit-panda" placeholder="foodpanda 店家網址" value="'+esc(p.panda||'')+'">'+
       '<div class="searchlinks">'+
@@ -592,6 +627,7 @@ function rowHTML(p){
     const bits=[];
     if(p.note)bits.push(esc(p.note));
     if(p.address)bits.push(esc(p.address));
+    if(p.maps)bits.push('<a href="'+esc(p.maps)+'" target="_blank" rel="noopener">Google 地圖</a>');
     const dt=distText(p);
     if(dt)bits.push('<span class="dist">'+esc(dt)+'</span>');
     if(bits.length)extra='<div class="note">'+bits.join('<br>')+'</div>';
@@ -765,6 +801,8 @@ document.getElementById('list').addEventListener('submit',e=>{
     p.lat=numOrNull(form.querySelector('.edit-lat').value);
     p.lng=numOrNull(form.querySelector('.edit-lng').value);
     p.hours=readHours(form);
+    const mapsEl=form.querySelector('.edit-maps');
+    if(mapsEl)p.maps=mapsEl.value.trim();
     p.uber=(form.querySelector('.edit-uber').value||'').trim();
     p.panda=(form.querySelector('.edit-panda').value||'').trim();
   }
@@ -772,7 +810,7 @@ document.getElementById('list').addEventListener('submit',e=>{
 });
 document.getElementById('addForm').addEventListener('submit',e=>{
   e.preventDefault();const name=document.getElementById('newName').value.trim();if(!name)return;
-  S.places.push({id:'u'+Date.now(),name,note:document.getElementById('newNote').value.trim(),veg:document.querySelector('#addForm input[name=veg]:checked').value,mon:document.getElementById('newMon').checked,on:true,link:'',address:'',lat:null,lng:null,hours:null,uber:'',panda:''});
+  S.places.push({id:'u'+Date.now(),name,note:document.getElementById('newNote').value.trim(),veg:document.querySelector('#addForm input[name=veg]:checked').value,mon:document.getElementById('newMon').checked,on:true,link:'',address:'',lat:null,lng:null,hours:null,uber:'',panda:'',maps:''});
   save();e.target.reset();render();
 });
 document.getElementById('itemForm').addEventListener('submit',e=>{
