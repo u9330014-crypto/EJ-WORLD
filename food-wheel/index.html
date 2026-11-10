@@ -218,7 +218,7 @@ const DEFAULTS=[
  {name:'一碗牛肉麵',note:'家對面走過去，爸爸吃湯麵',veg:''},
  {name:'八方雲集',note:'台中南屯店。爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點',veg:'',link:'https://ezorder.8way.com.tw/0091',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7'},
  {name:'三禾手打麵',note:'烏日，媽媽推薦（比較遠）',veg:'',address:'台中市烏日區公園路282號',lat:24.1026601,lng:120.6244841,dailyHours:['11:00','20:30']},
- {name:'熱浪小島',note:'',veg:''},
+ {name:'熱浪小島',note:'大墩店',veg:'',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5'},
  {name:'輕井澤',note:'文心南二店、火鍋',veg:'',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17'},
  {name:'麻一鍋',note:'向心店、火鍋，週一公休',veg:'',mon:true,address:'台中市南屯區向心南路897號',maps:'https://maps.app.goo.gl/4m4mUEYoSnYxsujQ9'},
  {name:'素食脆皮素圓',note:'明祖素圓，素食',veg:'全素',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9'},
@@ -226,7 +226,7 @@ const DEFAULTS=[
  {name:'上豪自助餐',note:'豐樂公園附近的自助餐',veg:'',address:'台中市南屯區向心南路931號',lat:24.1360111,lng:120.6439056,maps:'https://maps.app.goo.gl/A7okPNodrnVTVpX77'},
  {name:'涓豆腐',note:'文心秀泰，韓式豆腐鍋，吃大餐的好地方',veg:'',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng},
  {name:'阿宏麵線+臭豆腐',note:'麵線和臭豆腐',veg:''},
- {name:'文心秀泰拉麵',note:'文心秀泰的拉麵店',veg:'',address:SHOWTIME.address,lat:SHOWTIME.lat,lng:SHOWTIME.lng},
+ {name:'文心秀泰拉麵',note:'花月嵐拉麺，文心秀泰B1',veg:'',address:'台中市南屯區文心南路289號 B1',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/QRgXfomQNSxUv7j79'},
  {name:'五花馬',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'},
  {name:'大埔永春總店',note:'鐵板燒、永春總店',veg:'素OK',address:'台中市南屯區永春東七路607號',maps:'https://maps.app.goo.gl/G28nkzW68Mq7ft8j8'}
 ];
@@ -299,8 +299,19 @@ const PLACE_FIXES=[
  {name:'胖貓',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
  {name:'八方雲集',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7',notes:['','爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點'],note:'台中南屯店。爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點'},
  {name:'輕井澤',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17',notes:['','火鍋'],note:'文心南二店、火鍋'},
- {name:'素食脆皮素圓',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9',notes:['','素食'],note:'明祖素圓，素食'}
+ {name:'素食脆皮素圓',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9',notes:['','素食'],note:'明祖素圓，素食'},
+ {name:'熱浪小島',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5',notes:[''],note:'大墩店'}
 ];
+function applyShowtimeRamen(p){
+  if(!p||p.name!=='文心秀泰拉麵')return false;
+  let changed=false;
+  const addr='台中市南屯區文心南路289號 B1';
+  if(!p.address||p.address===SHOWTIME.address){if(p.address!==addr){p.address=addr;changed=true;}}
+  if(!p.maps){p.maps='https://maps.app.goo.gl/QRgXfomQNSxUv7j79';changed=true;}
+  if(p.lat==null||p.lat===''){p.lat=SHOWTIME.lat;p.lng=SHOWTIME.lng;changed=true;}
+  if(!p.note||p.note==='文心秀泰的拉麵店'){p.note='花月嵐拉麺，文心秀泰B1';changed=true;}
+  return changed;
+}
 function applyPlaceFix(p){
   const fix=PLACE_FIXES.find(f=>p&&p.name===f.name);
   if(!fix)return false;
@@ -343,6 +354,7 @@ function migrateKnownPlaces(db){
       if(applyShanghao(p))changed=true;
       if(applyLuwei(p))changed=true;
       if(applyPlaceFix(p))changed=true;
+      if(applyShowtimeRamen(p))changed=true;
     });
     if(ensureWuhua(list))changed=true;
     if(ensureYongchun(list))changed=true;
