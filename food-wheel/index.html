@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f7efe2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="待會吃什麼">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png" type="image/png">
 <title>待會吃什麼</title>
 <style>
 :root{--bg:#f7efe2;--card:#fffaf2;--brown:#8b5a2b;--brown-d:#5e3a1a;--caramel:#c98a4b;--line:#ead9c0;--muted:#9a7b5c;--green:#5f9e5a;}
@@ -22,7 +29,7 @@ header p{margin:4px 0 0;color:var(--muted);font-size:14px}
 .wheelbox{position:relative;width:100%;max-width:360px;margin:0 auto;aspect-ratio:1}
 canvas{width:100%;height:100%;display:block}
 .pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:30px solid var(--brown-d);filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));z-index:2}
-.hub{position:absolute;inset:0;margin:auto;width:22%;height:22%;border-radius:50%;background:var(--card);border:4px solid var(--brown);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--brown);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.hub{position:absolute;inset:0;margin:auto;width:22%;height:22%;border-radius:50%;background:var(--card);border:4px solid var(--brown);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--brown);box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer}
 .empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--muted);font-size:16px;line-height:1.6}
 .spin{display:block;width:100%;margin-top:14px;border:0;border-radius:18px;padding:16px;font-size:20px;font-weight:700;letter-spacing:2px;color:#fff;background:linear-gradient(180deg,var(--caramel),var(--brown));box-shadow:0 5px 0 var(--brown-d);cursor:pointer}
 .spin:active{transform:translateY(3px);box-shadow:0 2px 0 var(--brown-d)}
@@ -32,10 +39,11 @@ h2{font-size:18px;margin:0 0 10px}
 .row:last-child{border-bottom:0}
 .row .info{flex:1;min-width:0}
 .row .name{font-weight:700;word-break:break-word}
-.row .note{font-size:13px;color:var(--muted);margin-top:2px;word-break:break-word}
+.row .note,.dist{font-size:13px;color:var(--muted);margin-top:2px;word-break:break-word}
 .row.off .name,.row.off .note{opacity:.45;text-decoration:line-through}
 .tag{font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;background:#e4f1df;color:#3d6b39;vertical-align:middle;font-weight:600}
-.tag.mon{background:#f6dcdc;color:#a33}
+.tag.mon,.tag.closed{background:#f6dcdc;color:#a33}
+.tag.open{background:#e4f1df;color:#3d6b39}
 .sw{position:relative;width:46px;height:28px;flex:none}
 .sw input{opacity:0;width:0;height:0}
 .sw span{position:absolute;inset:0;background:#d8c6ae;border-radius:999px;transition:.2s;cursor:pointer}
@@ -44,8 +52,8 @@ h2{font-size:18px;margin:0 0 10px}
 .sw input:checked+span:before{transform:translateX(18px)}
 .del{border:0;background:none;font-size:18px;color:#c0a080;cursor:pointer;padding:4px}
 form{display:flex;flex-direction:column;gap:8px}
-input[type=text]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;background:#fff;color:var(--brown-d)}
-.chk{font-size:14px;color:var(--brown);display:flex;gap:14px;flex-wrap:wrap}
+input[type=text],input[type=url],input[type=time],input[type=number]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;background:#fff;color:var(--brown-d)}
+.chk{font-size:14px;color:var(--brown);display:flex;gap:10px;flex-wrap:wrap}
 .btn{border:0;border-radius:12px;padding:11px;font-size:16px;font-weight:700;background:var(--brown);color:#fff;cursor:pointer}
 .btn.ghost{background:none;color:var(--muted);border:1.5px dashed var(--line);font-weight:500;width:100%;margin-top:4px}
 .mask{position:fixed;inset:0;background:rgba(60,35,15,.45);display:none;align-items:center;justify-content:center;z-index:10;padding:24px}
@@ -58,6 +66,8 @@ input[type=text]{width:100%;border:1.5px solid var(--line);border-radius:12px;pa
 .result a{color:var(--brown);font-weight:700}
 .result .acts{display:flex;gap:8px;margin-top:18px}
 .result .acts button{flex:1}
+.exts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.exts a{flex:1;min-width:120px;background:var(--brown);color:#fff;text-decoration:none;border-radius:12px;padding:10px 8px;font-weight:700}
 .small{font-size:12px;color:var(--muted);text-align:center}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:11}
 .picks{display:flex;flex-direction:column;gap:12px}
@@ -68,18 +78,30 @@ input[type=text]{width:100%;border:1.5px solid var(--line);border-radius:12px;pa
 .pick .d{display:block;margin-top:4px;font-size:14px;color:var(--muted);font-weight:500}
 .pick .go{margin-left:auto;font-size:28px;color:var(--caramel);line-height:1}
 .pick.is-last{box-shadow:0 0 0 2.5px var(--caramel),0 4px 14px rgba(139,90,43,.12)}
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .back{border:0;background:transparent;color:var(--brown);font:inherit;font-weight:700;font-size:16px;padding:4px 0 8px;cursor:pointer}
 .back:disabled{opacity:.4}
+.sound{border:1.5px solid var(--line);background:#fff;color:var(--brown);border-radius:999px;padding:8px 12px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
 .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px}
 .tab{flex:1 1 calc(50% - 8px);border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:10px 6px;font:inherit;font-size:14px;font-weight:700;color:var(--brown);cursor:pointer}
 .tab.on{background:var(--brown);color:#fff;border-color:var(--brown)}
 .tab:disabled{opacity:.45}
+.placeTools{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.placeTools .btn.ghost{width:auto;flex:1 1 calc(50% - 8px);margin-top:0}
+.placeTools .btn.on{border-style:solid;border-color:var(--brown);color:var(--brown-d)}
 .edit{flex:none;border:1.5px solid var(--line);background:#fff;color:var(--brown);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .row.editing{flex-direction:column;align-items:stretch}
 .editform{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0}
 .editacts{display:flex;gap:8px}
 .editacts .btn,.editacts .btn.ghost{width:auto;flex:1;margin-top:0}
-button:focus-visible,input:focus-visible{outline:2px solid var(--caramel);outline-offset:2px}
+details.more{border-top:1px dashed var(--line);padding-top:8px}
+details.more summary{cursor:pointer;font-weight:700;color:var(--brown);padding:6px 0}
+.pair{display:flex;gap:8px}
+.pair label{flex:1;font-size:13px;color:var(--muted)}
+.searchlinks{display:flex;flex-wrap:wrap;gap:8px}
+.searchlinks a{flex:1;min-width:140px;text-align:center;text-decoration:none;border:1.5px dashed var(--line);border-radius:12px;padding:10px 8px;color:var(--brown);font-weight:700}
+.install p{margin:0 0 8px;text-align:left;line-height:1.5}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--caramel);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -91,11 +113,21 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--caramel);outlin
     <p>先選一個轉盤</p>
   </header>
   <div class="picks" id="picks"></div>
+  <div class="card install" id="installHint" hidden>
+    <p>可以把轉盤加到主畫面，下次像小程式一樣打開。</p>
+    <div class="editacts">
+      <button type="button" class="btn" id="installGo">安裝</button>
+      <button type="button" class="btn ghost" id="installNo">先不要</button>
+    </div>
+  </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
-  <button type="button" class="back" id="backBtn">← 回選單</button>
+  <div class="toprow">
+    <button type="button" class="back" id="backBtn">← 回選單</button>
+    <button type="button" class="sound" id="soundBtn" aria-pressed="true">🔊 聲音開</button>
+  </div>
   <div class="tabs" id="tabs"></div>
   <header>
     <h1 id="title"></h1>
@@ -106,6 +138,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--caramel);outlin
     <div class="chips" id="placeChips">
       <div class="chip" id="vegChip">🥬 只轉素食友善</div>
       <div class="chip" id="monChip">📅 週一自動排除公休</div>
+      <div class="chip" id="openChip">🕐 只轉現在有開的</div>
     </div>
     <div style="text-align:center"><span class="badge" id="status"></span></div>
     <div class="wheelbox">
@@ -114,7 +147,12 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--caramel);outlin
       <div class="hub" id="hub">轉!</div>
       <div class="empty" id="empty"></div>
     </div>
-    <button type="button" class="spin" id="spinBtn">🎯 轉一下！</button>
+    <button type="button" class="spin" id="spinBtn">🎯 開始轉</button>
+    <div class="placeTools" id="placeTools">
+      <button type="button" class="btn ghost" id="locBtn">用現在位置</button>
+      <button type="button" class="btn ghost" id="sortBtn">依距離排序</button>
+    </div>
+    <p class="small" id="locMsg" style="text-align:left;margin:8px 0 0"></p>
   </div>
 
   <div class="card" id="placeAdd">
@@ -165,37 +203,56 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--caramel);outlin
 <script>
 const V1='ej-food-wheel-v1';
 const V2='ej-food-wheel-v2';
+const SOUND_KEY='ej-food-wheel-sound';
+const LOC_KEY='ej-food-wheel-loc';
+const SHOWTIME={address:'台中市南屯區文心南路289號文心秀泰',lat:24.1301471,lng:120.6456843};
 const DEFAULTS=[
  {name:'大埔',note:'兩間分店都有素食，離家約 1 公里',veg:'素OK'},
  {name:'胖貓',note:'走路可到。爸爸豆皮烏龍麵、媽媽其他麵、姐姐蝦仁蓋飯、弟弟豬排蓋飯',veg:'素OK'},
  {name:'螞蟻鍋',note:'胖貓對面的臭豆腐，全家點無肉版本',veg:'素OK'},
  {name:'金井澤火鍋',note:'走路可到，素葷都能點，禮拜天常去',veg:'素OK'},
  {name:'空也',note:'素食餐廳，很好吃，當天停車免費',veg:'全素'},
- {name:'見晴蔬食',note:'素食，純真年代社區（外公外婆家）附近',veg:'全素'},
+ {name:'見晴蔬食',note:'素食，純真年代社區（外公外婆家）附近',veg:'全素',address:'台中市西區向上南路一段220號'},
  {name:'春成臭豆腐',note:'純真年代附近，常常沒開，週一公休',veg:'',mon:true},
  {name:'臭大叔',note:'臭豆腐料理，純真年代附近',veg:''},
  {name:'一碗牛肉麵',note:'家對面走過去，爸爸吃湯麵',veg:''},
  {name:'八方雲集',note:'爸爸和弟弟愛吃煎餃；姐姐安親班晚餐偶爾點',veg:'',link:'https://ezorder.8way.com.tw/0091'},
- {name:'三禾手打麵',note:'烏日，媽媽推薦（比較遠）',veg:''},
+ {name:'三禾手打麵',note:'烏日，媽媽推薦（比較遠）',veg:'',address:'台中市烏日區公園路282號',lat:24.1026601,lng:120.6244841,dailyHours:['11:00','20:30']},
  {name:'熱浪小島',note:'',veg:''},
  {name:'輕井澤',note:'火鍋',veg:''},
  {name:'麻一鍋',note:'火鍋，週一公休',veg:'',mon:true},
  {name:'素食脆皮素圓',note:'素食',veg:'全素'},
  {name:'附近滷味',note:'豐樂公園附近',veg:''},
  {name:'附近自助餐',note:'豐樂公園附近',veg:''},
- {name:'涓豆腐',note:'文心秀泰，韓式豆腐鍋，吃大餐的好地方',veg:''},
+ {name:'涓豆腐',note:'文心秀泰，韓式豆腐鍋，吃大餐的好地方',veg:'',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng},
  {name:'阿宏麵線+臭豆腐',note:'麵線和臭豆腐',veg:''},
- {name:'文心秀泰拉麵',note:'文心秀泰的拉麵店',veg:''}
+ {name:'文心秀泰拉麵',note:'文心秀泰的拉麵店',veg:'',address:SHOWTIME.address,lat:SHOWTIME.lat,lng:SHOWTIME.lng}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
  {id:'cook',label:'自己煮',emoji:'🍳',kind:'item',blurb:'家裡自己做',defaults:['水餃','烏龍麵','咖哩','蛋煎']},
  {id:'breakfast',label:'早餐吃什麼',emoji:'🥐',kind:'item',blurb:'早上這一餐',defaults:['蛋餅','麵包','燕麥片','泡飯','蛋煎']},
- {id:'night',label:'宵夜吃什麼',emoji:'🌙',kind:'item',blurb:'晚上再來一口',defaults:['泡麵','蛋煎','鬆餅']}
+ {id:'night',label:'宵夜吃什麼',emoji:'🌙',kind:'item',blurb:'晚上再來一口',defaults:['泡麵','蛋煎','鬆餅']},
+ {id:'delivery',label:'外送吃什麼',emoji:'🛵',kind:'place',blurb:'外送到家'}
 ];
 const COLORS=['#f4a259','#e76f51','#f6bd60','#84a59d','#f28482','#b5838d','#90be6d','#e9c46a','#c98a4b','#6d9dc5','#f7a072','#a3c4bc'];
-function freshEat(){return{places:DEFAULTS.map((p,i)=>({id:'d'+i,on:true,mon:false,link:'',...p})),vegOnly:false,autoMon:true};}
+const DAY_LABELS=['日','一','二','三','四','五','六'];
+function expandPlace(p,i){
+  const o=Object.assign({id:'d'+i,on:true,mon:false,link:'',address:'',lat:null,lng:null,hours:null,uber:'',panda:''},p);
+  o.id=p.id||('d'+i);
+  if(p.on===false)o.on=false;
+  if(p.dailyHours){
+    o.hours={};
+    for(let d=0;d<7;d++)o.hours[d]=p.dailyHours.slice();
+    delete o.dailyHours;
+  }
+  return o;
+}
+function freshFrom(list){return{places:list.map((p,i)=>expandPlace(p,i)),vegOnly:false,autoMon:true,openNow:false,sortDist:false};}
+function freshEat(){return freshFrom(DEFAULTS);}
+function freshDelivery(){return freshFrom(DEFAULTS.map(p=>Object.assign({},p,{uber:'',panda:''})));}
 function freshItems(names){return{items:names.map((name,i)=>({id:'d'+i,name,on:true}))};}
+function catById(id){return CATS.find(c=>c.id===id);}
 function readV1(){
   try{
     const s=JSON.parse(localStorage.getItem(V1));
@@ -207,13 +264,22 @@ function validDB(s){
   return !!(s&&s.eat&&Array.isArray(s.eat.places)&&s.cook&&Array.isArray(s.cook.items)&&s.breakfast&&Array.isArray(s.breakfast.items)&&s.night&&Array.isArray(s.night.items));
 }
 function loadDB(){
-  try{const s=JSON.parse(localStorage.getItem(V2));if(validDB(s))return s;}catch(e){}
+  try{
+    const s=JSON.parse(localStorage.getItem(V2));
+    if(validDB(s)){
+      if(!s.delivery||!Array.isArray(s.delivery.places))s.delivery=freshDelivery();
+      if(s.delivery.vegOnly===undefined)s.delivery.vegOnly=false;
+      if(s.delivery.autoMon===undefined)s.delivery.autoMon=true;
+      return s;
+    }
+  }catch(e){}
   const db={
     last:null,screen:'picker',
     eat:freshEat(),
-    cook:freshItems(CATS[1].defaults),
-    breakfast:freshItems(CATS[2].defaults),
-    night:freshItems(CATS[3].defaults)
+    cook:freshItems(catById('cook').defaults),
+    breakfast:freshItems(catById('breakfast').defaults),
+    night:freshItems(catById('night').defaults),
+    delivery:freshDelivery()
   };
   const old=readV1();
   if(old)db.eat=old;
@@ -222,20 +288,150 @@ function loadDB(){
 }
 let DB=loadDB();
 let catId=null,S=null,editingId=null;
+let soundOn=localStorage.getItem(SOUND_KEY)!=='0';
+let loc=null;
+try{const saved=JSON.parse(sessionStorage.getItem(LOC_KEY)||'null');if(saved&&Number.isFinite(saved.lat)&&Number.isFinite(saved.lng))loc=saved;}catch(e){}
 function persist(){localStorage.setItem(V2,JSON.stringify(DB));}
 function save(){DB[catId]=S;persist();}
-function current(){return CATS.find(c=>c.id===catId);}
+function current(){return catById(catId);}
 function kind(){return current().kind;}
 function listItems(){return kind()==='place'?S.places:S.items;}
 const isMon=()=>new Date().getDay()===1;
+function hasHours(p){return !!(p&&p.hours&&typeof p.hours==='object'&&Object.keys(p.hours).length);}
+function taipeiNow(){
+  const fmt=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  const parts=Object.fromEntries(fmt.formatToParts(new Date()).map(p=>[p.type,p.value]));
+  const wd={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[parts.weekday];
+  let hour=parts.hour;
+  if(hour==='24')hour='00';
+  return{wd,hm:String(hour).padStart(2,'0')+':'+String(parts.minute).padStart(2,'0')};
+}
+function daySlot(hours,wd){
+  if(!hours)return undefined;
+  if(Object.prototype.hasOwnProperty.call(hours,wd))return hours[wd];
+  if(Object.prototype.hasOwnProperty.call(hours,String(wd)))return hours[String(wd)];
+  return undefined;
+}
+function inRange(hm,open,close){
+  if(!open||!close)return false;
+  if(open===close)return true;
+  if(open<close)return hm>=open&&hm<close;
+  return hm>=open||hm<close;
+}
+function hoursStatus(p){
+  if(!hasHours(p))return '';
+  const now=taipeiNow();
+  const slot=daySlot(p.hours,now.wd);
+  if(slot===undefined)return '';
+  if(!Array.isArray(slot)||slot.length<2||!slot[0]||!slot[1])return '今日公休';
+  return inRange(now.hm,slot[0],slot[1])?'營業中':'已打烊';
+}
+function openEnough(p){
+  if(!S.openNow)return true;
+  if(!hasHours(p))return true;
+  const st=hoursStatus(p);
+  if(!st)return true;
+  return st==='營業中';
+}
 function active(){
-  if(kind()==='place')return S.places.filter(p=>p.on&&(!S.vegOnly||p.veg)&&!(S.autoMon&&isMon()&&p.mon));
+  if(kind()==='place')return S.places.filter(p=>p.on&&(!S.vegOnly||p.veg)&&!(S.autoMon&&isMon()&&p.mon)&&openEnough(p));
   return S.items.filter(p=>p.on);
 }
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371000,toR=d=>d*Math.PI/180;
+  const dLat=toR(lat2-lat1),dLng=toR(lng2-lng1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toR(lat1))*Math.cos(toR(lat2))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(a)));
+}
+function placeDist(p){
+  if(!loc||p.lat==null||p.lng==null||p.lat===''||p.lng==='')return null;
+  const lat=+p.lat,lng=+p.lng;
+  if(!Number.isFinite(lat)||!Number.isFinite(lng))return null;
+  return haversine(loc.lat,loc.lng,lat,lng);
+}
+function fmtDist(m){
+  if(m<1000)return Math.round(m)+' 米';
+  const km=m/1000;
+  return (km<10?km.toFixed(1):String(Math.round(km)))+' 公里';
+}
+function travelHint(m){
+  if(m<=1500)return '步行約 '+Math.max(1,Math.round(m/80))+' 分鐘';
+  return '開車約 '+Math.max(1,Math.round(m/500))+' 分鐘';
+}
+function distText(p){
+  const m=placeDist(p);
+  if(m==null)return '';
+  return fmtDist(m)+'・'+travelHint(m);
+}
+function uberSearch(name){return 'https://www.ubereats.com/tw/search?q='+encodeURIComponent(name+' 台中');}
+function pandaSearch(name){return 'https://www.foodpanda.com.tw/restaurants/new?query='+encodeURIComponent(name);}
 
 const cv=document.getElementById('wheel'),ctx=cv.getContext('2d');
 let rot=0,spinning=false,cur=[];
+let audioCtx=null,lastSlice=-1,lastTick=0;
+function ensureAudio(){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)return null;
+  if(!audioCtx)audioCtx=new AC();
+  if(audioCtx.state==='suspended'){const p=audioCtx.resume();if(p&&p.catch)p.catch(()=>{});}
+  return audioCtx;
+}
+function startSpinSound(durMs){
+  if(!soundOn)return;
+  const actx=ensureAudio();
+  if(!actx)return;
+  const dur=durMs/1000,t0=actx.currentTime,len=actx.sampleRate;
+  const buf=actx.createBuffer(1,len,actx.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<len;i++)data[i]=Math.random()*2-1;
+  const src=actx.createBufferSource();
+  src.buffer=buf;src.loop=true;
+  const filter=actx.createBiquadFilter();
+  filter.type='lowpass';
+  filter.frequency.setValueAtTime(1200,t0);
+  filter.frequency.exponentialRampToValueAtTime(220,t0+dur);
+  const g=actx.createGain();
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(0.045,t0+0.12);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  src.connect(filter);filter.connect(g);g.connect(actx.destination);
+  src.start(t0);src.stop(t0+dur+0.05);
+  lastSlice=-1;lastTick=0;
+}
+function blip(){
+  if(!audioCtx)return;
+  const t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type='square';o.frequency.value=740;
+  g.gain.setValueAtTime(0.035,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.035);
+  o.connect(g);g.connect(audioCtx.destination);
+  o.start(t);o.stop(t+0.04);
+}
+function chime(){
+  if(!soundOn||!audioCtx)return;
+  const t=audioCtx.currentTime;
+  [523.25,659.25,783.99].forEach((f,i)=>{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain(),st=t+i*0.07;
+    o.type='sine';o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,st);
+    g.gain.exponentialRampToValueAtTime(0.05,st+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,st+0.38);
+    o.connect(g);g.connect(audioCtx.destination);
+    o.start(st);o.stop(st+0.4);
+  });
+}
+function tickIfCrossed(now){
+  if(!soundOn||!audioCtx||cur.length<2)return;
+  const n=cur.length,a=2*Math.PI/n;
+  let ang=(-Math.PI/2-rot)%(2*Math.PI);
+  if(ang<0)ang+=2*Math.PI;
+  const idx=Math.floor(ang/a)%n;
+  if(idx!==lastSlice){
+    lastSlice=idx;
+    if(now-lastTick>70){lastTick=now;try{blip();}catch(e){}}
+  }
+}
 function draw(){
   cur=active();const n=cur.length,R=360;
   ctx.clearRect(0,0,720,720);
@@ -272,6 +468,7 @@ function spin(){
   if(spinning||cur.length<2)return;spinning=true;
   document.getElementById('backBtn').disabled=true;
   document.querySelectorAll('.tab').forEach(t=>t.disabled=true);
+  try{startSpinSound(4200);}catch(e){}
   const n=cur.length,a=2*Math.PI/n,pick=Math.floor(Math.random()*n);
   const target=-Math.PI/2-(pick*a+a/2)+(Math.random()-.5)*a*0.7;
   const base=rot-(rot%(2*Math.PI));
@@ -281,11 +478,14 @@ function spin(){
   (function step(now){
     const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,4);
     rot=start+(end-start)*e;draw();
+    try{tickIfCrossed(now);}catch(err){}
     if(p<1)requestAnimationFrame(step);else{
       spinning=false;
       document.getElementById('backBtn').disabled=false;
       document.querySelectorAll('.tab').forEach(t=>t.disabled=false);
-      rot%=2*Math.PI;draw();show(cur[pick]);
+      rot%=2*Math.PI;draw();
+      try{chime();}catch(err){}
+      show(cur[pick]);
     }
   })(t0);
 }
@@ -293,8 +493,21 @@ const EMO=['🍜','🍲','🥢','🍱','🥟','😋','🎉'];
 function show(p){
   document.getElementById('rEmo').textContent=EMO[Math.floor(Math.random()*EMO.length)];
   document.getElementById('rName').textContent=p.name;
-  let h=esc(p.note||'');if(p.veg)h+=' <span class="tag">'+p.veg+'</span>';
-  if(p.link)h+='<br><a href="'+esc(p.link)+'" target="_blank" rel="noopener">👉 線上點餐</a>';
+  let h='';
+  if(kind()==='place'){
+    const hs=hoursStatus(p);
+    if(hs)h+='<span class="tag '+(hs==='營業中'?'open':'closed')+'">'+hs+'</span> ';
+    if(p.note)h+=esc(p.note);
+    if(p.veg)h+=' <span class="tag">'+esc(p.veg)+'</span>';
+    if(p.address)h+='<br>'+esc(p.address);
+    const dt=distText(p);
+    if(dt)h+='<br>'+esc(dt);
+    if(p.link)h+='<br><a href="'+esc(p.link)+'" target="_blank" rel="noopener">👉 線上點餐</a>';
+    const exts=[];
+    if(p.uber)exts.push('<a href="'+esc(p.uber)+'" target="_blank" rel="noopener">Uber Eats</a>');
+    if(p.panda)exts.push('<a href="'+esc(p.panda)+'" target="_blank" rel="noopener">foodpanda</a>');
+    if(exts.length)h+='<div class="exts">'+exts.join('')+'</div>';
+  }
   document.getElementById('rNote').innerHTML=h||'好好享受！';
   document.getElementById('mask').classList.add('show');confetti();
 }
@@ -315,52 +528,123 @@ function renderTabs(){
 function rowNameText(p){
   if(kind()!=='place')return esc(p.name);
   const mon=isMon(),monSkip=mon&&S.autoMon&&p.mon;
-  return esc(p.name)+(p.veg?'<span class="tag">'+esc(p.veg)+'</span>':'')+(p.mon?'<span class="tag mon">'+(monSkip?'今天公休':'週一休')+'</span>':'');
+  const hs=hoursStatus(p);
+  let tags=(p.veg?'<span class="tag">'+esc(p.veg)+'</span>':'')+(p.mon?'<span class="tag mon">'+(monSkip?'今天公休':'週一休')+'</span>':'');
+  if(hs&&!(hs==='今日公休'&&monSkip))tags+='<span class="tag '+(hs==='營業中'?'open':'closed')+'">'+hs+'</span>';
+  return esc(p.name)+tags;
+}
+function hoursFields(p){
+  const closed={};
+  let open='',close='';
+  const h=p.hours||{};
+  for(let d=0;d<7;d++){
+    const slot=daySlot(h,d);
+    if(slot===undefined)continue;
+    if(!Array.isArray(slot)||slot.length<2){closed[d]=true;continue;}
+    if(!open){open=slot[0]||'';close=slot[1]||'';}
+  }
+  const days=DAY_LABELS.map((lab,d)=>'<label><input type="checkbox" class="edit-closed" value="'+d+'"'+(closed[d]?' checked':'')+'>'+lab+'</label>').join('');
+  return '<div class="pair"><label>開始<input type="time" class="edit-open" value="'+esc(open)+'"></label><label>結束<input type="time" class="edit-close" value="'+esc(close)+'"></label></div>'+
+    '<div class="small" style="text-align:left">公休（勾選的那天不營業）</div><div class="chk">'+days+'</div>'+
+    '<p class="small" style="text-align:left;margin:0">營業時間可能變動，請以店家公告為準。</p>';
 }
 function editHTML(p){
-  const note=kind()==='place'?'<input type="text" class="edit-note" maxlength="200" placeholder="備註／地址" value="'+esc(p.note||'')+'">':'';
+  if(kind()!=='place'){
+    return '<div class="row editing"><form class="editform" data-edit-id="'+esc(p.id)+'">'+
+      '<input type="text" class="edit-name" maxlength="20" required placeholder="名稱" value="'+esc(p.name)+'">'+
+      '<div class="editacts"><button type="submit" class="btn">儲存</button><button type="button" class="btn ghost" data-cancel>取消</button></div></form></div>';
+  }
   return '<div class="row editing"><form class="editform" data-edit-id="'+esc(p.id)+'">'+
     '<input type="text" class="edit-name" maxlength="20" required placeholder="名稱" value="'+esc(p.name)+'">'+
-    note+
-    '<div class="editacts"><button type="submit" class="btn">儲存</button>'+
-    '<button type="button" class="btn ghost" data-cancel>取消</button></div></form></div>';
+    '<input type="text" class="edit-note" maxlength="200" placeholder="備註" value="'+esc(p.note||'')+'">'+
+    '<details class="more"><summary>更多資訊</summary>'+
+      '<input type="text" class="edit-address" maxlength="80" placeholder="地址" value="'+esc(p.address||'')+'">'+
+      '<button type="button" class="btn ghost" data-geo>查這個地址</button>'+
+      '<p class="small geoMsg" style="text-align:left;margin:0"></p>'+
+      '<div class="pair"><label>緯度<input type="number" class="edit-lat" step="any" placeholder="lat" value="'+(p.lat==null?'':esc(p.lat))+'"></label>'+
+      '<label>經度<input type="number" class="edit-lng" step="any" placeholder="lng" value="'+(p.lng==null?'':esc(p.lng))+'"></label></div>'+
+      hoursFields(p)+
+      '<input type="url" class="edit-uber" placeholder="Uber Eats 店家網址" value="'+esc(p.uber||'')+'">'+
+      '<input type="url" class="edit-panda" placeholder="foodpanda 店家網址" value="'+esc(p.panda||'')+'">'+
+      '<div class="searchlinks">'+
+        '<a href="'+esc(uberSearch(p.name))+'" target="_blank" rel="noopener">開 Uber Eats 搜尋</a>'+
+        '<a href="'+esc(pandaSearch(p.name))+'" target="_blank" rel="noopener">開 foodpanda 搜尋</a>'+
+      '</div>'+
+      '<p class="small" style="text-align:left;margin:0">搜尋頁不是店家官方頁。找到店家後，再把網址貼到上面。</p>'+
+    '</details>'+
+    '<div class="editacts"><button type="submit" class="btn">儲存</button><button type="button" class="btn ghost" data-cancel>取消</button></div></form></div>';
+}
+function displayItems(){
+  const items=listItems();
+  if(kind()!=='place'||!S.sortDist)return items;
+  return items.slice().sort((a,b)=>{
+    const da=placeDist(a),db=placeDist(b);
+    if(da==null&&db==null)return 0;
+    if(da==null)return 1;
+    if(db==null)return -1;
+    return da-db;
+  });
 }
 function rowHTML(p){
   if(p.id===editingId)return editHTML(p);
-  const note=kind()==='place'&&p.note?'<div class="note">'+esc(p.note)+'</div>':'';
-  return '<div class="row'+(p.on?'':' off')+'" data-id="'+esc(p.id)+'"><div class="info"><div class="name">'+rowNameText(p)+'</div>'+note+'</div>'+
+  let extra='';
+  if(kind()==='place'){
+    const bits=[];
+    if(p.note)bits.push(esc(p.note));
+    if(p.address)bits.push(esc(p.address));
+    const dt=distText(p);
+    if(dt)bits.push('<span class="dist">'+esc(dt)+'</span>');
+    if(bits.length)extra='<div class="note">'+bits.join('<br>')+'</div>';
+  }
+  return '<div class="row'+(p.on?'':' off')+'" data-id="'+esc(p.id)+'"><div class="info"><div class="name">'+rowNameText(p)+'</div>'+extra+'</div>'+
     '<button type="button" class="edit" data-e="'+esc(p.id)+'">編輯</button>'+
     '<label class="sw"><input type="checkbox" data-t="'+esc(p.id)+'"'+(p.on?' checked':'')+'><span></span></label>'+
     '<button type="button" class="del" data-d="'+esc(p.id)+'" aria-label="刪除">🗑</button></div>';
 }
+function renderSound(){
+  const b=document.getElementById('soundBtn');
+  b.textContent=soundOn?'🔊 聲音開':'🔇 聲音關';
+  b.setAttribute('aria-pressed',soundOn?'true':'false');
+}
 function render(){
   const c=current(),place=c.kind==='place';
-  renderTabs();
+  renderTabs();renderSound();
   document.getElementById('title').textContent=c.emoji+' '+c.label;
-  document.getElementById('sub').textContent=place?'EJ 家的美食轉盤・豐樂公園一帶':c.blurb;
+  document.getElementById('sub').textContent=place?(c.id==='delivery'?'外送到家・跟出門吃飯分開記': 'EJ 家的美食轉盤・豐樂公園一帶'):c.blurb;
   document.getElementById('placeChips').hidden=!place;
+  document.getElementById('placeTools').hidden=!place;
+  document.getElementById('locMsg').hidden=!place;
   document.getElementById('placeAdd').hidden=!place;
   document.getElementById('itemAdd').hidden=place;
   document.getElementById('listHeading').textContent=place?'📋 店家清單':'📋 清單';
+  const sortBtn=document.getElementById('sortBtn');
   if(place){
     document.getElementById('vegChip').classList.toggle('on',!!S.vegOnly);
     document.getElementById('monChip').classList.toggle('on',!!S.autoMon);
+    document.getElementById('openChip').classList.toggle('on',!!S.openNow);
+    sortBtn.classList.toggle('on',!!S.sortDist);
     const mon=isMon(),skipped=S.places.filter(p=>p.on&&p.mon).length;
     let st='轉盤上 '+active().length+' 家';
     if(mon&&S.autoMon&&skipped)st+='・今天週一，已略過 '+skipped+' 家公休';
     if(S.vegOnly)st+='・只轉素食友善';
+    if(S.openNow)st+='・只轉現在有開的';
     document.getElementById('status').textContent=st;
     document.getElementById('count').textContent='（共 '+S.places.length+' 家）';
+    const msg=document.getElementById('locMsg');
+    if(loc){
+      const mins=Math.max(0,Math.round((Date.now()-loc.ts)/60000));
+      msg.textContent=mins<1?'已用現在位置。再按一次可以更新。':'位置是 '+mins+' 分鐘前的，再按一次可以更新。';
+    }
   }else{
     document.getElementById('status').textContent='轉盤上 '+active().length+' 項';
     document.getElementById('count').textContent='（共 '+S.items.length+' 項）';
   }
-  document.getElementById('list').innerHTML=listItems().map(rowHTML).join('');
+  document.getElementById('list').innerHTML=displayItems().map(rowHTML).join('');
   draw();
 }
 function openCat(id){
   if(spinning)return;
-  const c=CATS.find(x=>x.id===id);if(!c||!DB[id])return;
+  const c=catById(id);if(!c||!DB[id])return;
   catId=id;S=DB[id];DB.last=id;DB.screen='wheel';editingId=null;rot=0;
   document.getElementById('mask').classList.remove('show');
   persist();
@@ -377,6 +661,41 @@ function showPicker(){
   document.getElementById('picker').hidden=false;
   renderPicker();
 }
+function numOrNull(v){
+  if(v==null||String(v).trim()==='')return null;
+  const n=Number(v);
+  return Number.isFinite(n)?n:null;
+}
+function readHours(form){
+  const open=form.querySelector('.edit-open').value;
+  const close=form.querySelector('.edit-close').value;
+  const closed=new Set([...form.querySelectorAll('.edit-closed:checked')].map(x=>x.value));
+  if(!open&&!close&&!closed.size)return null;
+  const hours={};
+  for(let d=0;d<7;d++){
+    if(closed.has(String(d)))hours[d]=[];
+    else if(open&&close)hours[d]=[open,close];
+  }
+  return hours;
+}
+async function lookupAddress(form){
+  const msg=form.querySelector('.geoMsg');
+  const q=(form.querySelector('.edit-address').value||'').trim();
+  if(!q){msg.textContent='請先填地址';return;}
+  msg.textContent='查詢中…';
+  try{
+    const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=tw&q='+encodeURIComponent(q);
+    const res=await fetch(url,{headers:{Accept:'application/json'}});
+    if(!res.ok)throw new Error('bad');
+    const data=await res.json();
+    if(!data[0]){msg.textContent='查不到，可以自己填經緯度';return;}
+    form.querySelector('.edit-lat').value=Number(data[0].lat).toFixed(6);
+    form.querySelector('.edit-lng').value=Number(data[0].lon).toFixed(6);
+    msg.textContent='已填入座標，按儲存才會記住';
+  }catch(e){
+    msg.textContent='目前查不到，可以自己填經緯度';
+  }
+}
 document.getElementById('picks').addEventListener('click',e=>{
   const b=e.target.closest('[data-cat]');if(b)openCat(b.dataset.cat);
 });
@@ -384,7 +703,30 @@ document.getElementById('tabs').addEventListener('click',e=>{
   const b=e.target.closest('[data-cat]');if(b)openCat(b.dataset.cat);
 });
 document.getElementById('backBtn').onclick=showPicker;
+document.getElementById('soundBtn').onclick=()=>{
+  soundOn=!soundOn;
+  localStorage.setItem(SOUND_KEY,soundOn?'1':'0');
+  renderSound();
+};
+document.getElementById('locBtn').onclick=()=>{
+  const msg=document.getElementById('locMsg');
+  if(!navigator.geolocation){msg.textContent='這支手機沒有提供定位，轉盤還是可以轉。';return;}
+  msg.textContent='正在定位…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    loc={lat:pos.coords.latitude,lng:pos.coords.longitude,ts:Date.now()};
+    try{sessionStorage.setItem(LOC_KEY,JSON.stringify(loc));}catch(e){}
+    render();
+  },err=>{
+    msg.textContent=(err&&err.code===1)?'沒有取得位置權限，轉盤還是可以轉。':'目前定不到位置，轉盤還是可以轉。';
+  },{enableHighAccuracy:false,timeout:8000,maximumAge:0});
+};
+document.getElementById('sortBtn').onclick=()=>{
+  if(kind()!=='place')return;
+  if(!loc){document.getElementById('locMsg').textContent='要依距離排序，請先按「用現在位置」。轉盤還是可以轉。';return;}
+  S.sortDist=!S.sortDist;save();render();
+};
 document.getElementById('list').addEventListener('click',e=>{
+  if(e.target.closest('[data-geo]')){e.preventDefault();lookupAddress(e.target.closest('form'));return;}
   if(e.target.closest('[data-cancel]')){editingId=null;render();return;}
   const eb=e.target.closest('[data-e]');
   if(eb){
@@ -416,13 +758,21 @@ document.getElementById('list').addEventListener('submit',e=>{
   if(!name)return;
   const p=listItems().find(x=>x.id===form.dataset.editId);if(!p)return;
   p.name=name;
-  const noteEl=form.querySelector('.edit-note');
-  if(noteEl)p.note=noteEl.value.trim();
+  if(kind()==='place'){
+    const noteEl=form.querySelector('.edit-note');
+    if(noteEl)p.note=noteEl.value.trim();
+    p.address=(form.querySelector('.edit-address').value||'').trim();
+    p.lat=numOrNull(form.querySelector('.edit-lat').value);
+    p.lng=numOrNull(form.querySelector('.edit-lng').value);
+    p.hours=readHours(form);
+    p.uber=(form.querySelector('.edit-uber').value||'').trim();
+    p.panda=(form.querySelector('.edit-panda').value||'').trim();
+  }
   editingId=null;save();render();
 });
 document.getElementById('addForm').addEventListener('submit',e=>{
   e.preventDefault();const name=document.getElementById('newName').value.trim();if(!name)return;
-  S.places.push({id:'u'+Date.now(),name,note:document.getElementById('newNote').value.trim(),veg:document.querySelector('#addForm input[name=veg]:checked').value,mon:document.getElementById('newMon').checked,on:true,link:''});
+  S.places.push({id:'u'+Date.now(),name,note:document.getElementById('newNote').value.trim(),veg:document.querySelector('#addForm input[name=veg]:checked').value,mon:document.getElementById('newMon').checked,on:true,link:'',address:'',lat:null,lng:null,hours:null,uber:'',panda:''});
   save();e.target.reset();render();
 });
 document.getElementById('itemForm').addEventListener('submit',e=>{
@@ -432,16 +782,40 @@ document.getElementById('itemForm').addEventListener('submit',e=>{
 });
 document.getElementById('vegChip').onclick=()=>{if(kind()!=='place')return;S.vegOnly=!S.vegOnly;save();render();};
 document.getElementById('monChip').onclick=()=>{if(kind()!=='place')return;S.autoMon=!S.autoMon;save();render();};
+document.getElementById('openChip').onclick=()=>{if(kind()!=='place')return;S.openNow=!S.openNow;save();render();};
 document.getElementById('resetBtn').onclick=()=>{
   const place=kind()==='place';
   const msg=place?'恢復預設清單？你新增、修改或刪除的店家會被重設。':'恢復預設清單？你新增、修改或刪除的項目會被重設。';
   if(!confirm(msg))return;
-  S=place?freshEat():freshItems(current().defaults);
+  if(place)S=catId==='delivery'?freshDelivery():freshEat();
+  else S=freshItems(current().defaults);
   DB[catId]=S;editingId=null;save();render();
 };
 document.getElementById('spinBtn').onclick=spin;document.getElementById('hub').onclick=spin;
 document.getElementById('okBtn').onclick=()=>document.getElementById('mask').classList.remove('show');
-document.getElementById('againBtn').onclick=()=>{document.getElementById('mask').classList.remove('show');setTimeout(spin,250);};
+document.getElementById('againBtn').onclick=()=>{
+  document.getElementById('mask').classList.remove('show');
+  try{if(soundOn)ensureAudio();}catch(e){}
+  setTimeout(spin,250);
+};
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  if(sessionStorage.getItem('ej-food-wheel-install-hide'))return;
+  deferredPrompt=e;
+  document.getElementById('installHint').hidden=false;
+});
+document.getElementById('installGo').onclick=async()=>{
+  document.getElementById('installHint').hidden=true;
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  try{await deferredPrompt.userChoice;}catch(e){}
+  deferredPrompt=null;
+};
+document.getElementById('installNo').onclick=()=>{
+  document.getElementById('installHint').hidden=true;
+  try{sessionStorage.setItem('ej-food-wheel-install-hide','1');}catch(e){}
+};
 
 const cc=document.getElementById('confetti'),cx=cc.getContext('2d');
 function confetti(){
@@ -451,8 +825,11 @@ function confetti(){
     ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.4;p.r+=.2;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*1.6);cx.restore();});
     if(++f<110)requestAnimationFrame(tick);else cx.clearRect(0,0,cc.width,cc.height);})();
 }
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
 if(DB.screen==='wheel'&&DB.last&&DB[DB.last]&&CATS.some(c=>c.id===DB.last)){
-  catId=DB.last;S=DB[catId];
+  catId=DB.last;S=DB[DB.last];
   document.getElementById('picker').hidden=true;
   document.getElementById('wheelView').hidden=false;
   render();

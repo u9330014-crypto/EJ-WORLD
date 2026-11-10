@@ -1,0 +1,24 @@
+{
+  "name": "待會吃什麼",
+  "short_name": "待會吃什麼",
+  "lang": "zh-Hant",
+  "start_url": "/EJ-WORLD/food-wheel/",
+  "scope": "/EJ-WORLD/food-wheel/",
+  "display": "standalone",
+  "background_color": "#f7efe2",
+  "theme_color": "#c98a4b",
+  "icons": [
+    {
+      "src": "/EJ-WORLD/food-wheel/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/EJ-WORLD/food-wheel/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
