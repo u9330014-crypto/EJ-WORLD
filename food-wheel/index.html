@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10j</p>
+  <p class="small">版本 2026-11-10k</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10j</p>
+  <p class="small">版本 2026-11-10k</p>
 </div>
 
 <div class="mask" id="mask">
@@ -235,7 +235,8 @@ const DEFAULTS=[
  {name:'頂日竹葉飯蔬食館',note:'鼎日竹葉蒸飯，台中南區，網路資料寫週六公休',veg:'全素',address:'台中市南區仁義街89號',maps:'https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d'},
  {name:'花悅蔬香素食火鍋',note:'素食火鍋，北屯中清路',veg:'全素',address:'台中市北屯區中清路二段982號',maps:'https://maps.app.goo.gl/415a9TaGNBVzpv9t5'},
  {name:'熊的蔬食壽司',note:'蔬食壽司，西屯青海路',veg:'全素',address:'台中市西屯區青海路一段9-8號',maps:'https://maps.app.goo.gl/jXEBWgzqyXorDps4A'},
- {name:'論石間火鍋自助吧',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'}
+ {name:'論石間火鍋自助吧',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'},
+ {name:'福屋拉麵',note:'拉麵，有素食口味，東區振興路',veg:'素OK',address:'台中市東區振興路2-5號',maps:'https://maps.app.goo.gl/CW1wSeKp3ZfdqB9N9'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -409,6 +410,15 @@ function ensureMiaoshan(list){
   return true;
 }
 const ZHUYE_MAPS='https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d';
+function ensureFuku(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('福屋')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.fuku?'fuku2':'fuku';
+  list.push({id:id,name:'福屋拉麵',on:true,mon:false,link:'',note:'拉麵，有素食口味，東區振興路',veg:'素OK',address:'台中市東區振興路2-5號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/CW1wSeKp3ZfdqB9N9'});
+  return true;
+}
 function ensureLunshi(list){
   if(!Array.isArray(list))return false;
   if(list.some(p=>p&&String(p.name||'').indexOf('論石間')>=0))return false;
@@ -529,6 +539,7 @@ function migrateKnownPlaces(db){
     if(ensureHuayue(list))changed=true;
     if(ensureXiong(list))changed=true;
     if(ensureLunshi(list))changed=true;
+    if(ensureFuku(list))changed=true;
   });
   return changed;
 }
