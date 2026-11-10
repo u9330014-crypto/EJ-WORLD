@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10l</p>
+  <p class="small">版本 2026-11-10m</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10l</p>
+  <p class="small">版本 2026-11-10m</p>
 </div>
 
 <div class="mask" id="mask">
@@ -237,7 +237,8 @@ const DEFAULTS=[
  {name:'熊的蔬食壽司',note:'蔬食壽司，西屯青海路',veg:'全素',address:'台中市西屯區青海路一段9-8號',maps:'https://maps.app.goo.gl/jXEBWgzqyXorDps4A'},
  {name:'論石間火鍋自助吧',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'},
  {name:'福屋拉麵',note:'拉麵，有素食口味，東區振興路',veg:'素OK',address:'台中市東區振興路2-5號',maps:'https://maps.app.goo.gl/CW1wSeKp3ZfdqB9N9'},
- {name:'越南素食',note:'越齋越南素食料理，東區建成路',veg:'全素',address:'台中市東區建成路633號',maps:'https://maps.app.goo.gl/5pzJPbHrUcGZyc4b9'}
+ {name:'越南素食',note:'越齋越南素食料理，東區建成路',veg:'全素',address:'台中市東區建成路633號',maps:'https://maps.app.goo.gl/5pzJPbHrUcGZyc4b9'},
+ {name:'食草人',note:'蔬食定食、異國料理，南屯惠中路',veg:'全素',address:'台中市南屯區惠中路三段58號',maps:'https://maps.app.goo.gl/avX2B6SV6kNyWzqEA'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -411,6 +412,15 @@ function ensureMiaoshan(list){
   return true;
 }
 const ZHUYE_MAPS='https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d';
+function ensureShicaoren(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('食草人')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.shicaoren?'shicaoren2':'shicaoren';
+  list.push({id:id,name:'食草人',on:true,mon:false,link:'',note:'蔬食定食、異國料理，南屯惠中路',veg:'全素',address:'台中市南屯區惠中路三段58號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/avX2B6SV6kNyWzqEA'});
+  return true;
+}
 function ensureYuezhai(list){
   if(!Array.isArray(list))return false;
   if(list.some(p=>p&&(String(p.name||'').indexOf('越齋')>=0||String(p.name||'').indexOf('越南素食')>=0)))return false;
@@ -551,6 +561,7 @@ function migrateKnownPlaces(db){
     if(ensureLunshi(list))changed=true;
     if(ensureFuku(list))changed=true;
     if(ensureYuezhai(list))changed=true;
+    if(ensureShicaoren(list))changed=true;
   });
   return changed;
 }
