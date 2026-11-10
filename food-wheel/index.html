@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10g</p>
+  <p class="small">版本 2026-11-10h</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10g</p>
+  <p class="small">版本 2026-11-10h</p>
 </div>
 
 <div class="mask" id="mask">
@@ -232,7 +232,8 @@ const DEFAULTS=[
  {name:'妙善緣蔬食火鍋',note:'妙善園素食小火鍋，一中街',veg:'全素',address:'台中市北區三民路三段164巷14號',maps:'https://maps.app.goo.gl/h3Jkt6QoQoPCmVVP6'},
  {name:'清梅素食館',note:'原天航素食，大甲',veg:'全素',address:'台中市大甲區新政路2之4號',maps:'https://maps.app.goo.gl/D4yXeevNYRvcTGea8'},
  {name:'品撰蔬食',note:'品饌蔬食館，大里',veg:'全素',address:'台中市大里區瑞城一街118號',maps:'https://maps.app.goo.gl/ND8ikk127BHvnx9r8'},
- {name:'頂日竹葉飯蔬食館',note:'鼎日竹葉蒸飯，台中南區，網路資料寫週六公休',veg:'全素',address:'台中市南區仁義街89號',maps:'https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d'}
+ {name:'頂日竹葉飯蔬食館',note:'鼎日竹葉蒸飯，台中南區，網路資料寫週六公休',veg:'全素',address:'台中市南區仁義街89號',maps:'https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d'},
+ {name:'花悅蔬香素食火鍋',note:'素食火鍋，北屯中清路',veg:'全素',address:'台中市北屯區中清路二段982號',maps:'https://maps.app.goo.gl/415a9TaGNBVzpv9t5'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -406,6 +407,15 @@ function ensureMiaoshan(list){
   return true;
 }
 const ZHUYE_MAPS='https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d';
+function ensureHuayue(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('花悅')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.huayue?'huayue2':'huayue';
+  list.push({id:id,name:'花悅蔬香素食火鍋',on:true,mon:false,link:'',note:'素食火鍋，北屯中清路',veg:'全素',address:'台中市北屯區中清路二段982號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/415a9TaGNBVzpv9t5'});
+  return true;
+}
 function ensureZhuye(list){
   if(!Array.isArray(list))return false;
   if(list.some(p=>p&&String(p.name||'').indexOf('竹葉')>=0))return false;
@@ -496,6 +506,7 @@ function migrateKnownPlaces(db){
     if(ensureQingmei(list))changed=true;
     if(ensurePinzhuan(list))changed=true;
     if(ensureZhuye(list))changed=true;
+    if(ensureHuayue(list))changed=true;
   });
   return changed;
 }
