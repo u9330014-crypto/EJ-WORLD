@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10r</p>
+  <p class="small">版本 2026-11-10s</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10r</p>
+  <p class="small">版本 2026-11-10s</p>
 </div>
 
 <div class="mask" id="mask">
@@ -249,7 +249,8 @@ const DEFAULTS=[
  {name:'三院和食蔬食拉麵',note:'Google 名稱：三院和食（蔬食、素食拉麵專賣），北區',veg:'全素',address:'台中市北區大義街112號',maps:'https://maps.app.goo.gl/BuzfKPim8DK69MFn9'},
  {name:'16號廚房素食斗六店',note:'Google 名稱：16號廚房素食餐廳 斗六店。在雲林斗六，不在台中，適合外出途中',veg:'全素',address:'雲林縣斗六市上海路244號',maps:'https://maps.app.goo.gl/huA9f8uzk4FHGWrP9'},
  {name:'16號廚房素食虎尾店',note:'Google 名稱：16號廚房素食餐廳 虎尾店。在雲林虎尾，不在台中。好停車',veg:'全素',address:'雲林縣虎尾鎮清雲路507之1號',maps:'https://maps.app.goo.gl/Q1b4ueRDb1VkPy3c9'},
- {name:'菜菜園蔬香滷味',note:'Google 名稱：菜菜園（滿菜園）蔬香滷味麻辣燙（東區忠孝立德店）。素食滷味、麻辣燙',veg:'全素',address:'台中市東區立德街141號',maps:'https://maps.app.goo.gl/5qBiCAbFugpqZC4XA'}
+ {name:'菜菜園蔬香滷味',note:'Google 名稱：菜菜園（滿菜園）蔬香滷味麻辣燙（東區忠孝立德店）。素食滷味、麻辣燙',veg:'全素',address:'台中市東區立德街141號',maps:'https://maps.app.goo.gl/5qBiCAbFugpqZC4XA'},
+ {name:'老頑童蔬食',note:'在苗栗三義，不在台中，適合出遊途中',veg:'全素',address:'苗栗縣三義鄉水美街319號',maps:'https://maps.app.goo.gl/2FHMpFXAz34bV8cJA'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -598,6 +599,7 @@ function migrateKnownPlaces(db){
     if(ensureOnce(list,'16號廚房','kitchen16',{name:'16號廚房素食斗六店',note:'Google 名稱：16號廚房素食餐廳 斗六店。在雲林斗六，不在台中，適合外出途中',veg:'全素',address:'雲林縣斗六市上海路244號',maps:'https://maps.app.goo.gl/huA9f8uzk4FHGWrP9'}))changed=true;
     if(ensureHuwei(list))changed=true;
     if(ensureOnce(list,'菜菜園','caicaiyuan',{name:'菜菜園蔬香滷味',note:'Google 名稱：菜菜園（滿菜園）蔬香滷味麻辣燙（東區忠孝立德店）。素食滷味、麻辣燙',veg:'全素',address:'台中市東區立德街141號',maps:'https://maps.app.goo.gl/5qBiCAbFugpqZC4XA'}))changed=true;
+    if(ensureOnce(list,'老頑童','laowantong',{name:'老頑童蔬食',note:'在苗栗三義，不在台中，適合出遊途中',veg:'全素',address:'苗栗縣三義鄉水美街319號',maps:'https://maps.app.goo.gl/2FHMpFXAz34bV8cJA'}))changed=true;
   });
   return changed;
 }
