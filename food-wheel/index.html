@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10d</p>
+  <p class="small">版本 2026-11-10e</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10d</p>
+  <p class="small">版本 2026-11-10e</p>
 </div>
 
 <div class="mask" id="mask">
@@ -229,7 +229,8 @@ const DEFAULTS=[
  {name:'文心秀泰拉麵',note:'花月嵐拉麺，文心秀泰B1',veg:'',address:'台中市南屯區文心南路289號 B1',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/QRgXfomQNSxUv7j79'},
  {name:'五花馬',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'},
  {name:'大埔永春總店',note:'鐵板燒、永春總店',veg:'素OK',address:'台中市南屯區永春東七路607號',maps:'https://maps.app.goo.gl/G28nkzW68Mq7ft8j8'},
- {name:'妙善緣蔬食火鍋',note:'妙善園素食小火鍋，一中街',veg:'全素',address:'台中市北區三民路三段164巷14號',maps:'https://maps.app.goo.gl/h3Jkt6QoPCmVVP6'}
+ {name:'妙善緣蔬食火鍋',note:'妙善園素食小火鍋，一中街',veg:'全素',address:'台中市北區三民路三段164巷14號',maps:'https://maps.app.goo.gl/h3Jkt6QoQoPCmVVP6'},
+ {name:'清梅素食館',note:'原天航素食，大甲',veg:'全素',address:'台中市大甲區新政路2之4號',maps:'https://maps.app.goo.gl/D4yXeevNYRvcTGea8'}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -377,13 +378,38 @@ function applyPlaceFix(p){
   if(fix.vegIfEmpty&&!p.veg){p.veg=fix.vegIfEmpty;changed=true;}
   return changed;
 }
+const MIAO_MAPS='https://maps.app.goo.gl/h3Jkt6QoQoPCmVVP6';
+const MIAO_MAPS_BAD=MIAO_MAPS.replace('QoQo','Qo');
+function fixMiaoshanUrl(list){
+  if(!Array.isArray(list))return false;
+  let changed=false;
+  list.forEach(p=>{
+    if(p&&p.maps===MIAO_MAPS_BAD){p.maps=MIAO_MAPS;changed=true;}
+  });
+  return changed;
+}
 function ensureMiaoshan(list){
   if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf('妙善')>=0))return false;
+  const found=list.find(p=>p&&String(p.name||'').indexOf('妙善')>=0);
+  if(found){
+    let changed=false;
+    if(!found.address){found.address='台中市北區三民路三段164巷14號';changed=true;}
+    if(!found.maps||found.maps===MIAO_MAPS_BAD){if(found.maps!==MIAO_MAPS){found.maps=MIAO_MAPS;changed=true;}}
+    return changed;
+  }
   const used={};
   list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
   const id=used.miaoshan?'miaoshan2':'miaoshan';
-  list.push({id:id,name:'妙善緣蔬食火鍋',on:true,mon:false,link:'',note:'妙善園素食小火鍋，一中街',veg:'全素',address:'台中市北區三民路三段164巷14號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/h3Jkt6QoPCmVVP6'});
+  list.push({id:id,name:'妙善緣蔬食火鍋',on:true,mon:false,link:'',note:'妙善園素食小火鍋，一中街',veg:'全素',address:'台中市北區三民路三段164巷14號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:MIAO_MAPS});
+  return true;
+}
+function ensureQingmei(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('清梅')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.qingmei?'qingmei2':'qingmei';
+  list.push({id:id,name:'清梅素食館',on:true,mon:false,link:'',note:'原天航素食，大甲',veg:'全素',address:'台中市大甲區新政路2之4號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/D4yXeevNYRvcTGea8'});
   return true;
 }
 function ensureYongchun(list){
@@ -444,7 +470,9 @@ function migrateKnownPlaces(db){
     });
     if(ensureWuhua(list))changed=true;
     if(ensureYongchun(list))changed=true;
+    if(fixMiaoshanUrl(list))changed=true;
     if(ensureMiaoshan(list))changed=true;
+    if(ensureQingmei(list))changed=true;
   });
   return changed;
 }
