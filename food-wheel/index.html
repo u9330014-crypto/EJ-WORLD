@@ -121,7 +121,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     </div>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10m</p>
+  <p class="small">版本 2026-11-10n</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -186,7 +186,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-10m</p>
+  <p class="small">版本 2026-11-10n</p>
 </div>
 
 <div class="mask" id="mask">
@@ -208,6 +208,9 @@ const V2='ej-food-wheel-v2';
 const SOUND_KEY='ej-food-wheel-sound';
 const LOC_KEY='ej-food-wheel-loc';
 const SHOWTIME={address:'台中市南屯區文心南路289號文心秀泰',lat:24.1301471,lng:120.6456843};
+const XIUQIU_MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('繡球麵店 台中市西區中興街102號');
+const SHUXIANG_MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('蔬想起蔬食料理 台中市北屯區雷中街2-15號');
+const SANJIN_MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('三津制麵 台中249老宅店 台中市中區中山路249號');
 const DEFAULTS=[
  {name:'大埔大墩店',note:'鐵板燒、大墩店，兩間都有素食，離家約 1 公里',veg:'素OK',address:'台中市南屯區大墩路177號',lat:24.1418152,lng:120.6496811,maps:'https://maps.app.goo.gl/B94tsShjqYBULTrg9'},
  {name:'胖貓',note:'走路可到。爸爸豆皮烏龍麵、媽媽其他麵、姐姐蝦仁蓋飯、弟弟豬排蓋飯',veg:'素OK',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
@@ -238,7 +241,11 @@ const DEFAULTS=[
  {name:'論石間火鍋自助吧',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'},
  {name:'福屋拉麵',note:'拉麵，有素食口味，東區振興路',veg:'素OK',address:'台中市東區振興路2-5號',maps:'https://maps.app.goo.gl/CW1wSeKp3ZfdqB9N9'},
  {name:'越南素食',note:'越齋越南素食料理，東區建成路',veg:'全素',address:'台中市東區建成路633號',maps:'https://maps.app.goo.gl/5pzJPbHrUcGZyc4b9'},
- {name:'食草人',note:'蔬食定食、異國料理，南屯惠中路',veg:'全素',address:'台中市南屯區惠中路三段58號',maps:'https://maps.app.goo.gl/avX2B6SV6kNyWzqEA'}
+ {name:'食草人',note:'蔬食定食、異國料理，南屯惠中路',veg:'全素',address:'台中市南屯區惠中路三段58號',maps:'https://maps.app.goo.gl/avX2B6SV6kNyWzqEA'},
+ {name:'樹院子蔬食火鍋',note:'蔬食火鍋，北屯',veg:'全素',address:'台中市北屯區和祥五街188號',maps:'https://maps.app.goo.gl/aUx3VzzaMAVwqShV7'},
+ {name:'繡球麵店',note:'必比登麵店，葤素都有（素食可點松露白胡麻拌麵）。只開週五到週日，不接受訂位',veg:'素OK',address:'台中市西區中興街102號',maps:XIUQIU_MAPS},
+ {name:'蔬想起蔬食料理',note:'素食小館，北屯雷中街，有全素和蛋素。網路資料寫週四公休',veg:'全素',address:'台中市北屯區雷中街2-15號',maps:SHUXIANG_MAPS},
+ {name:'三津制麵',note:'釀善 三津制麵 台中249老宅店，純素麵館，週一公休',veg:'全素',mon:true,address:'台中市中區中山路249號',maps:SANJIN_MAPS}
 ];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯・豐樂公園一帶'},
@@ -412,6 +419,14 @@ function ensureMiaoshan(list){
   return true;
 }
 const ZHUYE_MAPS='https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d';
+function ensureOnce(list,key,idBase,place){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf(key)>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  list.push(Object.assign({id:used[idBase]?idBase+'2':idBase,on:true,mon:false,link:'',lat:null,lng:null,hours:null,uber:'',panda:''},place));
+  return true;
+}
 function ensureShicaoren(list){
   if(!Array.isArray(list))return false;
   if(list.some(p=>p&&String(p.name||'').indexOf('食草人')>=0))return false;
@@ -562,6 +577,10 @@ function migrateKnownPlaces(db){
     if(ensureFuku(list))changed=true;
     if(ensureYuezhai(list))changed=true;
     if(ensureShicaoren(list))changed=true;
+    if(ensureOnce(list,'樹院子','shuyuan',{name:'樹院子蔬食火鍋',note:'蔬食火鍋，北屯',veg:'全素',address:'台中市北屯區和祥五街188號',maps:'https://maps.app.goo.gl/aUx3VzzaMAVwqShV7'}))changed=true;
+    if(ensureOnce(list,'繡球','xiuqiu',{name:'繡球麵店',note:'必比登麵店，葤素都有（素食可點松露白胡麻拌麵）。只開週五到週日，不接受訂位',veg:'素OK',address:'台中市西區中興街102號',maps:XIUQIU_MAPS}))changed=true;
+    if(ensureOnce(list,'蔬想起','shuxiang',{name:'蔬想起蔬食料理',note:'素食小館，北屯雷中街，有全素和蛋素。網路資料寫週四公休',veg:'全素',address:'台中市北屯區雷中街2-15號',maps:SHUXIANG_MAPS}))changed=true;
+    if(ensureOnce(list,'三津','sanjin',{name:'三津制麵',note:'釀善 三津制麵 台中249老宅店，純素麵館，週一公休',veg:'全素',mon:true,address:'台中市中區中山路249號',maps:SANJIN_MAPS}))changed=true;
   });
   return changed;
 }
