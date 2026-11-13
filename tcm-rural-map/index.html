@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>中醫巡迴醫療據點</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --ink: #1c2a22;
+    --accent: #0f6b5c;
+    --card: rgba(255,255,255,.92);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--ink); }
+  #map { position: absolute; inset: 0; }
+  .panel {
+    position: absolute; z-index: 1000; top: 16px; left: 16px;
+    background: var(--card); backdrop-filter: blur(8px);
+    border-radius: 16px; padding: 16px 18px; box-shadow: 0 8px 24px rgba(20,40,30,.15);
+    max-width: min(360px, calc(100vw - 32px));
+  }
+  h1 { margin: 0 0 4px; font-size: 1.15rem; letter-spacing: .04em; }
+  .sub { margin: 0 0 10px; font-size: .85rem; color: #456; }
+  label { font-size: .8rem; color: #456; display: block; margin-bottom: 4px; }
+  select {
+    width: 100%; font: inherit; padding: 6px 8px; border-radius: 8px;
+    border: 1px solid #c5d0c8; background: #fff;
+  }
+  .stats { margin-top: 10px; font-size: .82rem; color: #345; }
+  .legend { margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: .75rem; color: #567; }
+  .dot { border-radius: 50%; background: rgba(15,107,92,.35); border: 2px solid var(--accent); display: inline-block; }
+  .popup h3 { margin: 0 0 6px; font-size: 1rem; }
+  .popup p { margin: 0; font-size: .85rem; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="panel">
+  <h1>中醫巡迴醫療據點</h1>
+  <p class='sub'>依 8 月人次調整光點大小，座標為村或鄉鎮概略位置</p>
+  <label for="county">縣市</label>
+  <select id="county"><option value="">全部縣市</option></select>
+  <div class="stats" id="stats"></div>
+  <div class="legend">
+    <span class="dot" style="width:10px;height:10px"></span>較少人次
+    <span class="dot" style="width:20px;height:20px"></span>較多人次
+  </div>
+</div>
+<script>
+const POINTS = [{"id": "O", "name": "明德村.望美村", "county": "南投縣", "address": "南投縣信義鄉明德村", "lat": 23.689495, "lon": 120.8829325, "value": 311.0, "radius": 21.07, "extras": {"診次": 8}}, {"id": "J", "name": "大同村.南豐村", "county": "南投縣", "address": "南投縣仁愛鄉大同村", "lat": 24.0212472, "lon": 121.1323222, "value": 344.0, "radius": 22.0, "extras": {"診次": 8}}, {"id": "J", "name": "東池村", "county": "南投縣", "address": "南投縣魚池鄉東池村", "lat": 23.8974688, "lon": 120.9455826, "value": 266.0, "radius": 19.72, "extras": {"診次": 4}}, {"id": "C", "name": "天輪里", "county": "台中市", "address": "臺中市和平區天輪里", "lat": 24.1914, "lon": 120.9340482, "value": 88.0, "radius": 12.67, "extras": {"診次": 4}}, {"id": "C", "name": "龍安村", "county": "南投縣", "address": "南投縣中寮鄉龍安村", "lat": 23.9441314, "lon": 120.774133, "value": 184.0, "radius": 16.93, "extras": {"診次": 5}}, {"id": "A", "name": "中庄里", "county": "台中市", "address": "臺中市大安區中庄里", "lat": 24.3551101, "lon": 120.582155, "value": 147.0, "radius": 15.46, "extras": {"診次": 4}}, {"id": "F", "name": "南勢里.博愛里", "county": "台中市", "address": "臺中市和平區南勢里", "lat": 24.1714699, "lon": 120.8952236, "value": 145.0, "radius": 15.38, "extras": {"診次": 8}}, {"id": "L", "name": "地利村", "county": "南投縣", "address": "南投縣信義鄉地利村", "lat": 23.7847116, "lon": 121.1212045, "value": 120.0, "radius": 14.27, "extras": {"診次": 4}}, {"id": "Q", "name": "竹林村", "county": "南投縣", "address": "南投縣鹿谷鄉竹林村", "lat": 23.7055718, "lon": 120.7513188, "value": 56.0, "radius": 10.74, "extras": {"診次": 4}}, {"id": "Q", "name": "吳厝里", "county": "南投縣", "address": "南投縣集集鎮吳厝里", "lat": 23.8282736, "lon": 120.7861097, "value": 82.0, "radius": 12.34, "extras": {"診次": 4}}, {"id": "D", "name": "龍興里", "county": "台中市", "address": "臺中市石岡區龍興里", "lat": 24.25779, "lon": 120.7926363, "value": 24.0, "radius": 8.11, "extras": {"診次": 2}}, {"id": "D", "name": "大東里", "county": "台中市", "address": "臺中市外埔區大東里", "lat": 24.339849, "lon": 120.6439221, "value": 23.0, "radius": 8.0, "extras": {"診次": 2}}, {"id": "M", "name": "雙龍村.同富村.羅娜村", "county": "南投縣", "address": "南投縣信義鄉雙龍村", "lat": 23.6907218, "lon": 121.1486769, "value": 173.0, "radius": 16.51, "extras": {"診次": 12}}, {"id": "K", "name": "法治村.互助村", "county": "南投縣", "address": "南投縣仁愛鄉法治村", "lat": 23.8697911, "lon": 121.062674, "value": 33.0, "radius": 8.97, "extras": {"診次": 4}}, {"id": "P", "name": "北港村.南港村.乾溝村.福龜村", "county": "南投縣", "address": "南投縣國姓鄉北港村", "lat": 24.0820321, "lon": 120.924409, "value": 124.0, "radius": 14.45, "extras": {"診次": 6}}, {"id": "N", "name": "合興村.源泉村", "county": "彰化縣", "address": "彰化縣二水鄉合興村", "lat": 23.7925287, "lon": 120.639525, "value": 61.0, "radius": 11.07, "extras": {"診次": 4}}, {"id": "N", "name": "義和村", "county": "南投縣", "address": "南投縣中寮鄉義和村", "lat": 23.8969454, "lon": 120.7185417, "value": 59.0, "radius": 10.94, "extras": {"診次": 4}}, {"id": "X", "name": "豐丘村.愛國村", "county": "南投縣", "address": "南投縣信義鄉豐丘村", "lat": 23.6324786, "lon": 120.963533, "value": 42.0, "radius": 9.72, "extras": {"診次": 8}}, {"id": "T", "name": "秀峰村", "county": "南投縣", "address": "南投縣鹿谷鄉秀峰村", "lat": 23.7811903, "lon": 120.7667679, "value": 65.0, "radius": 11.33, "extras": {"診次": 3}}, {"id": "I", "name": "下犁村.塭仔村", "county": "彰化縣", "address": "彰化縣線西鄉下犁村", "lat": 24.1122249, "lon": 120.4727706, "value": 132.0, "radius": 14.81, "extras": {"診次": 8}}, {"id": "I", "name": "博愛村", "county": "彰化縣", "address": "彰化縣芳苑鄉博愛村", "lat": 23.964586, "lon": 120.335059, "value": 28.0, "radius": 8.5, "extras": {"診次": 4}}, {"id": "H", "name": "瓦礫村.天盛村", "county": "彰化縣", "address": "彰化縣埔鹽鄉瓦礫村", "lat": 24.00788, "lon": 120.472186, "value": 114.0, "radius": 13.99, "extras": {"診次": 8}}, {"id": "B", "name": "中坑里", "county": "台中市", "address": "臺中市和平區中坑里", "lat": 24.235355, "lon": 120.92544, "value": 125.0, "radius": 14.5, "extras": {"診次": 4}}, {"id": "B", "name": "春陽村.中正村", "county": "南投縣", "address": "南投縣仁愛鄉春陽村", "lat": 24.014837, "lon": 121.1600212, "value": 181.0, "radius": 16.81, "extras": {"診次": 8}}, {"id": "G", "name": "達觀里", "county": "台中市", "address": "臺中市和平區達觀里", "lat": 24.3278995, "lon": 120.9208533, "value": 135.0, "radius": 14.95, "extras": {"診次": 4}}, {"id": "E", "name": "自由里", "county": "台中市", "address": "臺中市和平區自由里", "lat": 24.27441, "lon": 120.9340819, "value": 115.0, "radius": 14.04, "extras": {"診次": 4}}, {"id": "R", "name": "永豐里", "county": "台中市", "address": "臺中市外埔區永豐里", "lat": 24.3333998, "lon": 120.6888672, "value": 52.0, "radius": 10.46, "extras": {"診次": 3}}, {"id": "S", "name": "石岡里", "county": "台中市", "address": "臺中市石岡區石岡里", "lat": 24.279215, "lon": 120.7694058, "value": 46.0, "radius": 10.02, "extras": {"診次": 3}}, {"id": "Y", "name": "西安里", "county": "台中市", "address": "臺中市大安區西安里", "lat": 24.371615, "lon": 120.600067, "value": 272.0, "radius": 19.91, "extras": {"診次": 4}}, {"id": "W", "name": "聖化村", "county": "彰化縣", "address": "彰化縣二水鄉聖化村", "lat": 23.8099114, "lon": 120.6168865, "value": 79.0, "radius": 12.17, "extras": {"診次": 4}}, {"id": "Z", "name": "自強村.人和村", "county": "南投縣", "address": "南投縣信義鄉自強村", "lat": 23.6550657, "lon": 120.8413994, "value": 74.0, "radius": 11.88, "extras": {"診次": 8}}, {"id": "V", "name": "饒平村", "county": "彰化縣", "address": "彰化縣田尾鄉饒平村", "lat": 23.8884385, "lon": 120.5277758, "value": 28.0, "radius": 8.5, "extras": {"診次": 4}}, {"id": "AA", "name": "東城村", "county": "彰化縣", "address": "彰化縣大城鄉東城村", "lat": 23.8524591, "lon": 120.328061, "value": 31.0, "radius": 8.79, "extras": {"診次": 2}}, {"id": "AB", "name": "日月村", "county": "南投縣", "address": "南投縣魚池鄉日月村", "lat": 23.8462737, "lon": 120.9294252, "value": 109.0, "radius": 13.75, "extras": {"診次": 4}}, {"id": "AC", "name": "隘寮里", "county": "南投縣", "address": "南投縣集集鎮隘寮里", "lat": 23.8412497, "lon": 120.7393042, "value": 76.0, "radius": 11.99, "extras": {"診次": 4}}, {"id": "AD", "name": "親愛村", "county": "南投縣", "address": "南投縣仁愛鄉親愛村", "lat": 23.9113881, "lon": 121.1938982, "value": 71.0, "radius": 11.7, "extras": {"診次": 6}}];
+const COUNTIES = ["南投縣", "台中市", "彰化縣"];
+const VALUE_LABEL = "人次";
+const map = L.map('map', { zoomSnap: 0.5 });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 18,
+  attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+const select = document.getElementById('county');
+COUNTIES.forEach(c => {
+  const opt = document.createElement('option');
+  opt.value = c; opt.textContent = c;
+  select.appendChild(opt);
+});
+
+const layer = L.layerGroup().addTo(map);
+const markers = [];
+
+function popupHtml(p) {
+  const extras = Object.entries(p.extras || {}).map(([k,v]) => `<p>${k}：${v}</p>`).join('');
+  const code = p.id ? `<p>代號：${p.id}</p>` : '';
+  return `<div class="popup"><h3>${p.name}</h3>
+    <p>${p.county}　${p.address}</p>
+    <p>${VALUE_LABEL}：${p.value}</p>
+    ${extras}${code}</div>`;
+}
+
+function draw(county) {
+  layer.clearLayers();
+  markers.length = 0;
+  const rows = POINTS.filter(p => !county || p.county === county);
+  rows.forEach(p => {
+    const m = L.circleMarker([p.lat, p.lon], {
+      radius: p.radius,
+      color: '#0f6b5c',
+      weight: 2,
+      fillColor: '#1aa58a',
+      fillOpacity: 0.55
+    }).bindPopup(popupHtml(p));
+    m.addTo(layer);
+    markers.push(m);
+  });
+  const sum = rows.reduce((a, p) => a + p.value, 0);
+  document.getElementById('stats').textContent =
+    `據點 ${rows.length} 處，${VALUE_LABEL}合計 ${sum.toLocaleString('zh-Hant')}`;
+  if (rows.length) {
+    const b = L.latLngBounds(rows.map(p => [p.lat, p.lon]));
+    map.fitBounds(b.pad(0.18));
+  }
+}
+
+select.addEventListener('change', () => draw(select.value));
+draw('');
+</script>
+</body>
+</html>
