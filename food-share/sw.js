@@ -1,4 +1,4 @@
-const CACHE = 'ej-food-share-shell-1';
+const CACHE = 'ej-food-share-shell-2';
 const ASSETS = [
   './',
   './index.html',

@@ -125,15 +125,14 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 <div class="wrap" id="welcome" hidden>
   <header>
     <h1>🍜 待會吃什麼</h1>
-    <p>公開試用版。先選怎麼開始。</p>
+    <p>店家清單是空的。自己加店，或匯入分享的專區和備份。</p>
   </header>
   <div class="picks">
-    <button type="button" class="pick" id="startBlank"><span class="emo" aria-hidden="true">📝</span><span class="ptxt"><span class="t">從空白開始</span><span class="d">自己慢慢加店</span></span></button>
-    <button type="button" class="pick" id="startTaichung"><span class="emo" aria-hidden="true">📍</span><span class="ptxt"><span class="t">載入台中推薦清單</span><span class="d">公開店家資料，不含私人備註</span></span></button>
+    <button type="button" class="pick" id="startBlank"><span class="emo" aria-hidden="true">📝</span><span class="ptxt"><span class="t">開始使用</span><span class="d">店家清單是空的，自己加或匯入</span></span></button>
   </div>
   <p class="small">資料只存在你的手機瀏覽器，換手機前請先匯出備份</p>
   <p class="small">店家資訊僅供參考，以 Google 地圖為準</p>
-  <p class="small">版本 2026-11-14s1</p>
+  <p class="small">版本 2026-11-14s2</p>
 </div>
 <div class="wrap" id="picker">
   <header>
@@ -159,7 +158,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
   </div>
   <p class="small">資料只存在你的手機瀏覽器，換手機前請先匯出備份</p>
   <p class="small">店家資訊僅供參考，以 Google 地圖為準</p>
-  <p class="small">版本 2026-11-14s1</p>
+  <p class="small">版本 2026-11-14s2</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -232,7 +231,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
   </div>
   <p class="small">資料只存在你的手機瀏覽器，換手機前請先匯出備份</p>
   <p class="small">店家資訊僅供參考，以 Google 地圖為準</p>
-  <p class="small">版本 2026-11-14s1</p>
+  <p class="small">版本 2026-11-14s2</p>
 </div>
 
 <div class="mask" id="mask">
@@ -301,53 +300,6 @@ const V1='ej-food-share-unused';
 const V2='ej-food-share-v1';
 const SOUND_KEY='ej-food-share-sound';
 const LOC_KEY='ej-food-share-loc';
-const SHOWTIME={address:'台中市南屯區文心南路289號文心秀泰',lat:24.1301471,lng:120.6456843};
-const XIUQIU_MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('繡球麵店 台中市西區中興街102號');
-const SHUXIANG_MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('蔬想起蔬食料理 台中市北屯區雷中街2-15號');
-const SANJIN_MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('三津制麵 台中249老宅店 台中市中區中山路249號');
-const DEFAULTS=[
- {name:'大埔大墩店',note:'鐵板燒，大墩店，有素食',veg:'素OK',address:'台中市南屯區大墩路177號',lat:24.1418152,lng:120.6496811,maps:'https://maps.app.goo.gl/B94tsShjqYBULTrg9'},
- {name:'胖貓',note:'麵食，向心南路',veg:'素OK',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
- {name:'空也永春店',note:'素食麵店，永春店',veg:'全素',address:'台中市南屯區永春東七路855號',maps:'https://maps.app.goo.gl/hQZyNQFz9kJ91HE67'},
- {name:'見晴蔬食',note:'素食。平日中午僅供外帶',veg:'全素',address:'台中市西區向上南路一段220號',maps:'https://maps.app.goo.gl/bbcCXZQD1UPXLirv8'},
- {name:'春成臭豆腐',note:'蔬食臭豆腐，週一公休',veg:'全素',mon:true,address:'台中市南屯區東興路二段353號',maps:'https://maps.app.goo.gl/bqfU6demYFKnTdgcA'},
- {name:'臭大蔬',note:'臭豆腐，精誠店',veg:'全素',address:'台中市西區精誠路269號',maps:'https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6'},
- {name:'一碗牛肉麵',note:'牛肉麵，南屯店',veg:'',address:'台中市南屯區永春東路363號',maps:'https://maps.app.goo.gl/5UjGBLtSYz7U5AH16'},
- {name:'八方雲集',note:'鍋貼水餃，南屯店',veg:'',link:'https://ezorder.8way.com.tw/0091',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7'},
- {name:'熱浪小島',note:'大墩店',veg:'',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5'},
- {name:'輕井澤',note:'火鍋，文心南二店，素葷都能點',veg:'素OK',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17'},
- {name:'麻一鍋',note:'火鍋，向心店，週一公休',veg:'素OK',mon:true,address:'台中市南屯區向心南路897號',maps:'https://maps.app.goo.gl/4m4mUEYoSnYxsujQ9'},
- {name:'素食脆皮素圓',note:'明祖素圓，素食',veg:'全素',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9'},
- {name:'附近滷味',note:'向心南路',veg:'',address:'台中市南屯區向心南路915號',lat:24.1356468,lng:120.6439209,maps:'https://maps.app.goo.gl/G1KZMc33PukLmEm36'},
- {name:'上豪自助餐',note:'自助餐，向心南路',veg:'',address:'台中市南屯區向心南路931號',lat:24.1360111,lng:120.6439056,maps:'https://maps.app.goo.gl/A7okPNodrnVTVpX77'},
- {name:'涓豆腐',note:'韓式豆腐鍋，文心秀泰',veg:'',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/Mo5fJ1xrbctNpK6F7'},
- {name:'阿宏麵線+臭豆腐',note:'阿宏臭豆腐，麵線和臭豆腐',veg:'',address:'台中市南屯區向心路71號',maps:'https://maps.app.goo.gl/iHF1kMioboDyUtPF6'},
- {name:'文心秀泰拉麵',note:'花月嵐拉麺，文心秀泰B1',veg:'',address:'台中市南屯區文心南路289號 B1',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/QRgXfomQNSxUv7j79'},
- {name:'五花馬',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'},
- {name:'大埔永春總店',note:'鐵板燒、永春總店',veg:'素OK',address:'台中市南屯區永春東七路607號',maps:'https://maps.app.goo.gl/G28nkzW68Mq7ft8j8'}
-];
-const EXPLORE_DEFAULTS=[
- {name:'三禾手打麵',note:'手打麵，烏日店',veg:'',address:'台中市烏日區公園路282號',lat:24.1026601,lng:120.6244841,dailyHours:['11:00','20:30'],maps:'https://maps.app.goo.gl/hcd4CkGZWKuKnr4D7'},
- {name:'妙善緣蔬食火鍋',note:'妙善園素食小火鍋，一中街',veg:'全素',address:'台中市北區三民路三段164巷14號',maps:'https://maps.app.goo.gl/h3Jkt6QoQoPCmVVP6'},
- {name:'清梅素食館',note:'原天航素食，大甲',veg:'全素',address:'台中市大甲區新政路2之4號',maps:'https://maps.app.goo.gl/D4yXeevNYRvcTGea8'},
- {name:'品撰蔬食',note:'品饌蔬食館，大里',veg:'全素',address:'台中市大里區瑞城一街118號',maps:'https://maps.app.goo.gl/ND8ikk127BHvnx9r8'},
- {name:'頂日竹葉飯蔬食館',note:'鼎日竹葉蒸飯，台中南區，網路資料寫週六公休',veg:'全素',address:'台中市南區仁義街89號',maps:'https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d'},
- {name:'花悅蔬香素食火鍋',note:'素食火鍋，北屯中清路',veg:'全素',address:'台中市北屯區中清路二段982號',maps:'https://maps.app.goo.gl/415a9TaGNBVzpv9t5'},
- {name:'熊的蔬食壽司',note:'蔬食壽司，西屯青海路',veg:'全素',address:'台中市西屯區青海路一段9-8號',maps:'https://maps.app.goo.gl/jXEBWgzqyXorDps4A'},
- {name:'論石間火鍋自助吧',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'},
- {name:'福屋拉麵',note:'拉麵，有素食口味，東區振興路',veg:'素OK',address:'台中市東區振興路2-5號',maps:'https://maps.app.goo.gl/CW1wSeKp3ZfdqB9N9'},
- {name:'越南素食',note:'越齋越南素食料理，東區建成路',veg:'全素',address:'台中市東區建成路633號',maps:'https://maps.app.goo.gl/5pzJPbHrUcGZyc4b9'},
- {name:'食草人',note:'蔬食定食、異國料理，南屯惠中路',veg:'全素',address:'台中市南屯區惠中路三段58號',maps:'https://maps.app.goo.gl/avX2B6SV6kNyWzqEA'},
- {name:'樹院子蔬食火鍋',note:'蔬食火鍋，北屯',veg:'全素',address:'台中市北屯區和祥五街188號',maps:'https://maps.app.goo.gl/aUx3VzzaMAVwqShV7'},
- {name:'繡球麵店',note:'必比登麵店，葤素都有（素食可點松露白胡麻拌麵）。只開週五到週日，不接受訂位',veg:'素OK',address:'台中市西區中興街102號',maps:XIUQIU_MAPS},
- {name:'蔬想起蔬食料理',note:'素食小館，北屯雷中街，有全素和蛋素。網路資料寫週四公休',veg:'全素',address:'台中市北屯區雷中街2-15號',maps:SHUXIANG_MAPS},
- {name:'三津制麵',note:'釀善 三津制麵 台中249老宅店，純素麵館，週一公休',veg:'全素',mon:true,address:'台中市中區中山路249號',maps:SANJIN_MAPS},
- {name:'三院和食蔬食拉麵',note:'Google 名稱：三院和食（蔬食、素食拉麵專賣），北區',veg:'全素',address:'台中市北區大義街112號',maps:'https://maps.app.goo.gl/BuzfKPim8DK69MFn9'},
- {name:'16號廚房素食斗六店',note:'素食餐廳，雲林斗六',veg:'全素',address:'雲林縣斗六市上海路244號',maps:'https://maps.app.goo.gl/huA9f8uzk4FHGWrP9'},
- {name:'16號廚房素食虎尾店',note:'素食餐廳，雲林虎尾',veg:'全素',address:'雲林縣虎尾鎮清雲路507之1號',maps:'https://maps.app.goo.gl/Q1b4ueRDb1VkPy3c9'},
- {name:'菜菜園蔬香滷味',note:'Google 名稱：菜菜園（滿菜園）蔬香滷味麻辣燙（東區忠孝立德店）。素食滷味、麻辣燙',veg:'全素',address:'台中市東區立德街141號',maps:'https://maps.app.goo.gl/5qBiCAbFugpqZC4XA'},
- {name:'老頑童蔬食',note:'蔬食，苗栗三義',veg:'全素',address:'苗栗縣三義鄉水美街319號',maps:'https://maps.app.goo.gl/2FHMpFXAz34bV8cJA'}
-];
 const CATS=[
  {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯'},
  {id:'cook',label:'自己煮',emoji:'🍳',kind:'item',blurb:'家裡自己做',defaults:['水餃','烏龍麵','咖哩','蛋煎']},
@@ -370,9 +322,9 @@ function expandPlace(p,i){
   return o;
 }
 function freshFrom(list){return{places:list.map((p,i)=>expandPlace(p,i)),vegOnly:false,autoMon:true,openNow:false,sortDist:false};}
-function freshEat(){return freshFrom(DEFAULTS);}
-function freshDelivery(){return freshFrom(DEFAULTS.map(p=>Object.assign({},p,{uber:'',panda:''})));}
-function freshExplore(){return freshFrom(EXPLORE_DEFAULTS);}
+function freshEat(){return freshFrom([]);}
+function freshDelivery(){return freshFrom([]);}
+function freshExplore(){return freshFrom([]);}
 function freshCustom(name){const o=freshFrom([]);o.name=name;return o;}
 function freshItems(names){return{items:names.map((name,i)=>({id:'d'+i,name,on:true}))};}
 function catById(id){
@@ -387,475 +339,80 @@ function allCats(){
   const extra=(DB&&Array.isArray(DB.customCats)?DB.customCats:[]).map(c=>({id:c.id,label:c.name,emoji:'⭐',kind:'custom',blurb:'自己加的專區',custom:true}));
   return CATS.concat(extra);
 }
-function readV1(){
-  try{
-    const s=JSON.parse(localStorage.getItem(V1));
-    if(s&&Array.isArray(s.places))return{places:s.places,vegOnly:!!s.vegOnly,autoMon:!!s.autoMon};
-  }catch(e){}
-  return null;
-}
 function validDB(s){
   return !!(s&&s.eat&&Array.isArray(s.eat.places)&&s.cook&&Array.isArray(s.cook.items)&&s.breakfast&&Array.isArray(s.breakfast.items)&&s.night&&Array.isArray(s.night.items));
-}
-function applyKongye(p){
-  if(!p)return false;
-  if(p.name==='空也永春店'){
-    let changed=false;
-    if(!p.address){p.address='台中市南屯區永春東七路855號';changed=true;}
-    if(!p.maps){p.maps='https://maps.app.goo.gl/hQZyNQFz9kJ91HE67';changed=true;}
-    return changed;
-  }
-  if(p.name!=='空也')return false;
-  p.name='空也永春店';
-  if(!p.address)p.address='台中市南屯區永春東七路855號';
-  if(!p.maps)p.maps='https://maps.app.goo.gl/hQZyNQFz9kJ91HE67';
-  if(!p.note||p.note==='素食麵店')p.note='素食麵店，永春店';
-  return true;
-}
-function applyChou(p){
-  if(!p)return false;
-  if(p.name==='臭大蔬'){
-    let changed=false;
-    if(!p.address){p.address='台中市西區精誠路269號';changed=true;}
-    if(!p.maps){p.maps='https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6';changed=true;}
-    if(!p.veg){p.veg='全素';changed=true;}
-    return changed;
-  }
-  if(p.name!=='臭大叔')return false;
-  p.name='臭大蔬';
-  if(!p.address)p.address='台中市西區精誠路269號';
-  if(!p.maps)p.maps='https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6';
-  if(!p.veg)p.veg='全素';
-  if(!p.note||p.note==='臭豆腐')p.note='臭豆腐，精誠店';
-  return true;
-}
-function applyDapu(p){
-  if(!p||p.name!=='大埔')return false;
-  p.name='大埔大墩店';
-  if(!p.address)p.address='台中市南屯區大墩路177號';
-  if(p.lat==null||p.lat==='')p.lat=24.1418152;
-  if(p.lng==null||p.lng==='')p.lng=120.6496811;
-  if(!p.maps)p.maps='https://maps.app.goo.gl/B94tsShjqYBULTrg9';
-  if(!p.note||p.note==='鐵板燒，有素食')p.note='鐵板燒，大墩店，有素食';
-  return true;
-}
-function applyShanghao(p){
-  if(!p||p.name!=='附近自助餐')return false;
-  p.name='上豪自助餐';
-  p.address='台中市南屯區向心南路931號';
-  p.lat=24.1360111;
-  p.lng=120.6439056;
-  p.maps='https://maps.app.goo.gl/A7okPNodrnVTVpX77';
-  if(!p.note||p.note==='向心南路')p.note='自助餐，向心南路';
-  return true;
-}
-function applyLuwei(p){
-  if(!p||p.name!=='附近滷味')return false;
-  let changed=false;
-  if(!p.address){p.address='台中市南屯區向心南路915號';changed=true;}
-  if(p.lat==null||p.lat===''){p.lat=24.1356468;changed=true;}
-  if(p.lng==null||p.lng===''){p.lng=120.6439209;changed=true;}
-  if(!p.maps){p.maps='https://maps.app.goo.gl/G1KZMc33PukLmEm36';changed=true;}
-  return changed;
-}
-const PLACE_FIXES=[
- {name:'麻一鍋',address:'台中市南屯區向心南路897號',maps:'https://maps.app.goo.gl/4m4mUEYoSnYxsujQ9',notes:['','火鍋，週一公休','向心店、火鍋，週一公休','火鍋'],note:'火鍋，向心店，週一公休',vegIfEmpty:'素OK'},
- {name:'胖貓',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
- {name:'八方雲集',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7',notes:['','鍋貼水餃'],note:'鍋貼水餃，南屯店'},
- {name:'輕井澤',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17',notes:['','火鍋','文心南二店、火鍋','素葷都能點'],note:'火鍋，文心南二店，素葷都能點',vegIfEmpty:'素OK'},
- {name:'素食脆皮素圓',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9',notes:['','素食'],note:'明祖素圓，素食'},
- {name:'熱浪小島',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5',notes:[''],note:'大墩店'},
- {name:'見晴蔬食',address:'台中市西區向上南路一段220號',maps:'https://maps.app.goo.gl/bbcCXZQD1UPXLirv8',notes:['','素食'],note:'素食。平日中午僅供外帶'},
- {name:'春成臭豆腐',address:'台中市南屯區東興路二段353號',maps:'https://maps.app.goo.gl/bqfU6demYFKnTdgcA',notes:['','常常沒開，週一公休'],note:'蔬食臭豆腐，週一公休',vegIfEmpty:'全素'},
- {name:'一碗牛肉麵',address:'台中市南屯區永春東路363號',maps:'https://maps.app.goo.gl/5UjGBLtSYz7U5AH16',notes:['','牛肉麵，南屯店'],note:'牛肉麵，南屯店'},
- {name:'涓豆腐',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/Mo5fJ1xrbctNpK6F7'},
- {name:'阿宏麵線+臭豆腐',address:'台中市南屯區向心路71號',maps:'https://maps.app.goo.gl/iHF1kMioboDyUtPF6',notes:['','麵線和臭豆腐'],note:'阿宏臭豆腐，麵線和臭豆腐'},
- {name:'三禾手打麵',address:'台中市烏日區公園路282號',maps:'https://maps.app.goo.gl/hcd4CkGZWKuKnr4D7',notes:['','烏日店'],note:'手打麵，烏日店'}
-];
-function applyShowtimeRamen(p){
-  if(!p||p.name!=='文心秀泰拉麵')return false;
-  let changed=false;
-  const addr='台中市南屯區文心南路289號 B1';
-  if(!p.address||p.address===SHOWTIME.address){if(p.address!==addr){p.address=addr;changed=true;}}
-  if(!p.maps){p.maps='https://maps.app.goo.gl/QRgXfomQNSxUv7j79';changed=true;}
-  if(p.lat==null||p.lat===''){p.lat=SHOWTIME.lat;p.lng=SHOWTIME.lng;changed=true;}
-  if(!p.note||p.note==='文心秀泰的拉麵店'){p.note='花月嵐拉麺，文心秀泰B1';changed=true;}
-  return changed;
 }
 function normName(s){
   return String(s==null?'':s).trim().replace(/\s+/g,'').replace(/＋/g,'+');
 }
-function blankField(s){
-  return s==null||String(s).trim()==='';
-}
-function fixForPlace(p){
-  if(!p)return null;
-  const n=normName(p.name);
-  if(!n)return null;
-  if(n.indexOf('阿宏')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('阿宏')>=0)||null;
-  if(n.indexOf('春成')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('春成')>=0)||null;
-  if(n.indexOf('三禾')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('三禾')>=0)||null;
-  return PLACE_FIXES.find(f=>normName(f.name)===n)||null;
-}
-function applyPlaceFix(p){
-  const fix=fixForPlace(p);
-  if(!fix)return false;
-  let changed=false;
-  if(fix.address&&blankField(p.address)){p.address=fix.address;changed=true;}
-  if(fix.maps&&blankField(p.maps)){p.maps=fix.maps;changed=true;}
-  if(fix.lat!=null&&(p.lat==null||p.lat==='')){p.lat=fix.lat;p.lng=fix.lng;changed=true;}
-  if(fix.note&&(p.note==null||(fix.notes&&fix.notes.indexOf(p.note)>=0))){p.note=fix.note;changed=true;}
-  if(fix.vegIfEmpty&&!p.veg){p.veg=fix.vegIfEmpty;changed=true;}
-  return changed;
-}
-const MIAO_MAPS='https://maps.app.goo.gl/h3Jkt6QoQoPCmVVP6';
-const MIAO_MAPS_BAD=MIAO_MAPS.replace('QoQo','Qo');
-function fixMiaoshanUrl(list){
-  if(!Array.isArray(list))return false;
-  let changed=false;
-  list.forEach(p=>{
-    if(p&&p.maps===MIAO_MAPS_BAD){p.maps=MIAO_MAPS;changed=true;}
-  });
-  return changed;
-}
-function ensureMiaoshan(list){
-  if(!Array.isArray(list))return false;
-  const found=list.find(p=>p&&String(p.name||'').indexOf('妙善')>=0);
-  if(found){
-    let changed=false;
-    if(!found.address){found.address='台中市北區三民路三段164巷14號';changed=true;}
-    if(!found.maps||found.maps===MIAO_MAPS_BAD){if(found.maps!==MIAO_MAPS){found.maps=MIAO_MAPS;changed=true;}}
-    return changed;
+const DATA_REV=2;
+const SEED_IDS=new Set([
+'a2d00175832a06b',
+'bd722d0927ff4a4e',
+'201ea026a577fabe',
+'7586ed38e114a727',
+'c803c777121be2f9',
+'f5cd038b1354c0d3',
+'f7dda5b0aac9787f',
+'5e487c22a112dc05',
+'eb277f885f02f3f3',
+'d79157b9920e6621',
+'e150ef0f234f677f',
+'8998ef1b6e85bd9d',
+'2349f0398e64fa30',
+'445ccf3067bb45d4',
+'5bd8d9ec95743314',
+'c26825065aa26aa',
+'a3bd1c2bcc7b2c2d',
+'3f237587963cc32e',
+'63f48776a0dea2f5',
+'280e7c764309c503',
+'febc6097565f49ce',
+'6b321d8e7678f49a',
+'474504b5d2a259f5',
+'efceaa15b6a2c3a2',
+'72a6cc6d10da5bf7',
+'7989c8a957c94b13',
+'4cc5beb4c1edfaa9',
+'601e0ea5cbdc8405',
+'1ff4c2358255fd1f',
+'65179c07b474d1ed',
+'e144dfb2a05e7e89',
+'3adf6f6ab6659bd',
+'edd9f739670754b3',
+'fe113bb3e99f465e',
+'13e4c866226fec4c',
+'206a28690bd3144e',
+'86712649f7d6a27a',
+'4969e394b7c52910',
+'5186760661a08413'
+]);
+function hashName(s){
+  let h=14695981039346656037n;
+  for(const ch of String(s)){
+    h^=BigInt(ch.codePointAt(0));
+    h=(h*1099511628211n)&0xffffffffffffffffn;
   }
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.miaoshan?'miaoshan2':'miaoshan';
-  list.push({id:id,name:'妙善緣蔬食火鍋',on:true,mon:false,link:'',note:'妙善園素食小火鍋，一中街',veg:'全素',address:'台中市北區三民路三段164巷14號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:MIAO_MAPS});
-  return true;
+  return h.toString(16);
 }
-const ZHUYE_MAPS='https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d';
-function ensureHuwei(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf('16號廚房')>=0&&String(p.name||'').indexOf('虎尾')>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.huwei?'huwei2':'huwei';
-  list.push({id:id,name:'16號廚房素食虎尾店',on:true,mon:false,link:'',note:'素食餐廳，雲林虎尾',veg:'全素',address:'雲林縣虎尾鎮清雲路507之1號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/Q1b4ueRDb1VkPy3c9'});
-  return true;
+function isOldSeed(name){return SEED_IDS.has(hashName(normName(name)));}
+function stripSeeds(list){
+  if(!Array.isArray(list))return [];
+  return list.filter(p=>p&&!isOldSeed(p.name));
 }
-function ensureOnce(list,key,idBase,place){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf(key)>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  list.push(Object.assign({id:used[idBase]?idBase+'2':idBase,on:true,mon:false,link:'',lat:null,lng:null,hours:null,uber:'',panda:''},place));
-  return true;
-}
-function ensureShicaoren(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf('食草人')>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.shicaoren?'shicaoren2':'shicaoren';
-  list.push({id:id,name:'食草人',on:true,mon:false,link:'',note:'蔬食定食、異國料理，南屯惠中路',veg:'全素',address:'台中市南屯區惠中路三段58號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/avX2B6SV6kNyWzqEA'});
-  return true;
-}
-function ensureYuezhai(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&(String(p.name||'').indexOf('越齋')>=0||String(p.name||'').indexOf('越南素食')>=0)))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.yuezhai?'yuezhai2':'yuezhai';
-  list.push({id:id,name:'越南素食',on:true,mon:false,link:'',note:'越齋越南素食料理，東區建成路',veg:'全素',address:'台中市東區建成路633號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/5pzJPbHrUcGZyc4b9'});
-  return true;
-}
-function ensureFuku(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf('福屋')>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.fuku?'fuku2':'fuku';
-  list.push({id:id,name:'福屋拉麵',on:true,mon:false,link:'',note:'拉麵，有素食口味，東區振興路',veg:'素OK',address:'台中市東區振興路2-5號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/CW1wSeKp3ZfdqB9N9'});
-  return true;
-}
-function ensureLunshi(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf('論石間')>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.lunshi?'lunshi2':'lunshi';
-  list.push({id:id,name:'論石間火鍋自助吧',on:true,mon:false,link:'',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'});
-  return true;
-}
-function ensureXiong(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf('熊的')>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.xiong?'xiong2':'xiong';
-  list.push({id:id,name:'熊的蔬食壽司',on:true,mon:false,link:'',note:'蔬食壽司，西屯青海路',veg:'全素',address:'台中市西屯區青海路一段9-8號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/jXEBWgzqyXorDps4A'});
-  return true;
-}
-function ensureHuayue(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf('花悅')>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.huayue?'huayue2':'huayue';
-  list.push({id:id,name:'花悅蔬香素食火鍋',on:true,mon:false,link:'',note:'素食火鍋，北屯中清路',veg:'全素',address:'台中市北屯區中清路二段982號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/415a9TaGNBVzpv9t5'});
-  return true;
-}
-function ensureZhuye(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf('竹葉')>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.zhuye?'zhuye2':'zhuye';
-  list.push({id:id,name:'頂日竹葉飯蔬食館',on:true,mon:false,link:'',note:'鼎日竹葉蒸飯，台中南區，網路資料寫週六公休',veg:'全素',address:'台中市南區仁義街89號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:ZHUYE_MAPS});
-  return true;
-}
-function ensurePinzhuan(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&(String(p.name||'').indexOf('品撰')>=0||String(p.name||'').indexOf('品饌')>=0)))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.pinzhuan?'pinzhuan2':'pinzhuan';
-  list.push({id:id,name:'品撰蔬食',on:true,mon:false,link:'',note:'品饌蔬食館，大里',veg:'全素',address:'台中市大里區瑞城一街118號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/ND8ikk127BHvnx9r8'});
-  return true;
-}
-function ensureQingmei(list){
-  if(!Array.isArray(list))return false;
-  if(list.some(p=>p&&String(p.name||'').indexOf('清梅')>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.qingmei?'qingmei2':'qingmei';
-  list.push({id:id,name:'清梅素食館',on:true,mon:false,link:'',note:'原天航素食，大甲',veg:'全素',address:'台中市大甲區新政路2之4號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/D4yXeevNYRvcTGea8'});
-  return true;
-}
-function ensureYongchun(list){
-  if(!Array.isArray(list))return false;
-  const found=list.find(p=>p&&normName(p.name).indexOf('大埔永春總店')>=0);
-  if(found){
-    let changed=false;
-    if(!found.address){found.address='台中市南屯區永春東七路607號';changed=true;}
-    if(!found.maps){found.maps='https://maps.app.goo.gl/G28nkzW68Mq7ft8j8';changed=true;}
-    return changed;
-  }
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  list.push({id:used.d21?'yongchun':'d21',name:'大埔永春總店',on:true,mon:false,link:'',note:'鐵板燒、永春總店',veg:'素OK',address:'台中市南屯區永春東七路607號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/G28nkzW68Mq7ft8j8'});
-  return true;
-}
-function ensureWuhua(list){
-  if(!Array.isArray(list)||list.some(p=>p&&normName(p.name).indexOf('五花馬')>=0))return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const id=used.d20?'wuhua':'d20';
-  list.push({id:id,name:'五花馬',on:true,mon:false,link:'',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'});
-  return true;
-}
-function mergeInto(list,from,to){
-  if(!Array.isArray(list))return false;
-  const aliases=list.filter(p=>p&&p.name===from);
-  if(!aliases.length)return false;
-  const target=list.find(p=>p&&p.name===to);
-  const aliasOn=aliases.some(p=>p.on);
-  if(target){
-    if(aliasOn&&!target.on)target.on=true;
-    for(let i=list.length-1;i>=0;i--){if(list[i]&&list[i].name===from)list.splice(i,1);}
-    return true;
-  }
-  const keep=aliases[0];
-  keep.name=to;
-  if(aliasOn)keep.on=true;
-  if(to==='麻一鍋'&&!keep.mon)keep.mon=true;
-  for(let i=list.length-1;i>=0;i--){if(list[i]&&list[i]!==keep&&list[i].name===from)list.splice(i,1);}
-  return true;
-}
-function migrateKnownPlaces(db){
-  let changed=false;
-  ['eat','delivery'].forEach(key=>{
-    const list=db[key]&&db[key].places;
-    if(!Array.isArray(list))return;
-    if(mergeInto(list,'螞蟻鍋','麻一鍋'))changed=true;
-    if(mergeInto(list,'金井澤火鍋','輕井澤'))changed=true;
-    list.forEach(p=>{
-      if(applyChou(p))changed=true;
-      if(applyKongye(p))changed=true;
-      if(applyDapu(p))changed=true;
-      if(applyShanghao(p))changed=true;
-      if(applyLuwei(p))changed=true;
-      if(applyPlaceFix(p))changed=true;
-      if(applyShowtimeRamen(p))changed=true;
-    });
-    if(!seedBlocked(db,'wuhua')&&ensureWuhua(list))changed=true;
-    if(!seedBlocked(db,'yongchun')&&ensureYongchun(list))changed=true;
-    if(fixMiaoshanUrl(list))changed=true;
-  });
-  return changed;
-}
-const EXPLORE_MATCH=[
- {id:'sanhe',test:n=>n.indexOf('三禾')>=0},
- {id:'miaoshan',test:n=>n.indexOf('妙善')>=0},
- {id:'qingmei',test:n=>n.indexOf('清梅')>=0},
- {id:'pinzhuan',test:n=>n.indexOf('品撰')>=0||n.indexOf('品饌')>=0},
- {id:'zhuye',test:n=>n.indexOf('竹葉')>=0},
- {id:'huayue',test:n=>n.indexOf('花悅')>=0},
- {id:'xiong',test:n=>n.indexOf('熊的')>=0},
- {id:'lunshi',test:n=>n.indexOf('論石間')>=0},
- {id:'fuku',test:n=>n.indexOf('福屋')>=0},
- {id:'yuezhai',test:n=>n.indexOf('越齋')>=0||n.indexOf('越南素食')>=0},
- {id:'shicaoren',test:n=>n.indexOf('食草人')>=0},
- {id:'shuyuan',test:n=>n.indexOf('樹院子')>=0},
- {id:'xiuqiu',test:n=>n.indexOf('繡球')>=0},
- {id:'shuxiang',test:n=>n.indexOf('蔬想起')>=0},
- {id:'sanjin',test:n=>n.indexOf('三津')>=0},
- {id:'sanyuan',test:n=>n.indexOf('三院')>=0},
- {id:'kitchen16',test:n=>n.indexOf('16號廚房')>=0&&n.indexOf('斗六')>=0},
- {id:'huwei',test:n=>n.indexOf('16號廚房')>=0&&n.indexOf('虎尾')>=0},
- {id:'caicaiyuan',test:n=>n.indexOf('菜菜園')>=0||n.indexOf('滿菜園')>=0},
- {id:'laowantong',test:n=>n.indexOf('老頑童')>=0}
-];
-function exploreMatch(name){
-  const n=normName(name);
-  if(!n)return '';
-  if(n.indexOf('16號廚房')>=0&&n.indexOf('虎尾')>=0)return 'huwei';
-  if(n.indexOf('16號廚房')>=0)return 'kitchen16';
-  const hit=EXPLORE_MATCH.find(s=>s.id!=='huwei'&&s.id!=='kitchen16'&&s.test(n));
-  return hit?hit.id:'';
-}
-function placeLists(db){
-  const lists=[];
+function purgeOldSeeds(s){
+  if(s.dataRev>=DATA_REV)return false;
   ['eat','delivery','explore'].forEach(id=>{
-    const places=db[id]&&db[id].places;
-    if(Array.isArray(places))lists.push(places);
+    if(s[id]&&Array.isArray(s[id].places))s[id].places=stripSeeds(s[id].places);
   });
-  (db.customCats||[]).forEach(c=>{if(c&&Array.isArray(c.places))lists.push(c.places);});
-  return lists;
-}
-function anyHasExplore(db,id){
-  const spec=EXPLORE_MATCH.find(s=>s.id===id);
-  if(!spec)return false;
-  return placeLists(db).some(list=>list.some(p=>p&&spec.test(normName(p.name))));
-}
-function pushRaw(list,idBase,raw){
-  if(!Array.isArray(list)||!raw)return false;
-  const used={};
-  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
-  const p=expandPlace(Object.assign({},raw),list.length);
-  p.id=used[idBase]?idBase+'2':idBase;
-  list.push(p);
+  (s.customCats||[]).forEach(c=>{if(c&&Array.isArray(c.places))c.places=stripSeeds(c.places);});
+  s.mode='blank';
+  s.dataRev=DATA_REV;
+  s.seedGone=[];
   return true;
-}
-function seedKeyOf(p){
-  if(!p)return '';
-  const id=exploreMatch(p.name);
-  if(id)return id;
-  const n=normName(p.name);
-  if(n.indexOf('五花馬')>=0)return 'wuhua';
-  if(n.indexOf('大埔永春總店')>=0)return 'yongchun';
-  return '';
-}
-function seedBlocked(db,key){
-  return !!(key&&db&&Array.isArray(db.seedGone)&&db.seedGone.indexOf(key)>=0);
-}
-function anyHasKey(db,key){
-  if(key==='wuhua')return placeLists(db).some(list=>list.some(p=>p&&normName(p.name).indexOf('五花馬')>=0));
-  if(key==='yongchun')return placeLists(db).some(list=>list.some(p=>p&&normName(p.name).indexOf('大埔永春總店')>=0));
-  return anyHasExplore(db,key);
-}
-function noteSeedDeletion(db,item){
-  const key=seedKeyOf(item);
-  if(!key||anyHasKey(db,key))return {key:key,added:false};
-  if(!Array.isArray(db.seedGone))db.seedGone=[];
-  if(db.seedGone.indexOf(key)>=0)return {key:key,added:false};
-  db.seedGone.push(key);
-  return {key:key,added:true};
-}
-function ensureExploreReady(db){
-  if(!db.explore||typeof db.explore!=='object'||!Array.isArray(db.explore.places))db.explore=freshFrom([]);
-  if(db.explore.vegOnly===undefined)db.explore.vegOnly=false;
-  if(db.explore.autoMon===undefined)db.explore.autoMon=true;
-  if(db.explore.openNow===undefined)db.explore.openNow=false;
-  if(db.explore.sortDist===undefined)db.explore.sortDist=false;
-}
-function migrateToExplore(db){
-  if(db.exploreMoved)return false;
-  ensureExploreReady(db);
-  const dest=db.explore.places;
-  const seen={};
-  dest.forEach(p=>{const k=exploreMatch(p&&p.name);if(k)seen[k]=true;});
-  ['eat','delivery'].forEach(key=>{
-    const list=db[key]&&db[key].places;
-    if(!Array.isArray(list))return;
-    for(let i=0;i<list.length;){
-      const k=exploreMatch(list[i]&&list[i].name);
-      if(!k){i++;continue;}
-      const p=list.splice(i,1)[0];
-      if(!seen[k]){dest.push(p);seen[k]=true;}
-    }
-  });
-  const rank=id=>EXPLORE_MATCH.findIndex(s=>s.id===id);
-  dest.sort((a,b)=>{
-    const ia=rank(exploreMatch(a&&a.name)),ib=rank(exploreMatch(b&&b.name));
-    if(ia<0&&ib<0)return 0;
-    if(ia<0)return 1;
-    if(ib<0)return -1;
-    return ia-ib;
-  });
-  db.exploreMoved=1;
-  return true;
-}
-function ensureExploreSeeds(db){
-  ensureExploreReady(db);
-  const list=db.explore.places;
-  let changed=false;
-  if(fixMiaoshanUrl(list))changed=true;
-  list.forEach(p=>{if(applyPlaceFix(p))changed=true;});
-  const fill=[
-    [n=>n.indexOf('妙善')>=0,ensureMiaoshan],
-    [n=>n.indexOf('清梅')>=0,ensureQingmei],
-    [n=>n.indexOf('品撰')>=0||n.indexOf('品饌')>=0,ensurePinzhuan],
-    [n=>n.indexOf('竹葉')>=0,ensureZhuye],
-    [n=>n.indexOf('花悅')>=0,ensureHuayue],
-    [n=>n.indexOf('熊的')>=0,ensureXiong],
-    [n=>n.indexOf('論石間')>=0,ensureLunshi],
-    [n=>n.indexOf('福屋')>=0,ensureFuku],
-    [n=>n.indexOf('越齋')>=0||n.indexOf('越南素食')>=0,ensureYuezhai],
-    [n=>n.indexOf('食草人')>=0,ensureShicaoren],
-    [n=>n.indexOf('樹院子')>=0,l=>ensureOnce(l,'樹院子','shuyuan',EXPLORE_DEFAULTS.find(p=>p.name==='樹院子蔬食火鍋'))],
-    [n=>n.indexOf('繡球')>=0,l=>ensureOnce(l,'繡球','xiuqiu',EXPLORE_DEFAULTS.find(p=>p.name==='繡球麵店'))],
-    [n=>n.indexOf('蔬想起')>=0,l=>ensureOnce(l,'蔬想起','shuxiang',EXPLORE_DEFAULTS.find(p=>p.name==='蔬想起蔬食料理'))],
-    [n=>n.indexOf('三津')>=0,l=>ensureOnce(l,'三津','sanjin',EXPLORE_DEFAULTS.find(p=>p.name==='三津制麵'))],
-    [n=>n.indexOf('三院')>=0,l=>ensureOnce(l,'三院','sanyuan',EXPLORE_DEFAULTS.find(p=>p.name==='三院和食蔬食拉麵'))],
-    [n=>n.indexOf('菜菜園')>=0||n.indexOf('滿菜園')>=0,l=>ensureOnce(l,'菜菜園','caicaiyuan',EXPLORE_DEFAULTS.find(p=>p.name==='菜菜園蔬香滷味'))],
-    [n=>n.indexOf('老頑童')>=0,l=>ensureOnce(l,'老頑童','laowantong',EXPLORE_DEFAULTS.find(p=>p.name==='老頑童蔬食'))]
-  ];
-  fill.forEach(([test,fn])=>{
-    if(list.some(p=>p&&test(normName(p.name)))&&fn(list))changed=true;
-  });
-  EXPLORE_MATCH.forEach((spec,idx)=>{
-    if(seedBlocked(db,spec.id)||anyHasExplore(db,spec.id))return;
-    const raw=EXPLORE_DEFAULTS[idx];
-    if(!raw||!pushRaw(list,spec.id,raw))return;
-    const p=list.pop();
-    let at=list.findIndex(x=>{
-      const id=exploreMatch(x&&x.name);
-      if(!id)return false;
-      return EXPLORE_MATCH.findIndex(s=>s.id===id)>idx;
-    });
-    if(at<0)at=list.findIndex(x=>!exploreMatch(x&&x.name));
-    if(at<0)at=list.length;
-    list.splice(at,0,p);
-    changed=true;
-  });
-  return changed;
 }
 function blankDB(){
-  return{last:null,screen:'picker',mode:'blank',eat:freshFrom([]),cook:freshItems(catById('cook').defaults),breakfast:freshItems(catById('breakfast').defaults),night:freshItems(catById('night').defaults),delivery:freshFrom([]),explore:freshFrom([]),customCats:[],seedGone:[],exploreMoved:1};
-}
-function taichungDB(){
-  return{last:null,screen:'picker',mode:'taichung',eat:freshEat(),cook:freshItems(catById('cook').defaults),breakfast:freshItems(catById('breakfast').defaults),night:freshItems(catById('night').defaults),delivery:freshDelivery(),explore:freshExplore(),customCats:[],seedGone:[],exploreMoved:1};
+  return{last:null,screen:'picker',mode:'blank',dataRev:DATA_REV,eat:freshFrom([]),cook:freshItems(catById('cook').defaults),breakfast:freshItems(catById('breakfast').defaults),night:freshItems(catById('night').defaults),delivery:freshFrom([]),explore:freshFrom([]),customCats:[],seedGone:[]};
 }
 function loadDB(){
   let raw;
@@ -864,18 +421,13 @@ function loadDB(){
   try{
     const s=JSON.parse(raw);
     if(validDB(s)){
-      if(s.mode!=='blank'&&s.mode!=='taichung')s.mode='taichung';
-      if(!s.delivery||!Array.isArray(s.delivery.places))s.delivery=s.mode==='blank'?freshFrom([]):freshDelivery();
+      if(!s.delivery||!Array.isArray(s.delivery.places))s.delivery=freshFrom([]);
       if(s.delivery.vegOnly===undefined)s.delivery.vegOnly=false;
       if(s.delivery.autoMon===undefined)s.delivery.autoMon=true;
+      if(!s.explore||!Array.isArray(s.explore.places))s.explore=freshFrom([]);
       if(!Array.isArray(s.customCats))s.customCats=[];
       if(!Array.isArray(s.seedGone))s.seedGone=[];
-      if(s.mode!=='blank'){
-        let changed=migrateKnownPlaces(s);
-        if(migrateToExplore(s))changed=true;
-        if(ensureExploreSeeds(s))changed=true;
-        if(changed)localStorage.setItem(V2,JSON.stringify(s));
-      }
+      if(purgeOldSeeds(s))localStorage.setItem(V2,JSON.stringify(s));
       return s;
     }
   }catch(e){}
@@ -974,7 +526,7 @@ function distText(p){
   if(m==null)return '';
   return fmtDist(m)+'・'+travelHint(m);
 }
-function uberSearch(name){return 'https://www.ubereats.com/tw/search?q='+encodeURIComponent(name+' 台中');}
+function uberSearch(name){return 'https://www.ubereats.com/tw/search?q='+encodeURIComponent(name);}
 function pandaSearch(name){return 'https://www.foodpanda.com.tw/restaurants/new?query='+encodeURIComponent(name);}
 
 const cv=document.getElementById('wheel'),ctx=cv.getContext('2d');
@@ -1051,7 +603,7 @@ function draw(){
     ctx.beginPath();ctx.arc(R,R,R-8,0,7);ctx.fillStyle='#f1e4cf';ctx.fill();
     empty.style.display='flex';document.getElementById('hub').style.display='none';
     if(placeLike()){
-      empty.innerHTML=n===0?'轉盤空空的 🥲<br>把下面清單的開關打開，或新增一家店吧！':'只剩一家：<b>'+esc(cur[0].name)+'</b><br>不用轉了，就吃這家吧 😋<br><small>（再打開一家才能轉）</small>';
+      empty.innerHTML=n===0?'還沒有店 🌱<br>在下面新增一家，或匯入分享的專區、備份':'只剩一家：<b>'+esc(cur[0].name)+'</b><br>再加一家就能轉<br><small>也可以匯入別人分享的專區</small>';
     }else{
       empty.innerHTML=n===0?'轉盤空空的 🥲<br>把下面清單的開關打開，或新增一項吧！':'只剩一項：<b>'+esc(cur[0].name)+'</b><br>不用轉了，就吃這個吧 😋<br><small>（再打開一項才能轉）</small>';
     }
@@ -1239,7 +791,7 @@ function render(){
   document.getElementById('placeAdd').hidden=!place;
   document.getElementById('itemAdd').hidden=place;
   document.getElementById('catTools').hidden=!c.custom;
-  document.getElementById('listHint').textContent=place?'右邊開關關掉＝暫時不轉。左滑或點「修改」可以刪除、複製、移動。':'右邊開關關掉＝暫時不轉（例如昨天剛吃過），不會刪除。';
+  document.getElementById('listHint').textContent=place?'清單是空的就先新增店家，或匯入分享的專區、備份。左滑或點「修改」可以刪除、複製、移動。':'右邊開關關掉＝暫時不轉。';
   document.getElementById('listHeading').textContent=place?'📋 店家清單':'📋 清單';
   const sortBtn=document.getElementById('sortBtn');
   if(place){
@@ -1393,7 +945,7 @@ function deleteItem(id){
   const item=list[index];
   if(!confirm('確定刪除「'+item.name+'」？'))return;
   list.splice(index,1);
-  const seed=place?noteSeedDeletion(DB,item):{key:'',added:false};
+  const seed={key:'',added:false};
   if(editingId===id)editingId=null;
   openId=null;
   save();render();
@@ -1513,13 +1065,9 @@ document.getElementById('openChip').onclick=()=>{if(!placeLike())return;S.openNo
 document.getElementById('resetBtn').onclick=()=>{
   const c=current();if(!c)return;
   const place=placeLike();
-  const msg=c.custom?'清空這個專區的清單？':(place?'恢復預設清單？你新增、修改或刪除的店家會被重設。':'恢復預設清單？你新增、修改或刪除的項目會被重設。');
+  const msg=place?'清空這份店家清單？':'恢復預設項目？你新增的項目會被重設。';
   if(!confirm(msg))return;
-  if(c.custom)S.places=[];
-  else if(DB.mode==='blank'&&place)S.places=[];
-  else if(catId==='explore')S=freshExplore();
-  else if(catId==='delivery')S=freshDelivery();
-  else if(place)S=freshEat();
+  if(place)S.places=[];
   else S=freshItems(c.defaults);
   editingId=null;save();render();
 };
@@ -1701,7 +1249,6 @@ function begin(db){
   showShell();
 }
 document.getElementById('startBlank').onclick=()=>begin(blankDB());
-document.getElementById('startTaichung').onclick=()=>begin(taichungDB());
 if(FEEDBACK_URL){
   const fb=document.getElementById('feedbackBtn');
   fb.hidden=false;
@@ -1767,12 +1314,12 @@ function applyImport(mode){
   if(!src)return;
   if(!DB)DB=blankDB();
   if(mode==='replace'){
-    src.mode=src.mode==='blank'?'blank':'taichung';
+    src.mode='blank';src.dataRev=DATA_REV;
     if(!Array.isArray(src.customCats))src.customCats=[];
     if(!Array.isArray(src.seedGone))src.seedGone=[];
     ['eat','delivery','explore'].forEach(id=>{
       if(!src[id]||!Array.isArray(src[id].places))return;
-      src[id].places=src[id].places.map(sanitizePlace).filter(Boolean);
+      src[id].places=stripSeeds(src[id].places.map(sanitizePlace).filter(Boolean));
     });
     ['cook','breakfast','night'].forEach(id=>{
       if(!src[id]||!Array.isArray(src[id].items))return;
@@ -1783,14 +1330,14 @@ function applyImport(mode){
       const name=String(c.name||'').trim().slice(0,20);
       if(!name)return null;
       const raw=Array.isArray(c.places)?c.places:(c.items||[]).map(p=>({name:p&&p.name,on:!p||p.on!==false}));
-      return Object.assign(freshFrom([]),{id:String(c.id||('c'+Date.now())),name:name,places:raw.map(sanitizePlace).filter(Boolean)});
+      return Object.assign(freshFrom([]),{id:String(c.id||('c'+Date.now())),name:name,places:stripSeeds(raw.map(sanitizePlace).filter(Boolean))});
     }).filter(Boolean);
     DB=src;catId=null;S=null;DB.screen='picker';DB.last=null;
   }else{
     ['eat','delivery','explore'].forEach(id=>{
       const list=src[id]&&src[id].places;
       if(!Array.isArray(list)||!DB[id])return;
-      mergeByName(DB[id].places,list.map(sanitizePlace).filter(Boolean));
+      mergeByName(DB[id].places,stripSeeds(list.map(sanitizePlace).filter(Boolean)));
     });
     ['cook','breakfast','night'].forEach(id=>{
       const list=src[id]&&src[id].items;
@@ -1802,7 +1349,7 @@ function applyImport(mode){
       if(!c||!c.name)return;
       const name=String(c.name).trim().slice(0,20);
       const found=DB.customCats.find(x=>x&&x.name===name);
-      const places=(c.places||[]).map(sanitizePlace).filter(Boolean);
+      const places=stripSeeds((c.places||[]).map(sanitizePlace).filter(Boolean));
       if(!found){
         const o=freshFrom([]);o.name=name;o.id='c'+Date.now()+Math.floor(Math.random()*1000);o.places=places;
         DB.customCats.push(o);
@@ -1882,7 +1429,7 @@ function acceptShare(){
   if(DB.customCats.some(c=>c&&c.name===name))name=(name+' 2').slice(0,20);
   const id='c'+Date.now();
   const raw=cat.kind==='item'?(cat.items||[]).map(p=>({name:p&&p.name,on:p&&p.on!==false})):(cat.places||[]);
-  const o=freshFrom([]);o.id=id;o.name=name;o.places=raw.map(sanitizePlace).filter(Boolean);
+  const o=freshFrom([]);o.id=id;o.name=name;o.places=stripSeeds(raw.map(sanitizePlace).filter(Boolean));
   DB.customCats.push(o);
   DB.screen='wheel';DB.last=id;
   persist();
