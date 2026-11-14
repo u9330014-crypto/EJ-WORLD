@@ -135,8 +135,16 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
       <button type="button" class="btn ghost" id="installNo">先不要</button>
     </div>
   </div>
+  <div class="card">
+    <h2>備份</h2>
+    <div class="editacts">
+      <button type="button" class="btn" id="exportBtn">匯出備份</button>
+      <button type="button" class="btn ghost" id="importBtn">匯入備份</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-14a</p>
+  <p class="small">版本 2026-11-14b</p>
 </div>
 
 <div class="wrap" id="wheelView" hidden>
@@ -205,7 +213,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
     <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
   </div>
   <p class="small">資料只存在這支手機的瀏覽器裡</p>
-  <p class="small">版本 2026-11-14a</p>
+  <p class="small">版本 2026-11-14b</p>
 </div>
 
 <div class="mask" id="mask">
@@ -224,6 +232,17 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 <div id="undoToast" class="toast" hidden>
   <span id="undoText">已刪除</span>
   <button type="button" class="btn" id="undoBtn">復原</button>
+</div>
+<div class="mask" id="importMask">
+  <div class="result">
+    <div class="rname" style="font-size:22px">匯入備份</div>
+    <p class="small" id="importSummary" style="text-align:left"></p>
+    <div class="acts">
+      <button type="button" class="btn ghost" id="importMerge">合併</button>
+      <button type="button" class="btn" id="importReplace">覆蓋</button>
+    </div>
+    <button type="button" class="btn ghost" id="importCancel">取消</button>
+  </div>
 </div>
 <div class="mask" id="moveMask">
   <div class="result">
@@ -1618,6 +1637,124 @@ if('serviceWorker' in navigator && location.protocol!=='file:'){
     if(reg&&reg.update)reg.update().catch(()=>{});
   }).catch(()=>{});
 }
+let pendingImport=null;
+function safeUrl(u){
+  const s=String(u||'').trim();
+  return /^https:\/\//i.test(s)&&s.length<500?s:'';
+}
+function sanitizeHours(h){
+  if(!h||typeof h!=='object')return null;
+  const out={};
+  for(let d=0;d<7;d++){
+    const slot=h[d]!=null?h[d]:h[String(d)];
+    if(slot==null)continue;
+    if(!Array.isArray(slot)||slot.length<2||!slot[0]||!slot[1])out[d]=[];
+    else out[d]=[String(slot[0]).slice(0,5),String(slot[1]).slice(0,5)];
+  }
+  return Object.keys(out).length?out:null;
+}
+function sanitizePlace(p,i){
+  if(!p||typeof p!=='object')return null;
+  const name=String(p.name||'').trim().slice(0,40);
+  if(!name)return null;
+  return expandPlace({
+    id:String(p.id||('s'+i)).replace(/[^\w-]/g,'').slice(0,40)||('s'+i),
+    name:name,on:p.on!==false,mon:!!p.mon,
+    note:String(p.note||'').slice(0,200),
+    veg:p.veg==='全素'||p.veg==='素OK'?p.veg:'',
+    address:String(p.address||'').slice(0,80),
+    maps:safeUrl(p.maps),link:safeUrl(p.link),uber:safeUrl(p.uber),panda:safeUrl(p.panda),
+    lat:numOrNull(p.lat),lng:numOrNull(p.lng),hours:sanitizeHours(p.hours)
+  },i);
+}
+function sanitizeItem(p,i){
+  if(!p||typeof p!=='object')return null;
+  const name=String(p.name||'').trim().slice(0,40);
+  if(!name)return null;
+  return{id:String(p.id||('i'+i)).replace(/[^\w-]/g,'').slice(0,40)||('i'+i),name:name,on:p.on!==false};
+}
+function exportBackup(){
+  const blob=new Blob([JSON.stringify({app:'ej-food-wheel',v:1,exportedAt:new Date().toISOString(),db:DB})],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='food-wheel-backup.json';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+function mergeByName(dst,src){
+  const seen={};
+  dst.forEach(p=>{if(p&&p.name)seen[normName(p.name)]=true;});
+  src.forEach(p=>{
+    const k=normName(p&&p.name);
+    if(!k||seen[k])return;
+    seen[k]=true;dst.push(p);
+  });
+}
+function applyImport(mode){
+  const src=pendingImport;pendingImport=null;
+  document.getElementById('importMask').classList.remove('show');
+  if(!src)return;
+  if(mode==='replace'){
+    if(!Array.isArray(src.customCats))src.customCats=[];
+    if(!Array.isArray(src.seedGone))src.seedGone=[];
+    ['eat','delivery','explore'].forEach(id=>{
+      if(!src[id]||!Array.isArray(src[id].places))return;
+      src[id].places=src[id].places.map(sanitizePlace).filter(Boolean);
+    });
+    ['cook','breakfast','night'].forEach(id=>{
+      if(!src[id]||!Array.isArray(src[id].items))return;
+      src[id].items=src[id].items.map(sanitizeItem).filter(Boolean);
+    });
+    DB=src;catId=null;S=null;DB.screen='picker';DB.last=null;
+  }else{
+    ['eat','delivery','explore'].forEach(id=>{
+      const list=src[id]&&src[id].places;
+      if(!Array.isArray(list)||!DB[id]||!Array.isArray(DB[id].places))return;
+      mergeByName(DB[id].places,list.map(sanitizePlace).filter(Boolean));
+    });
+    ['cook','breakfast','night'].forEach(id=>{
+      const list=src[id]&&src[id].items;
+      if(!Array.isArray(list)||!DB[id]||!Array.isArray(DB[id].items))return;
+      mergeByName(DB[id].items,list.map(sanitizeItem).filter(Boolean));
+    });
+    if(!Array.isArray(DB.customCats))DB.customCats=[];
+    (src.customCats||[]).forEach(c=>{
+      if(!c||!c.name)return;
+      const name=String(c.name).trim().slice(0,20);
+      const found=DB.customCats.find(x=>x&&x.name===name);
+      const places=(c.places||[]).map(sanitizePlace).filter(Boolean);
+      if(!found){
+        const o=freshFrom([]);o.name=name;o.id='c'+Date.now()+Math.floor(Math.random()*1000);o.places=places;
+        DB.customCats.push(o);
+      }else if(Array.isArray(found.places))mergeByName(found.places,places);
+    });
+  }
+  persist();
+  document.getElementById('wheelView').hidden=true;
+  document.getElementById('picker').hidden=false;
+  renderPicker();
+}
+document.getElementById('exportBtn').onclick=exportBackup;
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+document.getElementById('importFile').addEventListener('change',e=>{
+  const file=e.target.files&&e.target.files[0];
+  e.target.value='';
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(String(reader.result||''));
+      if(!data||data.app!=='ej-food-wheel'||data.v!==1||!validDB(data.db))throw new Error('bad');
+      pendingImport=data.db;
+      document.getElementById('importSummary').textContent='讀到備份。合併會保留現在的項目，只補上沒有的名字。覆蓋會換成這份備份。';
+      document.getElementById('importMask').classList.add('show');
+    }catch(err){alert('這個檔案不是這個轉盤的備份。');}
+  };
+  reader.readAsText(file);
+});
+document.getElementById('importMerge').onclick=()=>{if(confirm('合併這份備份？現有的項目會留著。'))applyImport('merge');};
+document.getElementById('importReplace').onclick=()=>{if(confirm('覆蓋現在的全部清單？這會換成備份裡的內容。'))applyImport('replace');};
+document.getElementById('importCancel').onclick=()=>{pendingImport=null;document.getElementById('importMask').classList.remove('show');};
 if(DB.screen==='wheel'&&DB.last&&catById(DB.last)&&bucketOf(DB.last)){
   catId=DB.last;S=bucketOf(DB.last);
   document.getElementById('picker').hidden=true;

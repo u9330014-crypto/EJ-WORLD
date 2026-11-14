@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7efe2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="待會吃什麼">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png" type="image/png">
+<title>待會吃什麼</title>
+<style>
+:root{--bg:#f7efe2;--card:#fffaf2;--brown:#8b5a2b;--brown-d:#5e3a1a;--caramel:#c98a4b;--line:#ead9c0;--muted:#9a7b5c;--green:#5f9e5a;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--brown-d);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;padding:env(safe-area-inset-top) 0 40px;overflow-x:hidden}
+button,input{font-family:inherit}
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+header{text-align:center;margin:6px 0 10px}
+header h1{margin:0;font-size:28px;letter-spacing:2px}
+header p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.card{background:var(--card);border-radius:22px;box-shadow:0 4px 14px rgba(139,90,43,.12);padding:16px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;color:var(--brown);cursor:pointer;user-select:none}
+.chip.on{background:var(--brown);color:#fff;border-color:var(--brown)}
+.badge{display:inline-block;background:#fde3c2;color:var(--brown-d);border-radius:999px;padding:4px 10px;font-size:13px;margin:0 auto 8px}
+.wheelbox{position:relative;width:100%;max-width:360px;margin:0 auto;aspect-ratio:1}
+canvas{width:100%;height:100%;display:block}
+.pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:30px solid var(--brown-d);filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));z-index:2}
+.hub{position:absolute;inset:0;margin:auto;width:22%;height:22%;border-radius:50%;background:var(--card);border:4px solid var(--brown);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--brown);box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer}
+.empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--muted);font-size:16px;line-height:1.6}
+.spin{display:block;width:100%;margin-top:14px;border:0;border-radius:18px;padding:16px;font-size:20px;font-weight:700;letter-spacing:2px;color:#fff;background:linear-gradient(180deg,var(--caramel),var(--brown));box-shadow:0 5px 0 var(--brown-d);cursor:pointer}
+.spin:active{transform:translateY(3px);box-shadow:0 2px 0 var(--brown-d)}
+.spin:disabled{opacity:.5}
+h2{font-size:18px;margin:0 0 10px}
+.row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border-bottom:0}
+.row .info{flex:1;min-width:0}
+.row .name{font-weight:700;word-break:break-word}
+.row .note,.dist{font-size:13px;color:var(--muted);margin-top:2px;word-break:break-word}
+.row.off .name,.row.off .note{opacity:.45;text-decoration:line-through}
+.tag{font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;background:#e4f1df;color:#3d6b39;vertical-align:middle;font-weight:600}
+.tag.mon,.tag.closed{background:#f6dcdc;color:#a33}
+.tag.open{background:#e4f1df;color:#3d6b39}
+.sw{position:relative;width:46px;height:28px;flex:none}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:#d8c6ae;border-radius:999px;transition:.2s;cursor:pointer}
+.sw span:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked+span{background:var(--green)}
+.sw input:checked+span:before{transform:translateX(18px)}
+.del{border:0;background:none;font-size:18px;color:#c0a080;cursor:pointer;padding:4px}
+form{display:flex;flex-direction:column;gap:8px}
+input[type=text],input[type=url],input[type=time],input[type=number]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;background:#fff;color:var(--brown-d)}
+.chk{font-size:14px;color:var(--brown);display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:11px;font-size:16px;font-weight:700;background:var(--brown);color:#fff;cursor:pointer}
+.btn.ghost{background:none;color:var(--muted);border:1.5px dashed var(--line);font-weight:500;width:100%;margin-top:4px}
+.mask{position:fixed;inset:0;background:rgba(60,35,15,.45);display:none;align-items:center;justify-content:center;z-index:10;padding:24px}
+.mask.show{display:flex}
+.result{background:var(--card);border-radius:26px;padding:26px 20px;text-align:center;max-width:360px;width:100%;animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.result .emo{font-size:52px}
+.result .rname{font-size:30px;font-weight:800;margin:6px 0}
+.result .rnote{color:var(--muted);line-height:1.6;font-size:15px}
+.result a{color:var(--brown);font-weight:700}
+.result .acts{display:flex;gap:8px;margin-top:18px}
+.result .acts button{flex:1}
+.exts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.exts a{flex:1;min-width:120px;background:var(--brown);color:#fff;text-decoration:none;border-radius:12px;padding:10px 8px;font-weight:700}
+.small{font-size:12px;color:var(--muted);text-align:center}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:11}
+.picks{display:flex;flex-direction:column;gap:12px}
+.pick{display:flex;align-items:center;gap:14px;width:100%;min-height:92px;border:0;border-radius:22px;background:var(--card);box-shadow:0 4px 14px rgba(139,90,43,.12);padding:16px;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.pick:active{transform:translateY(2px)}
+.pick .emo{flex:none;width:68px;height:68px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;background:linear-gradient(180deg,#fde3c2,var(--caramel));box-shadow:inset 0 -4px 0 rgba(94,58,26,.12)}
+.pick .t{display:block;font-size:22px;font-weight:800;letter-spacing:1px}
+.pick .d{display:block;margin-top:4px;font-size:14px;color:var(--muted);font-weight:500}
+.pick .go{margin-left:auto;font-size:28px;color:var(--caramel);line-height:1}
+.pick.is-last{box-shadow:0 0 0 2.5px var(--caramel),0 4px 14px rgba(139,90,43,.12)}
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.back{border:0;background:transparent;color:var(--brown);font:inherit;font-weight:700;font-size:16px;padding:4px 0 8px;cursor:pointer}
+.back:disabled{opacity:.4}
+.sound{border:1.5px solid var(--line);background:#fff;color:var(--brown);border-radius:999px;padding:8px 12px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px}
+.tab{flex:1 1 calc(50% - 8px);border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:10px 6px;font:inherit;font-size:14px;font-weight:700;color:var(--brown);cursor:pointer}
+.tab.on{background:var(--brown);color:#fff;border-color:var(--brown)}
+.tab:disabled{opacity:.45}
+.placeTools{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.placeTools .btn.ghost{width:auto;flex:1 1 calc(50% - 8px);margin-top:0}
+.placeTools .btn.on{border-style:solid;border-color:var(--brown);color:var(--brown-d)}
+.edit,.move{flex:none;border:1.5px solid var(--line);background:#fff;color:var(--brown);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.mod{flex:none;border:0;background:var(--brown);color:#fff;border-radius:12px;padding:10px 14px;font:inherit;font-size:16px;font-weight:800;min-height:44px;cursor:pointer}
+.swipe{display:block;position:relative;overflow:hidden;padding:0}
+.swipe-back{position:absolute;top:0;right:0;bottom:0;width:228px;display:flex}
+.swipe-back .act{flex:1;border:0;color:#fff;font:inherit;font-size:18px;font-weight:800;min-width:76px;min-height:64px;cursor:pointer}
+.swipe-back .del{background:#b94b3e}
+.swipe-back .copy{background:#c98a4b}
+.swipe-back .go{background:#6d4c2b}
+.swipe-front{position:relative;z-index:1;display:flex;align-items:center;gap:8px;background:var(--card);padding:10px 0;transform:translateX(0);transition:transform .18s ease;touch-action:pan-y}
+.swipe.open .swipe-front{transform:translateX(-228px)}
+.toast{position:fixed;left:16px;right:16px;bottom:16px;z-index:20;display:flex;align-items:center;gap:10px;background:#5e3a1a;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.toast[hidden]{display:none}
+.toast span{flex:1;font-size:16px;font-weight:700;text-align:left}
+.toast .btn{width:auto;background:#fff;color:#5e3a1a;min-width:76px;min-height:44px}
+.movelist{display:flex;flex-direction:column;gap:8px;margin:12px 0;max-height:46vh;overflow:auto}
+.movelist .btn.ghost{margin-top:0}
+.row.editing{flex-direction:column;align-items:stretch}
+.editform{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0}
+.editacts{display:flex;gap:8px}
+.editacts .btn,.editacts .btn.ghost{width:auto;flex:1;margin-top:0}
+details.more{border-top:1px dashed var(--line);padding-top:8px}
+details.more summary{cursor:pointer;font-weight:700;color:var(--brown);padding:6px 0}
+.pair{display:flex;gap:8px}
+.pair label{flex:1;font-size:13px;color:var(--muted)}
+.searchlinks{display:flex;flex-wrap:wrap;gap:8px}
+.searchlinks a{flex:1;min-width:140px;text-align:center;text-decoration:none;border:1.5px dashed var(--line);border-radius:12px;padding:10px 8px;color:var(--brown);font-weight:700}
+.install p{margin:0 0 8px;text-align:left;line-height:1.5}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--caramel);outline-offset:2px}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<div class="wrap" id="welcome" hidden>
+  <header>
+    <h1>🍜 待會吃什麼</h1>
+    <p>公開試用版。先選怎麼開始。</p>
+  </header>
+  <div class="picks">
+    <button type="button" class="pick" id="startBlank"><span class="emo" aria-hidden="true">📝</span><span class="ptxt"><span class="t">從空白開始</span><span class="d">自己慢慢加店</span></span></button>
+    <button type="button" class="pick" id="startTaichung"><span class="emo" aria-hidden="true">📍</span><span class="ptxt"><span class="t">載入台中推薦清單</span><span class="d">公開店家資料，不含私人備註</span></span></button>
+  </div>
+  <p class="small">資料只存在你的手機瀏覽器，換手機前請先匯出備份</p>
+  <p class="small">店家資訊僅供參考，以 Google 地圖為準</p>
+  <p class="small">版本 2026-11-14s1</p>
+</div>
+<div class="wrap" id="picker">
+  <header>
+    <h1>🍜 待會吃什麼</h1>
+    <p>先選一個轉盤</p>
+  </header>
+  <div class="picks" id="picks"></div>
+  <div class="card install" id="installHint" hidden>
+    <p>可以把轉盤加到主畫面，下次像小程式一樣打開。</p>
+    <div class="editacts">
+      <button type="button" class="btn" id="installGo">安裝</button>
+      <button type="button" class="btn ghost" id="installNo">先不要</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>備份與分享</h2>
+    <div class="editacts">
+      <button type="button" class="btn" id="exportBtn">匯出備份</button>
+      <button type="button" class="btn ghost" id="importBtn">匯入備份</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <button type="button" class="btn ghost" id="feedbackBtn" hidden>意見回饋</button>
+  </div>
+  <p class="small">資料只存在你的手機瀏覽器，換手機前請先匯出備份</p>
+  <p class="small">店家資訊僅供參考，以 Google 地圖為準</p>
+  <p class="small">版本 2026-11-14s1</p>
+</div>
+
+<div class="wrap" id="wheelView" hidden>
+  <div class="toprow">
+    <button type="button" class="back" id="backBtn">← 回選單</button>
+    <button type="button" class="sound" id="soundBtn" aria-pressed="true">🔊 聲音開</button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <header>
+    <h1 id="title"></h1>
+    <p id="sub"></p>
+  </header>
+  <div class="placeTools" id="catTools" hidden>
+    <button type="button" class="btn ghost" id="renameCatBtn">重新命名</button>
+    <button type="button" class="btn ghost" id="delCatBtn">刪除專區</button>
+  </div>
+  <div class="placeTools">
+    <button type="button" class="btn ghost" id="shareCatBtn">分享專區</button>
+  </div>
+
+  <div class="card">
+    <div class="chips" id="placeChips">
+      <div class="chip" id="vegChip">🥬 只轉素食友善</div>
+      <div class="chip" id="monChip">📅 週一自動排除公休</div>
+      <div class="chip" id="openChip">🕐 只轉現在有開的</div>
+    </div>
+    <div style="text-align:center"><span class="badge" id="status"></span></div>
+    <div class="wheelbox">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="720" height="720"></canvas>
+      <div class="hub" id="hub">轉!</div>
+      <div class="empty" id="empty"></div>
+    </div>
+    <button type="button" class="spin" id="spinBtn">🎯 開始轉</button>
+    <div class="placeTools" id="placeTools">
+      <button type="button" class="btn ghost" id="locBtn">用現在位置</button>
+      <button type="button" class="btn ghost" id="sortBtn">依距離排序</button>
+    </div>
+    <p class="small" id="locMsg" style="text-align:left;margin:8px 0 0"></p>
+  </div>
+
+  <div class="card" id="placeAdd">
+    <h2>➕ 新增店家</h2>
+    <form id="addForm">
+      <input type="text" id="newName" placeholder="店名（必填）" maxlength="20" required>
+      <input type="text" id="newNote" placeholder="備註，例如：要訂位、有素食" maxlength="60">
+      <div class="chk">
+        <label><input type="radio" name="veg" value="" checked> 一般</label>
+        <label><input type="radio" name="veg" value="素OK"> 素OK</label>
+        <label><input type="radio" name="veg" value="全素"> 全素</label>
+        <label><input type="checkbox" id="newMon"> 週一公休</label>
+      </div>
+      <button class="btn" type="submit">加入轉盤</button>
+    </form>
+  </div>
+
+  <div class="card" id="itemAdd" hidden>
+    <h2>➕ 新增</h2>
+    <form id="itemForm">
+      <input type="text" id="itemName" placeholder="名稱（必填）" maxlength="20" required>
+      <button class="btn" type="submit">加入轉盤</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2><span id="listHeading">📋 店家清單</span> <span class="small" id="count"></span></h2>
+    <div class="small" id="listHint" style="text-align:left;margin-bottom:6px">右邊開關關掉＝暫時不轉（例如昨天剛吃過），不會刪除。點「編輯」可改名稱。</div>
+    <div id="list"></div>
+    <button type="button" class="btn ghost" id="resetBtn">↺ 恢復預設清單</button>
+  </div>
+  <p class="small">資料只存在你的手機瀏覽器，換手機前請先匯出備份</p>
+  <p class="small">店家資訊僅供參考，以 Google 地圖為準</p>
+  <p class="small">版本 2026-11-14s1</p>
+</div>
+
+<div class="mask" id="mask">
+  <div class="result">
+    <div class="emo" id="rEmo">🎉</div>
+    <div class="small">今天就吃</div>
+    <div class="rname" id="rName"></div>
+    <div class="rnote" id="rNote"></div>
+    <div class="acts">
+      <button type="button" class="btn ghost" id="againBtn" style="margin:0">再轉一次</button>
+      <button type="button" class="btn" id="okBtn">就吃這個！</button>
+    </div>
+  </div>
+</div>
+
+<div id="undoToast" class="toast" hidden>
+  <span id="undoText">已刪除</span>
+  <button type="button" class="btn" id="undoBtn">復原</button>
+</div>
+<div class="mask" id="importMask">
+  <div class="result">
+    <div class="rname" style="font-size:22px">匯入備份</div>
+    <p class="small" id="importSummary" style="text-align:left"></p>
+    <div class="acts">
+      <button type="button" class="btn ghost" id="importMerge">合併</button>
+      <button type="button" class="btn" id="importReplace">覆蓋</button>
+    </div>
+    <button type="button" class="btn ghost" id="importCancel">取消</button>
+  </div>
+</div>
+<div class="mask" id="shareMask">
+  <div class="result">
+    <div class="small">有人分享了一個專區</div>
+    <div class="rname" id="sharePreviewTitle" style="font-size:22px"></div>
+    <p class="small" id="sharePreviewList" style="text-align:left"></p>
+    <div class="acts">
+      <button type="button" class="btn ghost" id="shareSkip">先不要</button>
+      <button type="button" class="btn" id="shareAccept">加入成新專區</button>
+    </div>
+  </div>
+</div>
+<div class="mask" id="shareOut">
+  <div class="result" style="text-align:left">
+    <div class="rname" style="font-size:22px;text-align:center">分享專區</div>
+    <p class="small">把連結傳給對方。對方打開後可以選擇加入。</p>
+    <textarea id="shareLink" readonly style="width:100%;min-height:72px;border:1.5px solid var(--line);border-radius:12px;padding:8px;font:inherit"></textarea>
+    <p class="small">如果連結太長，改傳下面這段代碼。</p>
+    <textarea id="shareCode" readonly style="width:100%;min-height:72px;border:1.5px solid var(--line);border-radius:12px;padding:8px;font:inherit"></textarea>
+    <div class="acts">
+      <button type="button" class="btn ghost" id="shareCopy">複製連結</button>
+      <button type="button" class="btn" id="shareClose">完成</button>
+    </div>
+  </div>
+</div>
+<div class="mask" id="moveMask">
+  <div class="result">
+    <div class="rname" id="moveTitle" style="font-size:22px">移動到哪個專區？</div>
+    <div class="movelist" id="moveTargets"></div>
+    <button type="button" class="btn ghost" id="moveCancel">取消</button>
+  </div>
+</div>
+
+<script>
+const FEEDBACK_URL='';
+const V1='ej-food-share-unused';
+const V2='ej-food-share-v1';
+const SOUND_KEY='ej-food-share-sound';
+const LOC_KEY='ej-food-share-loc';
+const SHOWTIME={address:'台中市南屯區文心南路289號文心秀泰',lat:24.1301471,lng:120.6456843};
+const XIUQIU_MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('繡球麵店 台中市西區中興街102號');
+const SHUXIANG_MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('蔬想起蔬食料理 台中市北屯區雷中街2-15號');
+const SANJIN_MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('三津制麵 台中249老宅店 台中市中區中山路249號');
+const DEFAULTS=[
+ {name:'大埔大墩店',note:'鐵板燒，大墩店，有素食',veg:'素OK',address:'台中市南屯區大墩路177號',lat:24.1418152,lng:120.6496811,maps:'https://maps.app.goo.gl/B94tsShjqYBULTrg9'},
+ {name:'胖貓',note:'麵食，向心南路',veg:'素OK',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
+ {name:'空也永春店',note:'素食麵店，永春店',veg:'全素',address:'台中市南屯區永春東七路855號',maps:'https://maps.app.goo.gl/hQZyNQFz9kJ91HE67'},
+ {name:'見晴蔬食',note:'素食。平日中午僅供外帶',veg:'全素',address:'台中市西區向上南路一段220號',maps:'https://maps.app.goo.gl/bbcCXZQD1UPXLirv8'},
+ {name:'春成臭豆腐',note:'蔬食臭豆腐，週一公休',veg:'全素',mon:true,address:'台中市南屯區東興路二段353號',maps:'https://maps.app.goo.gl/bqfU6demYFKnTdgcA'},
+ {name:'臭大蔬',note:'臭豆腐，精誠店',veg:'全素',address:'台中市西區精誠路269號',maps:'https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6'},
+ {name:'一碗牛肉麵',note:'牛肉麵，南屯店',veg:'',address:'台中市南屯區永春東路363號',maps:'https://maps.app.goo.gl/5UjGBLtSYz7U5AH16'},
+ {name:'八方雲集',note:'鍋貼水餃，南屯店',veg:'',link:'https://ezorder.8way.com.tw/0091',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7'},
+ {name:'熱浪小島',note:'大墩店',veg:'',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5'},
+ {name:'輕井澤',note:'火鍋，文心南二店，素葷都能點',veg:'素OK',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17'},
+ {name:'麻一鍋',note:'火鍋，向心店，週一公休',veg:'素OK',mon:true,address:'台中市南屯區向心南路897號',maps:'https://maps.app.goo.gl/4m4mUEYoSnYxsujQ9'},
+ {name:'素食脆皮素圓',note:'明祖素圓，素食',veg:'全素',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9'},
+ {name:'附近滷味',note:'向心南路',veg:'',address:'台中市南屯區向心南路915號',lat:24.1356468,lng:120.6439209,maps:'https://maps.app.goo.gl/G1KZMc33PukLmEm36'},
+ {name:'上豪自助餐',note:'自助餐，向心南路',veg:'',address:'台中市南屯區向心南路931號',lat:24.1360111,lng:120.6439056,maps:'https://maps.app.goo.gl/A7okPNodrnVTVpX77'},
+ {name:'涓豆腐',note:'韓式豆腐鍋，文心秀泰',veg:'',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/Mo5fJ1xrbctNpK6F7'},
+ {name:'阿宏麵線+臭豆腐',note:'阿宏臭豆腐，麵線和臭豆腐',veg:'',address:'台中市南屯區向心路71號',maps:'https://maps.app.goo.gl/iHF1kMioboDyUtPF6'},
+ {name:'文心秀泰拉麵',note:'花月嵐拉麺，文心秀泰B1',veg:'',address:'台中市南屯區文心南路289號 B1',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/QRgXfomQNSxUv7j79'},
+ {name:'五花馬',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'},
+ {name:'大埔永春總店',note:'鐵板燒、永春總店',veg:'素OK',address:'台中市南屯區永春東七路607號',maps:'https://maps.app.goo.gl/G28nkzW68Mq7ft8j8'}
+];
+const EXPLORE_DEFAULTS=[
+ {name:'三禾手打麵',note:'手打麵，烏日店',veg:'',address:'台中市烏日區公園路282號',lat:24.1026601,lng:120.6244841,dailyHours:['11:00','20:30'],maps:'https://maps.app.goo.gl/hcd4CkGZWKuKnr4D7'},
+ {name:'妙善緣蔬食火鍋',note:'妙善園素食小火鍋，一中街',veg:'全素',address:'台中市北區三民路三段164巷14號',maps:'https://maps.app.goo.gl/h3Jkt6QoQoPCmVVP6'},
+ {name:'清梅素食館',note:'原天航素食，大甲',veg:'全素',address:'台中市大甲區新政路2之4號',maps:'https://maps.app.goo.gl/D4yXeevNYRvcTGea8'},
+ {name:'品撰蔬食',note:'品饌蔬食館，大里',veg:'全素',address:'台中市大里區瑞城一街118號',maps:'https://maps.app.goo.gl/ND8ikk127BHvnx9r8'},
+ {name:'頂日竹葉飯蔬食館',note:'鼎日竹葉蒸飯，台中南區，網路資料寫週六公休',veg:'全素',address:'台中市南區仁義街89號',maps:'https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d'},
+ {name:'花悅蔬香素食火鍋',note:'素食火鍋，北屯中清路',veg:'全素',address:'台中市北屯區中清路二段982號',maps:'https://maps.app.goo.gl/415a9TaGNBVzpv9t5'},
+ {name:'熊的蔬食壽司',note:'蔬食壽司，西屯青海路',veg:'全素',address:'台中市西屯區青海路一段9-8號',maps:'https://maps.app.goo.gl/jXEBWgzqyXorDps4A'},
+ {name:'論石間火鍋自助吧',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'},
+ {name:'福屋拉麵',note:'拉麵，有素食口味，東區振興路',veg:'素OK',address:'台中市東區振興路2-5號',maps:'https://maps.app.goo.gl/CW1wSeKp3ZfdqB9N9'},
+ {name:'越南素食',note:'越齋越南素食料理，東區建成路',veg:'全素',address:'台中市東區建成路633號',maps:'https://maps.app.goo.gl/5pzJPbHrUcGZyc4b9'},
+ {name:'食草人',note:'蔬食定食、異國料理，南屯惠中路',veg:'全素',address:'台中市南屯區惠中路三段58號',maps:'https://maps.app.goo.gl/avX2B6SV6kNyWzqEA'},
+ {name:'樹院子蔬食火鍋',note:'蔬食火鍋，北屯',veg:'全素',address:'台中市北屯區和祥五街188號',maps:'https://maps.app.goo.gl/aUx3VzzaMAVwqShV7'},
+ {name:'繡球麵店',note:'必比登麵店，葤素都有（素食可點松露白胡麻拌麵）。只開週五到週日，不接受訂位',veg:'素OK',address:'台中市西區中興街102號',maps:XIUQIU_MAPS},
+ {name:'蔬想起蔬食料理',note:'素食小館，北屯雷中街，有全素和蛋素。網路資料寫週四公休',veg:'全素',address:'台中市北屯區雷中街2-15號',maps:SHUXIANG_MAPS},
+ {name:'三津制麵',note:'釀善 三津制麵 台中249老宅店，純素麵館，週一公休',veg:'全素',mon:true,address:'台中市中區中山路249號',maps:SANJIN_MAPS},
+ {name:'三院和食蔬食拉麵',note:'Google 名稱：三院和食（蔬食、素食拉麵專賣），北區',veg:'全素',address:'台中市北區大義街112號',maps:'https://maps.app.goo.gl/BuzfKPim8DK69MFn9'},
+ {name:'16號廚房素食斗六店',note:'素食餐廳，雲林斗六',veg:'全素',address:'雲林縣斗六市上海路244號',maps:'https://maps.app.goo.gl/huA9f8uzk4FHGWrP9'},
+ {name:'16號廚房素食虎尾店',note:'素食餐廳，雲林虎尾',veg:'全素',address:'雲林縣虎尾鎮清雲路507之1號',maps:'https://maps.app.goo.gl/Q1b4ueRDb1VkPy3c9'},
+ {name:'菜菜園蔬香滷味',note:'Google 名稱：菜菜園（滿菜園）蔬香滷味麻辣燙（東區忠孝立德店）。素食滷味、麻辣燙',veg:'全素',address:'台中市東區立德街141號',maps:'https://maps.app.goo.gl/5qBiCAbFugpqZC4XA'},
+ {name:'老頑童蔬食',note:'蔬食，苗栗三義',veg:'全素',address:'苗栗縣三義鄉水美街319號',maps:'https://maps.app.goo.gl/2FHMpFXAz34bV8cJA'}
+];
+const CATS=[
+ {id:'eat',label:'待會吃什麼',emoji:'🍜',kind:'place',blurb:'外出吃飯'},
+ {id:'cook',label:'自己煮',emoji:'🍳',kind:'item',blurb:'家裡自己做',defaults:['水餃','烏龍麵','咖哩','蛋煎']},
+ {id:'breakfast',label:'早餐吃什麼',emoji:'🥐',kind:'item',blurb:'早上這一餐',defaults:['蛋餅','麵包','燕麥片','泡飯','蛋煎']},
+ {id:'night',label:'宵夜吃什麼',emoji:'🌙',kind:'item',blurb:'晚上再來一口',defaults:['泡麵','蛋煎','鬆餅']},
+ {id:'delivery',label:'外送吃什麼',emoji:'🛵',kind:'place',blurb:'外送到家'},
+ {id:'explore',label:'待探索',emoji:'🧭',kind:'place',blurb:'先收著，以後再決定'}
+];
+const COLORS=['#f4a259','#e76f51','#f6bd60','#84a59d','#f28482','#b5838d','#90be6d','#e9c46a','#c98a4b','#6d9dc5','#f7a072','#a3c4bc'];
+const DAY_LABELS=['日','一','二','三','四','五','六'];
+function expandPlace(p,i){
+  const o=Object.assign({id:'d'+i,on:true,mon:false,link:'',address:'',lat:null,lng:null,hours:null,uber:'',panda:'',maps:''},p);
+  o.id=p.id||('d'+i);
+  if(p.on===false)o.on=false;
+  if(p.dailyHours){
+    o.hours={};
+    for(let d=0;d<7;d++)o.hours[d]=p.dailyHours.slice();
+    delete o.dailyHours;
+  }
+  return o;
+}
+function freshFrom(list){return{places:list.map((p,i)=>expandPlace(p,i)),vegOnly:false,autoMon:true,openNow:false,sortDist:false};}
+function freshEat(){return freshFrom(DEFAULTS);}
+function freshDelivery(){return freshFrom(DEFAULTS.map(p=>Object.assign({},p,{uber:'',panda:''})));}
+function freshExplore(){return freshFrom(EXPLORE_DEFAULTS);}
+function freshCustom(name){const o=freshFrom([]);o.name=name;return o;}
+function freshItems(names){return{items:names.map((name,i)=>({id:'d'+i,name,on:true}))};}
+function catById(id){
+  const built=CATS.find(c=>c.id===id);
+  if(built)return built;
+  const list=DB&&Array.isArray(DB.customCats)?DB.customCats:[];
+  const c=list.find(x=>x&&x.id===id);
+  if(!c)return undefined;
+  return{id:c.id,label:c.name,emoji:'⭐',kind:'custom',blurb:'自己加的專區',custom:true};
+}
+function allCats(){
+  const extra=(DB&&Array.isArray(DB.customCats)?DB.customCats:[]).map(c=>({id:c.id,label:c.name,emoji:'⭐',kind:'custom',blurb:'自己加的專區',custom:true}));
+  return CATS.concat(extra);
+}
+function readV1(){
+  try{
+    const s=JSON.parse(localStorage.getItem(V1));
+    if(s&&Array.isArray(s.places))return{places:s.places,vegOnly:!!s.vegOnly,autoMon:!!s.autoMon};
+  }catch(e){}
+  return null;
+}
+function validDB(s){
+  return !!(s&&s.eat&&Array.isArray(s.eat.places)&&s.cook&&Array.isArray(s.cook.items)&&s.breakfast&&Array.isArray(s.breakfast.items)&&s.night&&Array.isArray(s.night.items));
+}
+function applyKongye(p){
+  if(!p)return false;
+  if(p.name==='空也永春店'){
+    let changed=false;
+    if(!p.address){p.address='台中市南屯區永春東七路855號';changed=true;}
+    if(!p.maps){p.maps='https://maps.app.goo.gl/hQZyNQFz9kJ91HE67';changed=true;}
+    return changed;
+  }
+  if(p.name!=='空也')return false;
+  p.name='空也永春店';
+  if(!p.address)p.address='台中市南屯區永春東七路855號';
+  if(!p.maps)p.maps='https://maps.app.goo.gl/hQZyNQFz9kJ91HE67';
+  if(!p.note||p.note==='素食麵店')p.note='素食麵店，永春店';
+  return true;
+}
+function applyChou(p){
+  if(!p)return false;
+  if(p.name==='臭大蔬'){
+    let changed=false;
+    if(!p.address){p.address='台中市西區精誠路269號';changed=true;}
+    if(!p.maps){p.maps='https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6';changed=true;}
+    if(!p.veg){p.veg='全素';changed=true;}
+    return changed;
+  }
+  if(p.name!=='臭大叔')return false;
+  p.name='臭大蔬';
+  if(!p.address)p.address='台中市西區精誠路269號';
+  if(!p.maps)p.maps='https://maps.app.goo.gl/NJQ4fuGVbB2cSDHq6';
+  if(!p.veg)p.veg='全素';
+  if(!p.note||p.note==='臭豆腐')p.note='臭豆腐，精誠店';
+  return true;
+}
+function applyDapu(p){
+  if(!p||p.name!=='大埔')return false;
+  p.name='大埔大墩店';
+  if(!p.address)p.address='台中市南屯區大墩路177號';
+  if(p.lat==null||p.lat==='')p.lat=24.1418152;
+  if(p.lng==null||p.lng==='')p.lng=120.6496811;
+  if(!p.maps)p.maps='https://maps.app.goo.gl/B94tsShjqYBULTrg9';
+  if(!p.note||p.note==='鐵板燒，有素食')p.note='鐵板燒，大墩店，有素食';
+  return true;
+}
+function applyShanghao(p){
+  if(!p||p.name!=='附近自助餐')return false;
+  p.name='上豪自助餐';
+  p.address='台中市南屯區向心南路931號';
+  p.lat=24.1360111;
+  p.lng=120.6439056;
+  p.maps='https://maps.app.goo.gl/A7okPNodrnVTVpX77';
+  if(!p.note||p.note==='向心南路')p.note='自助餐，向心南路';
+  return true;
+}
+function applyLuwei(p){
+  if(!p||p.name!=='附近滷味')return false;
+  let changed=false;
+  if(!p.address){p.address='台中市南屯區向心南路915號';changed=true;}
+  if(p.lat==null||p.lat===''){p.lat=24.1356468;changed=true;}
+  if(p.lng==null||p.lng===''){p.lng=120.6439209;changed=true;}
+  if(!p.maps){p.maps='https://maps.app.goo.gl/G1KZMc33PukLmEm36';changed=true;}
+  return changed;
+}
+const PLACE_FIXES=[
+ {name:'麻一鍋',address:'台中市南屯區向心南路897號',maps:'https://maps.app.goo.gl/4m4mUEYoSnYxsujQ9',notes:['','火鍋，週一公休','向心店、火鍋，週一公休','火鍋'],note:'火鍋，向心店，週一公休',vegIfEmpty:'素OK'},
+ {name:'胖貓',address:'台中市南屯區向心南路896號',maps:'https://maps.app.goo.gl/DHLG862AgefpDLKY6'},
+ {name:'八方雲集',address:'台中市南屯區南屯路二段355號',lat:24.1379738,lng:120.6447144,maps:'https://maps.app.goo.gl/LwKMYEhm6n56k6Rg7',notes:['','鍋貼水餃'],note:'鍋貼水餃，南屯店'},
+ {name:'輕井澤',address:'台中市南屯區文心南路58-1號',maps:'https://maps.app.goo.gl/v2NtJNv4uoZM4gP17',notes:['','火鍋','文心南二店、火鍋','素葷都能點'],note:'火鍋，文心南二店，素葷都能點',vegIfEmpty:'素OK'},
+ {name:'素食脆皮素圓',address:'台中市南屯區東興路二段28號',maps:'https://maps.app.goo.gl/z1qfBDj9VsGsT9BD9',notes:['','素食'],note:'明祖素圓，素食'},
+ {name:'熱浪小島',address:'台中市南屯區大墩路868號',maps:'https://maps.app.goo.gl/FYRwhhUpt88dzwPs5',notes:[''],note:'大墩店'},
+ {name:'見晴蔬食',address:'台中市西區向上南路一段220號',maps:'https://maps.app.goo.gl/bbcCXZQD1UPXLirv8',notes:['','素食'],note:'素食。平日中午僅供外帶'},
+ {name:'春成臭豆腐',address:'台中市南屯區東興路二段353號',maps:'https://maps.app.goo.gl/bqfU6demYFKnTdgcA',notes:['','常常沒開，週一公休'],note:'蔬食臭豆腐，週一公休',vegIfEmpty:'全素'},
+ {name:'一碗牛肉麵',address:'台中市南屯區永春東路363號',maps:'https://maps.app.goo.gl/5UjGBLtSYz7U5AH16',notes:['','牛肉麵，南屯店'],note:'牛肉麵，南屯店'},
+ {name:'涓豆腐',address:'台中市南屯區文心南路289號秀泰生活6樓',lat:SHOWTIME.lat,lng:SHOWTIME.lng,maps:'https://maps.app.goo.gl/Mo5fJ1xrbctNpK6F7'},
+ {name:'阿宏麵線+臭豆腐',address:'台中市南屯區向心路71號',maps:'https://maps.app.goo.gl/iHF1kMioboDyUtPF6',notes:['','麵線和臭豆腐'],note:'阿宏臭豆腐，麵線和臭豆腐'},
+ {name:'三禾手打麵',address:'台中市烏日區公園路282號',maps:'https://maps.app.goo.gl/hcd4CkGZWKuKnr4D7',notes:['','烏日店'],note:'手打麵，烏日店'}
+];
+function applyShowtimeRamen(p){
+  if(!p||p.name!=='文心秀泰拉麵')return false;
+  let changed=false;
+  const addr='台中市南屯區文心南路289號 B1';
+  if(!p.address||p.address===SHOWTIME.address){if(p.address!==addr){p.address=addr;changed=true;}}
+  if(!p.maps){p.maps='https://maps.app.goo.gl/QRgXfomQNSxUv7j79';changed=true;}
+  if(p.lat==null||p.lat===''){p.lat=SHOWTIME.lat;p.lng=SHOWTIME.lng;changed=true;}
+  if(!p.note||p.note==='文心秀泰的拉麵店'){p.note='花月嵐拉麺，文心秀泰B1';changed=true;}
+  return changed;
+}
+function normName(s){
+  return String(s==null?'':s).trim().replace(/\s+/g,'').replace(/＋/g,'+');
+}
+function blankField(s){
+  return s==null||String(s).trim()==='';
+}
+function fixForPlace(p){
+  if(!p)return null;
+  const n=normName(p.name);
+  if(!n)return null;
+  if(n.indexOf('阿宏')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('阿宏')>=0)||null;
+  if(n.indexOf('春成')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('春成')>=0)||null;
+  if(n.indexOf('三禾')>=0)return PLACE_FIXES.find(f=>f.name.indexOf('三禾')>=0)||null;
+  return PLACE_FIXES.find(f=>normName(f.name)===n)||null;
+}
+function applyPlaceFix(p){
+  const fix=fixForPlace(p);
+  if(!fix)return false;
+  let changed=false;
+  if(fix.address&&blankField(p.address)){p.address=fix.address;changed=true;}
+  if(fix.maps&&blankField(p.maps)){p.maps=fix.maps;changed=true;}
+  if(fix.lat!=null&&(p.lat==null||p.lat==='')){p.lat=fix.lat;p.lng=fix.lng;changed=true;}
+  if(fix.note&&(p.note==null||(fix.notes&&fix.notes.indexOf(p.note)>=0))){p.note=fix.note;changed=true;}
+  if(fix.vegIfEmpty&&!p.veg){p.veg=fix.vegIfEmpty;changed=true;}
+  return changed;
+}
+const MIAO_MAPS='https://maps.app.goo.gl/h3Jkt6QoQoPCmVVP6';
+const MIAO_MAPS_BAD=MIAO_MAPS.replace('QoQo','Qo');
+function fixMiaoshanUrl(list){
+  if(!Array.isArray(list))return false;
+  let changed=false;
+  list.forEach(p=>{
+    if(p&&p.maps===MIAO_MAPS_BAD){p.maps=MIAO_MAPS;changed=true;}
+  });
+  return changed;
+}
+function ensureMiaoshan(list){
+  if(!Array.isArray(list))return false;
+  const found=list.find(p=>p&&String(p.name||'').indexOf('妙善')>=0);
+  if(found){
+    let changed=false;
+    if(!found.address){found.address='台中市北區三民路三段164巷14號';changed=true;}
+    if(!found.maps||found.maps===MIAO_MAPS_BAD){if(found.maps!==MIAO_MAPS){found.maps=MIAO_MAPS;changed=true;}}
+    return changed;
+  }
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.miaoshan?'miaoshan2':'miaoshan';
+  list.push({id:id,name:'妙善緣蔬食火鍋',on:true,mon:false,link:'',note:'妙善園素食小火鍋，一中街',veg:'全素',address:'台中市北區三民路三段164巷14號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:MIAO_MAPS});
+  return true;
+}
+const ZHUYE_MAPS='https://www.google.com/maps/place//data=!4m2!3m1!1s0x34693d03130c0c5f:0x9fb8a4dc604e807d';
+function ensureHuwei(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('16號廚房')>=0&&String(p.name||'').indexOf('虎尾')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.huwei?'huwei2':'huwei';
+  list.push({id:id,name:'16號廚房素食虎尾店',on:true,mon:false,link:'',note:'素食餐廳，雲林虎尾',veg:'全素',address:'雲林縣虎尾鎮清雲路507之1號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/Q1b4ueRDb1VkPy3c9'});
+  return true;
+}
+function ensureOnce(list,key,idBase,place){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf(key)>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  list.push(Object.assign({id:used[idBase]?idBase+'2':idBase,on:true,mon:false,link:'',lat:null,lng:null,hours:null,uber:'',panda:''},place));
+  return true;
+}
+function ensureShicaoren(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('食草人')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.shicaoren?'shicaoren2':'shicaoren';
+  list.push({id:id,name:'食草人',on:true,mon:false,link:'',note:'蔬食定食、異國料理，南屯惠中路',veg:'全素',address:'台中市南屯區惠中路三段58號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/avX2B6SV6kNyWzqEA'});
+  return true;
+}
+function ensureYuezhai(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&(String(p.name||'').indexOf('越齋')>=0||String(p.name||'').indexOf('越南素食')>=0)))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.yuezhai?'yuezhai2':'yuezhai';
+  list.push({id:id,name:'越南素食',on:true,mon:false,link:'',note:'越齋越南素食料理，東區建成路',veg:'全素',address:'台中市東區建成路633號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/5pzJPbHrUcGZyc4b9'});
+  return true;
+}
+function ensureFuku(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('福屋')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.fuku?'fuku2':'fuku';
+  list.push({id:id,name:'福屋拉麵',on:true,mon:false,link:'',note:'拉麵，有素食口味，東區振興路',veg:'素OK',address:'台中市東區振興路2-5號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/CW1wSeKp3ZfdqB9N9'});
+  return true;
+}
+function ensureLunshi(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('論石間')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.lunshi?'lunshi2':'lunshi';
+  list.push({id:id,name:'論石間火鍋自助吧',on:true,mon:false,link:'',note:'論石間鍋物 台中國美店，個人鍋＋蔬食自助吧，素食點菌菇蔬饗鍋',veg:'素OK',address:'台中市西區五權七街56號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/j8j5BYf3sgqPJRBQA'});
+  return true;
+}
+function ensureXiong(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('熊的')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.xiong?'xiong2':'xiong';
+  list.push({id:id,name:'熊的蔬食壽司',on:true,mon:false,link:'',note:'蔬食壽司，西屯青海路',veg:'全素',address:'台中市西屯區青海路一段9-8號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/jXEBWgzqyXorDps4A'});
+  return true;
+}
+function ensureHuayue(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('花悅')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.huayue?'huayue2':'huayue';
+  list.push({id:id,name:'花悅蔬香素食火鍋',on:true,mon:false,link:'',note:'素食火鍋，北屯中清路',veg:'全素',address:'台中市北屯區中清路二段982號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/415a9TaGNBVzpv9t5'});
+  return true;
+}
+function ensureZhuye(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('竹葉')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.zhuye?'zhuye2':'zhuye';
+  list.push({id:id,name:'頂日竹葉飯蔬食館',on:true,mon:false,link:'',note:'鼎日竹葉蒸飯，台中南區，網路資料寫週六公休',veg:'全素',address:'台中市南區仁義街89號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:ZHUYE_MAPS});
+  return true;
+}
+function ensurePinzhuan(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&(String(p.name||'').indexOf('品撰')>=0||String(p.name||'').indexOf('品饌')>=0)))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.pinzhuan?'pinzhuan2':'pinzhuan';
+  list.push({id:id,name:'品撰蔬食',on:true,mon:false,link:'',note:'品饌蔬食館，大里',veg:'全素',address:'台中市大里區瑞城一街118號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/ND8ikk127BHvnx9r8'});
+  return true;
+}
+function ensureQingmei(list){
+  if(!Array.isArray(list))return false;
+  if(list.some(p=>p&&String(p.name||'').indexOf('清梅')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.qingmei?'qingmei2':'qingmei';
+  list.push({id:id,name:'清梅素食館',on:true,mon:false,link:'',note:'原天航素食，大甲',veg:'全素',address:'台中市大甲區新政路2之4號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/D4yXeevNYRvcTGea8'});
+  return true;
+}
+function ensureYongchun(list){
+  if(!Array.isArray(list))return false;
+  const found=list.find(p=>p&&normName(p.name).indexOf('大埔永春總店')>=0);
+  if(found){
+    let changed=false;
+    if(!found.address){found.address='台中市南屯區永春東七路607號';changed=true;}
+    if(!found.maps){found.maps='https://maps.app.goo.gl/G28nkzW68Mq7ft8j8';changed=true;}
+    return changed;
+  }
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  list.push({id:used.d21?'yongchun':'d21',name:'大埔永春總店',on:true,mon:false,link:'',note:'鐵板燒、永春總店',veg:'素OK',address:'台中市南屯區永春東七路607號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/G28nkzW68Mq7ft8j8'});
+  return true;
+}
+function ensureWuhua(list){
+  if(!Array.isArray(list)||list.some(p=>p&&normName(p.name).indexOf('五花馬')>=0))return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const id=used.d20?'wuhua':'d20';
+  list.push({id:id,name:'五花馬',on:true,mon:false,link:'',note:'水餃館，台中向上門市',veg:'',address:'台中市西區向上路一段463號',lat:null,lng:null,hours:null,uber:'',panda:'',maps:'https://maps.app.goo.gl/nPaxXL96vUjFd6v26'});
+  return true;
+}
+function mergeInto(list,from,to){
+  if(!Array.isArray(list))return false;
+  const aliases=list.filter(p=>p&&p.name===from);
+  if(!aliases.length)return false;
+  const target=list.find(p=>p&&p.name===to);
+  const aliasOn=aliases.some(p=>p.on);
+  if(target){
+    if(aliasOn&&!target.on)target.on=true;
+    for(let i=list.length-1;i>=0;i--){if(list[i]&&list[i].name===from)list.splice(i,1);}
+    return true;
+  }
+  const keep=aliases[0];
+  keep.name=to;
+  if(aliasOn)keep.on=true;
+  if(to==='麻一鍋'&&!keep.mon)keep.mon=true;
+  for(let i=list.length-1;i>=0;i--){if(list[i]&&list[i]!==keep&&list[i].name===from)list.splice(i,1);}
+  return true;
+}
+function migrateKnownPlaces(db){
+  let changed=false;
+  ['eat','delivery'].forEach(key=>{
+    const list=db[key]&&db[key].places;
+    if(!Array.isArray(list))return;
+    if(mergeInto(list,'螞蟻鍋','麻一鍋'))changed=true;
+    if(mergeInto(list,'金井澤火鍋','輕井澤'))changed=true;
+    list.forEach(p=>{
+      if(applyChou(p))changed=true;
+      if(applyKongye(p))changed=true;
+      if(applyDapu(p))changed=true;
+      if(applyShanghao(p))changed=true;
+      if(applyLuwei(p))changed=true;
+      if(applyPlaceFix(p))changed=true;
+      if(applyShowtimeRamen(p))changed=true;
+    });
+    if(!seedBlocked(db,'wuhua')&&ensureWuhua(list))changed=true;
+    if(!seedBlocked(db,'yongchun')&&ensureYongchun(list))changed=true;
+    if(fixMiaoshanUrl(list))changed=true;
+  });
+  return changed;
+}
+const EXPLORE_MATCH=[
+ {id:'sanhe',test:n=>n.indexOf('三禾')>=0},
+ {id:'miaoshan',test:n=>n.indexOf('妙善')>=0},
+ {id:'qingmei',test:n=>n.indexOf('清梅')>=0},
+ {id:'pinzhuan',test:n=>n.indexOf('品撰')>=0||n.indexOf('品饌')>=0},
+ {id:'zhuye',test:n=>n.indexOf('竹葉')>=0},
+ {id:'huayue',test:n=>n.indexOf('花悅')>=0},
+ {id:'xiong',test:n=>n.indexOf('熊的')>=0},
+ {id:'lunshi',test:n=>n.indexOf('論石間')>=0},
+ {id:'fuku',test:n=>n.indexOf('福屋')>=0},
+ {id:'yuezhai',test:n=>n.indexOf('越齋')>=0||n.indexOf('越南素食')>=0},
+ {id:'shicaoren',test:n=>n.indexOf('食草人')>=0},
+ {id:'shuyuan',test:n=>n.indexOf('樹院子')>=0},
+ {id:'xiuqiu',test:n=>n.indexOf('繡球')>=0},
+ {id:'shuxiang',test:n=>n.indexOf('蔬想起')>=0},
+ {id:'sanjin',test:n=>n.indexOf('三津')>=0},
+ {id:'sanyuan',test:n=>n.indexOf('三院')>=0},
+ {id:'kitchen16',test:n=>n.indexOf('16號廚房')>=0&&n.indexOf('斗六')>=0},
+ {id:'huwei',test:n=>n.indexOf('16號廚房')>=0&&n.indexOf('虎尾')>=0},
+ {id:'caicaiyuan',test:n=>n.indexOf('菜菜園')>=0||n.indexOf('滿菜園')>=0},
+ {id:'laowantong',test:n=>n.indexOf('老頑童')>=0}
+];
+function exploreMatch(name){
+  const n=normName(name);
+  if(!n)return '';
+  if(n.indexOf('16號廚房')>=0&&n.indexOf('虎尾')>=0)return 'huwei';
+  if(n.indexOf('16號廚房')>=0)return 'kitchen16';
+  const hit=EXPLORE_MATCH.find(s=>s.id!=='huwei'&&s.id!=='kitchen16'&&s.test(n));
+  return hit?hit.id:'';
+}
+function placeLists(db){
+  const lists=[];
+  ['eat','delivery','explore'].forEach(id=>{
+    const places=db[id]&&db[id].places;
+    if(Array.isArray(places))lists.push(places);
+  });
+  (db.customCats||[]).forEach(c=>{if(c&&Array.isArray(c.places))lists.push(c.places);});
+  return lists;
+}
+function anyHasExplore(db,id){
+  const spec=EXPLORE_MATCH.find(s=>s.id===id);
+  if(!spec)return false;
+  return placeLists(db).some(list=>list.some(p=>p&&spec.test(normName(p.name))));
+}
+function pushRaw(list,idBase,raw){
+  if(!Array.isArray(list)||!raw)return false;
+  const used={};
+  list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  const p=expandPlace(Object.assign({},raw),list.length);
+  p.id=used[idBase]?idBase+'2':idBase;
+  list.push(p);
+  return true;
+}
+function seedKeyOf(p){
+  if(!p)return '';
+  const id=exploreMatch(p.name);
+  if(id)return id;
+  const n=normName(p.name);
+  if(n.indexOf('五花馬')>=0)return 'wuhua';
+  if(n.indexOf('大埔永春總店')>=0)return 'yongchun';
+  return '';
+}
+function seedBlocked(db,key){
+  return !!(key&&db&&Array.isArray(db.seedGone)&&db.seedGone.indexOf(key)>=0);
+}
+function anyHasKey(db,key){
+  if(key==='wuhua')return placeLists(db).some(list=>list.some(p=>p&&normName(p.name).indexOf('五花馬')>=0));
+  if(key==='yongchun')return placeLists(db).some(list=>list.some(p=>p&&normName(p.name).indexOf('大埔永春總店')>=0));
+  return anyHasExplore(db,key);
+}
+function noteSeedDeletion(db,item){
+  const key=seedKeyOf(item);
+  if(!key||anyHasKey(db,key))return {key:key,added:false};
+  if(!Array.isArray(db.seedGone))db.seedGone=[];
+  if(db.seedGone.indexOf(key)>=0)return {key:key,added:false};
+  db.seedGone.push(key);
+  return {key:key,added:true};
+}
+function ensureExploreReady(db){
+  if(!db.explore||typeof db.explore!=='object'||!Array.isArray(db.explore.places))db.explore=freshFrom([]);
+  if(db.explore.vegOnly===undefined)db.explore.vegOnly=false;
+  if(db.explore.autoMon===undefined)db.explore.autoMon=true;
+  if(db.explore.openNow===undefined)db.explore.openNow=false;
+  if(db.explore.sortDist===undefined)db.explore.sortDist=false;
+}
+function migrateToExplore(db){
+  if(db.exploreMoved)return false;
+  ensureExploreReady(db);
+  const dest=db.explore.places;
+  const seen={};
+  dest.forEach(p=>{const k=exploreMatch(p&&p.name);if(k)seen[k]=true;});
+  ['eat','delivery'].forEach(key=>{
+    const list=db[key]&&db[key].places;
+    if(!Array.isArray(list))return;
+    for(let i=0;i<list.length;){
+      const k=exploreMatch(list[i]&&list[i].name);
+      if(!k){i++;continue;}
+      const p=list.splice(i,1)[0];
+      if(!seen[k]){dest.push(p);seen[k]=true;}
+    }
+  });
+  const rank=id=>EXPLORE_MATCH.findIndex(s=>s.id===id);
+  dest.sort((a,b)=>{
+    const ia=rank(exploreMatch(a&&a.name)),ib=rank(exploreMatch(b&&b.name));
+    if(ia<0&&ib<0)return 0;
+    if(ia<0)return 1;
+    if(ib<0)return -1;
+    return ia-ib;
+  });
+  db.exploreMoved=1;
+  return true;
+}
+function ensureExploreSeeds(db){
+  ensureExploreReady(db);
+  const list=db.explore.places;
+  let changed=false;
+  if(fixMiaoshanUrl(list))changed=true;
+  list.forEach(p=>{if(applyPlaceFix(p))changed=true;});
+  const fill=[
+    [n=>n.indexOf('妙善')>=0,ensureMiaoshan],
+    [n=>n.indexOf('清梅')>=0,ensureQingmei],
+    [n=>n.indexOf('品撰')>=0||n.indexOf('品饌')>=0,ensurePinzhuan],
+    [n=>n.indexOf('竹葉')>=0,ensureZhuye],
+    [n=>n.indexOf('花悅')>=0,ensureHuayue],
+    [n=>n.indexOf('熊的')>=0,ensureXiong],
+    [n=>n.indexOf('論石間')>=0,ensureLunshi],
+    [n=>n.indexOf('福屋')>=0,ensureFuku],
+    [n=>n.indexOf('越齋')>=0||n.indexOf('越南素食')>=0,ensureYuezhai],
+    [n=>n.indexOf('食草人')>=0,ensureShicaoren],
+    [n=>n.indexOf('樹院子')>=0,l=>ensureOnce(l,'樹院子','shuyuan',EXPLORE_DEFAULTS.find(p=>p.name==='樹院子蔬食火鍋'))],
+    [n=>n.indexOf('繡球')>=0,l=>ensureOnce(l,'繡球','xiuqiu',EXPLORE_DEFAULTS.find(p=>p.name==='繡球麵店'))],
+    [n=>n.indexOf('蔬想起')>=0,l=>ensureOnce(l,'蔬想起','shuxiang',EXPLORE_DEFAULTS.find(p=>p.name==='蔬想起蔬食料理'))],
+    [n=>n.indexOf('三津')>=0,l=>ensureOnce(l,'三津','sanjin',EXPLORE_DEFAULTS.find(p=>p.name==='三津制麵'))],
+    [n=>n.indexOf('三院')>=0,l=>ensureOnce(l,'三院','sanyuan',EXPLORE_DEFAULTS.find(p=>p.name==='三院和食蔬食拉麵'))],
+    [n=>n.indexOf('菜菜園')>=0||n.indexOf('滿菜園')>=0,l=>ensureOnce(l,'菜菜園','caicaiyuan',EXPLORE_DEFAULTS.find(p=>p.name==='菜菜園蔬香滷味'))],
+    [n=>n.indexOf('老頑童')>=0,l=>ensureOnce(l,'老頑童','laowantong',EXPLORE_DEFAULTS.find(p=>p.name==='老頑童蔬食'))]
+  ];
+  fill.forEach(([test,fn])=>{
+    if(list.some(p=>p&&test(normName(p.name)))&&fn(list))changed=true;
+  });
+  EXPLORE_MATCH.forEach((spec,idx)=>{
+    if(seedBlocked(db,spec.id)||anyHasExplore(db,spec.id))return;
+    const raw=EXPLORE_DEFAULTS[idx];
+    if(!raw||!pushRaw(list,spec.id,raw))return;
+    const p=list.pop();
+    let at=list.findIndex(x=>{
+      const id=exploreMatch(x&&x.name);
+      if(!id)return false;
+      return EXPLORE_MATCH.findIndex(s=>s.id===id)>idx;
+    });
+    if(at<0)at=list.findIndex(x=>!exploreMatch(x&&x.name));
+    if(at<0)at=list.length;
+    list.splice(at,0,p);
+    changed=true;
+  });
+  return changed;
+}
+function blankDB(){
+  return{last:null,screen:'picker',mode:'blank',eat:freshFrom([]),cook:freshItems(catById('cook').defaults),breakfast:freshItems(catById('breakfast').defaults),night:freshItems(catById('night').defaults),delivery:freshFrom([]),explore:freshFrom([]),customCats:[],seedGone:[],exploreMoved:1};
+}
+function taichungDB(){
+  return{last:null,screen:'picker',mode:'taichung',eat:freshEat(),cook:freshItems(catById('cook').defaults),breakfast:freshItems(catById('breakfast').defaults),night:freshItems(catById('night').defaults),delivery:freshDelivery(),explore:freshExplore(),customCats:[],seedGone:[],exploreMoved:1};
+}
+function loadDB(){
+  let raw;
+  try{raw=localStorage.getItem(V2);}catch(e){return null;}
+  if(!raw)return null;
+  try{
+    const s=JSON.parse(raw);
+    if(validDB(s)){
+      if(s.mode!=='blank'&&s.mode!=='taichung')s.mode='taichung';
+      if(!s.delivery||!Array.isArray(s.delivery.places))s.delivery=s.mode==='blank'?freshFrom([]):freshDelivery();
+      if(s.delivery.vegOnly===undefined)s.delivery.vegOnly=false;
+      if(s.delivery.autoMon===undefined)s.delivery.autoMon=true;
+      if(!Array.isArray(s.customCats))s.customCats=[];
+      if(!Array.isArray(s.seedGone))s.seedGone=[];
+      if(s.mode!=='blank'){
+        let changed=migrateKnownPlaces(s);
+        if(migrateToExplore(s))changed=true;
+        if(ensureExploreSeeds(s))changed=true;
+        if(changed)localStorage.setItem(V2,JSON.stringify(s));
+      }
+      return s;
+    }
+  }catch(e){}
+  return null;
+}
+let DB=loadDB();
+let catId=null,S=null,editingId=null,openId=null;
+let soundOn=localStorage.getItem(SOUND_KEY)!=='0';
+let loc=null;
+try{const saved=JSON.parse(sessionStorage.getItem(LOC_KEY)||'null');if(saved&&Number.isFinite(saved.lat)&&Number.isFinite(saved.lng))loc=saved;}catch(e){}
+function persist(){localStorage.setItem(V2,JSON.stringify(DB));}
+function save(){
+  const c=current();
+  if(c&&c.custom){
+    if(!Array.isArray(DB.customCats))DB.customCats=[];
+    const i=DB.customCats.findIndex(x=>x&&x.id===catId);
+    if(i>=0)DB.customCats[i]=S;
+  }else if(catId)DB[catId]=S;
+  persist();
+}
+function current(){return catById(catId);}
+function kind(){return current()?current().kind:'';}
+function placeLike(){const k=kind();return k==='place'||k==='custom';}
+function bucketOf(id){
+  const c=catById(id);
+  if(!c)return null;
+  if(c.custom)return (DB.customCats||[]).find(x=>x&&x.id===id)||null;
+  return DB[id]||null;
+}
+function listItems(){return placeLike()?S.places:S.items;}
+const isMon=()=>new Date().getDay()===1;
+function hasHours(p){return !!(p&&p.hours&&typeof p.hours==='object'&&Object.keys(p.hours).length);}
+function taipeiNow(){
+  const fmt=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  const parts=Object.fromEntries(fmt.formatToParts(new Date()).map(p=>[p.type,p.value]));
+  const wd={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[parts.weekday];
+  let hour=parts.hour;
+  if(hour==='24')hour='00';
+  return{wd,hm:String(hour).padStart(2,'0')+':'+String(parts.minute).padStart(2,'0')};
+}
+function daySlot(hours,wd){
+  if(!hours)return undefined;
+  if(Object.prototype.hasOwnProperty.call(hours,wd))return hours[wd];
+  if(Object.prototype.hasOwnProperty.call(hours,String(wd)))return hours[String(wd)];
+  return undefined;
+}
+function inRange(hm,open,close){
+  if(!open||!close)return false;
+  if(open===close)return true;
+  if(open<close)return hm>=open&&hm<close;
+  return hm>=open||hm<close;
+}
+function hoursStatus(p){
+  if(!hasHours(p))return '';
+  const now=taipeiNow();
+  const slot=daySlot(p.hours,now.wd);
+  if(slot===undefined)return '';
+  if(!Array.isArray(slot)||slot.length<2||!slot[0]||!slot[1])return '今日公休';
+  return inRange(now.hm,slot[0],slot[1])?'營業中':'已打烊';
+}
+function openEnough(p){
+  if(!S.openNow)return true;
+  if(!hasHours(p))return true;
+  const st=hoursStatus(p);
+  if(!st)return true;
+  return st==='營業中';
+}
+function active(){
+  if(placeLike())return S.places.filter(p=>p.on&&(!S.vegOnly||p.veg)&&!(S.autoMon&&isMon()&&p.mon)&&openEnough(p));
+  return S.items.filter(p=>p.on);
+}
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371000,toR=d=>d*Math.PI/180;
+  const dLat=toR(lat2-lat1),dLng=toR(lng2-lng1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toR(lat1))*Math.cos(toR(lat2))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(a)));
+}
+function placeDist(p){
+  if(!loc||p.lat==null||p.lng==null||p.lat===''||p.lng==='')return null;
+  const lat=+p.lat,lng=+p.lng;
+  if(!Number.isFinite(lat)||!Number.isFinite(lng))return null;
+  return haversine(loc.lat,loc.lng,lat,lng);
+}
+function fmtDist(m){
+  if(m<1000)return Math.round(m)+' 米';
+  const km=m/1000;
+  return (km<10?km.toFixed(1):String(Math.round(km)))+' 公里';
+}
+function travelHint(m){
+  if(m<=1500)return '步行約 '+Math.max(1,Math.round(m/80))+' 分鐘';
+  return '開車約 '+Math.max(1,Math.round(m/500))+' 分鐘';
+}
+function distText(p){
+  const m=placeDist(p);
+  if(m==null)return '';
+  return fmtDist(m)+'・'+travelHint(m);
+}
+function uberSearch(name){return 'https://www.ubereats.com/tw/search?q='+encodeURIComponent(name+' 台中');}
+function pandaSearch(name){return 'https://www.foodpanda.com.tw/restaurants/new?query='+encodeURIComponent(name);}
+
+const cv=document.getElementById('wheel'),ctx=cv.getContext('2d');
+let rot=0,spinning=false,cur=[];
+let audioCtx=null,lastSlice=-1,lastTick=0;
+function ensureAudio(){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)return null;
+  if(!audioCtx)audioCtx=new AC();
+  if(audioCtx.state==='suspended'){const p=audioCtx.resume();if(p&&p.catch)p.catch(()=>{});}
+  return audioCtx;
+}
+function startSpinSound(durMs){
+  if(!soundOn)return;
+  const actx=ensureAudio();
+  if(!actx)return;
+  const dur=durMs/1000,t0=actx.currentTime,len=actx.sampleRate;
+  const buf=actx.createBuffer(1,len,actx.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<len;i++)data[i]=Math.random()*2-1;
+  const src=actx.createBufferSource();
+  src.buffer=buf;src.loop=true;
+  const filter=actx.createBiquadFilter();
+  filter.type='lowpass';
+  filter.frequency.setValueAtTime(1200,t0);
+  filter.frequency.exponentialRampToValueAtTime(220,t0+dur);
+  const g=actx.createGain();
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(0.045,t0+0.12);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  src.connect(filter);filter.connect(g);g.connect(actx.destination);
+  src.start(t0);src.stop(t0+dur+0.05);
+  lastSlice=-1;lastTick=0;
+}
+function blip(){
+  if(!audioCtx)return;
+  const t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type='square';o.frequency.value=740;
+  g.gain.setValueAtTime(0.035,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.035);
+  o.connect(g);g.connect(audioCtx.destination);
+  o.start(t);o.stop(t+0.04);
+}
+function chime(){
+  if(!soundOn||!audioCtx)return;
+  const t=audioCtx.currentTime;
+  [523.25,659.25,783.99].forEach((f,i)=>{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain(),st=t+i*0.07;
+    o.type='sine';o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,st);
+    g.gain.exponentialRampToValueAtTime(0.05,st+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,st+0.38);
+    o.connect(g);g.connect(audioCtx.destination);
+    o.start(st);o.stop(st+0.4);
+  });
+}
+function tickIfCrossed(now){
+  if(!soundOn||!audioCtx||cur.length<2)return;
+  const n=cur.length,a=2*Math.PI/n;
+  let ang=(-Math.PI/2-rot)%(2*Math.PI);
+  if(ang<0)ang+=2*Math.PI;
+  const idx=Math.floor(ang/a)%n;
+  if(idx!==lastSlice){
+    lastSlice=idx;
+    if(now-lastTick>70){lastTick=now;try{blip();}catch(e){}}
+  }
+}
+function draw(){
+  cur=active();const n=cur.length,R=360;
+  ctx.clearRect(0,0,720,720);
+  const empty=document.getElementById('empty');
+  document.getElementById('spinBtn').disabled=spinning||n<2;
+  if(n<2){
+    ctx.beginPath();ctx.arc(R,R,R-8,0,7);ctx.fillStyle='#f1e4cf';ctx.fill();
+    empty.style.display='flex';document.getElementById('hub').style.display='none';
+    if(placeLike()){
+      empty.innerHTML=n===0?'轉盤空空的 🥲<br>把下面清單的開關打開，或新增一家店吧！':'只剩一家：<b>'+esc(cur[0].name)+'</b><br>不用轉了，就吃這家吧 😋<br><small>（再打開一家才能轉）</small>';
+    }else{
+      empty.innerHTML=n===0?'轉盤空空的 🥲<br>把下面清單的開關打開，或新增一項吧！':'只剩一項：<b>'+esc(cur[0].name)+'</b><br>不用轉了，就吃這個吧 😋<br><small>（再打開一項才能轉）</small>';
+    }
+    return;
+  }
+  empty.style.display='none';document.getElementById('hub').style.display='flex';
+  const a=2*Math.PI/n;
+  ctx.save();ctx.translate(R,R);ctx.rotate(rot);
+  for(let i=0;i<n;i++){
+    ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R-8,i*a,(i+1)*a);ctx.closePath();
+    ctx.fillStyle=COLORS[(i+(n%COLORS.length===1&&i===n-1?1:0))%COLORS.length];ctx.fill();
+    ctx.strokeStyle='#fffaf2';ctx.lineWidth=4;ctx.stroke();
+    ctx.save();ctx.rotate(i*a+a/2);ctx.fillStyle='#fff';
+    const fs=n>14?26:n>9?30:36;ctx.font='bold '+fs+'px "PingFang TC","Noto Sans TC",sans-serif';
+    ctx.textAlign='right';ctx.textBaseline='middle';ctx.shadowColor='rgba(0,0,0,.25)';ctx.shadowBlur=3;
+    let t=cur[i].name;if(t.length>7)t=t.slice(0,6)+'…';
+    ctx.fillText(t,R-34,0);ctx.restore();
+  }
+  ctx.restore();
+  ctx.beginPath();ctx.arc(R,R,R-6,0,7);ctx.lineWidth=12;ctx.strokeStyle='#8b5a2b';ctx.stroke();
+  for(let i=0;i<24;i++){const t=i/24*2*Math.PI;ctx.beginPath();ctx.arc(R+(R-6)*Math.cos(t),R+(R-6)*Math.sin(t),4,0,7);ctx.fillStyle=i%2?'#ffe8a3':'#fff';ctx.fill();}
+}
+function spin(){
+  if(spinning||cur.length<2)return;spinning=true;
+  document.getElementById('backBtn').disabled=true;
+  document.querySelectorAll('.tab').forEach(t=>t.disabled=true);
+  try{startSpinSound(4200);}catch(e){}
+  const n=cur.length,a=2*Math.PI/n,pick=Math.floor(Math.random()*n);
+  const target=-Math.PI/2-(pick*a+a/2)+(Math.random()-.5)*a*0.7;
+  const base=rot-(rot%(2*Math.PI));
+  let end=base+6*2*Math.PI+((target-base)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+  const start=rot,dur=4200,t0=performance.now();
+  document.getElementById('spinBtn').disabled=true;
+  (function step(now){
+    const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,4);
+    rot=start+(end-start)*e;draw();
+    try{tickIfCrossed(now);}catch(err){}
+    if(p<1)requestAnimationFrame(step);else{
+      spinning=false;
+      document.getElementById('backBtn').disabled=false;
+      document.querySelectorAll('.tab').forEach(t=>t.disabled=false);
+      rot%=2*Math.PI;draw();
+      try{chime();}catch(err){}
+      show(cur[pick]);
+    }
+  })(t0);
+}
+const EMO=['🍜','🍲','🥢','🍱','🥟','😋','🎉'];
+function show(p){
+  document.getElementById('rEmo').textContent=EMO[Math.floor(Math.random()*EMO.length)];
+  document.getElementById('rName').textContent=p.name;
+  let h='';
+  if(placeLike()){
+    const hs=hoursStatus(p);
+    if(hs)h+='<span class="tag '+(hs==='營業中'?'open':'closed')+'">'+hs+'</span> ';
+    if(p.note)h+=esc(p.note);
+    if(p.veg)h+=' <span class="tag">'+esc(p.veg)+'</span>';
+    if(p.address)h+='<br>'+esc(p.address);
+    const dt=distText(p);
+    if(dt)h+='<br>'+esc(dt);
+    if(p.maps)h+='<br><a href="'+esc(p.maps)+'" target="_blank" rel="noopener">📍 Google 地圖</a>';
+    if(p.link)h+='<br><a href="'+esc(p.link)+'" target="_blank" rel="noopener">👉 線上點餐</a>';
+    const exts=[];
+    if(p.uber)exts.push('<a href="'+esc(p.uber)+'" target="_blank" rel="noopener">Uber Eats</a>');
+    if(p.panda)exts.push('<a href="'+esc(p.panda)+'" target="_blank" rel="noopener">foodpanda</a>');
+    if(exts.length)h+='<div class="exts">'+exts.join('')+'</div>';
+  }
+  document.getElementById('rNote').innerHTML=h||'好好享受！';
+  document.getElementById('mask').classList.add('show');confetti();
+}
+function renderPicker(){
+  document.getElementById('picks').innerHTML=allCats().map(c=>{
+    const last=DB.last===c.id;
+    return '<button type="button" class="pick'+(last?' is-last':'')+'" data-cat="'+c.id+'">'+
+      '<span class="emo" aria-hidden="true">'+c.emoji+'</span>'+
+      '<span class="ptxt"><span class="t">'+esc(c.label)+'</span><span class="d">'+esc(c.blurb)+(last?'・上次選的':'')+'</span></span>'+
+      '<span class="go" aria-hidden="true">›</span></button>';
+  }).join('')+'<button type="button" class="pick" data-add="1"><span class="emo" aria-hidden="true">＋</span><span class="ptxt"><span class="t">新增專區</span><span class="d">做一個自己的轉盤</span></span><span class="go" aria-hidden="true">＋</span></button>';
+}
+function renderTabs(){
+  document.getElementById('tabs').innerHTML=allCats().map(c=>
+    '<button type="button" class="tab'+(c.id===catId?' on':'')+'" data-cat="'+c.id+'">'+c.emoji+' '+esc(c.label)+'</button>'
+  ).join('')+'<button type="button" class="tab" data-add="1">＋新增專區</button>';
+}
+function rowNameText(p){
+  if(!placeLike())return esc(p.name);
+  const mon=isMon(),monSkip=mon&&S.autoMon&&p.mon;
+  const hs=hoursStatus(p);
+  let tags=(p.veg?'<span class="tag">'+esc(p.veg)+'</span>':'')+(p.mon?'<span class="tag mon">'+(monSkip?'今天公休':'週一休')+'</span>':'');
+  if(hs&&!(hs==='今日公休'&&monSkip))tags+='<span class="tag '+(hs==='營業中'?'open':'closed')+'">'+hs+'</span>';
+  return esc(p.name)+tags;
+}
+function hoursFields(p){
+  const closed={};
+  let open='',close='';
+  const h=p.hours||{};
+  for(let d=0;d<7;d++){
+    const slot=daySlot(h,d);
+    if(slot===undefined)continue;
+    if(!Array.isArray(slot)||slot.length<2){closed[d]=true;continue;}
+    if(!open){open=slot[0]||'';close=slot[1]||'';}
+  }
+  const days=DAY_LABELS.map((lab,d)=>'<label><input type="checkbox" class="edit-closed" value="'+d+'"'+(closed[d]?' checked':'')+'>'+lab+'</label>').join('');
+  return '<div class="pair"><label>開始<input type="time" class="edit-open" value="'+esc(open)+'"></label><label>結束<input type="time" class="edit-close" value="'+esc(close)+'"></label></div>'+
+    '<div class="small" style="text-align:left">公休（勾選的那天不營業）</div><div class="chk">'+days+'</div>'+
+    '<p class="small" style="text-align:left;margin:0">營業時間可能變動，請以店家公告為準。</p>';
+}
+function editHTML(p){
+  if(!placeLike()){
+    return '<div class="row editing"><form class="editform" data-edit-id="'+esc(p.id)+'">'+
+      '<input type="text" class="edit-name" maxlength="20" required placeholder="名稱" value="'+esc(p.name)+'">'+
+      '<div class="editacts"><button type="submit" class="btn">儲存</button><button type="button" class="btn ghost" data-cancel>取消</button></div></form></div>';
+  }
+  return '<div class="row editing"><form class="editform" data-edit-id="'+esc(p.id)+'">'+
+    '<input type="text" class="edit-name" maxlength="20" required placeholder="名稱" value="'+esc(p.name)+'">'+
+    '<input type="text" class="edit-note" maxlength="200" placeholder="備註" value="'+esc(p.note||'')+'">'+
+    '<details class="more"><summary>更多資訊</summary>'+
+      '<input type="text" class="edit-address" maxlength="80" placeholder="地址" value="'+esc(p.address||'')+'">'+
+      '<button type="button" class="btn ghost" data-geo>查這個地址</button>'+
+      '<p class="small geoMsg" style="text-align:left;margin:0"></p>'+
+      '<div class="pair"><label>緯度<input type="number" class="edit-lat" step="any" placeholder="lat" value="'+(p.lat==null?'':esc(p.lat))+'"></label>'+
+      '<label>經度<input type="number" class="edit-lng" step="any" placeholder="lng" value="'+(p.lng==null?'':esc(p.lng))+'"></label></div>'+
+      hoursFields(p)+
+      '<input type="url" class="edit-maps" placeholder="Google 地圖網址" value="'+esc(p.maps||'')+'">'+
+      '<input type="url" class="edit-uber" placeholder="Uber Eats 店家網址" value="'+esc(p.uber||'')+'">'+
+      '<input type="url" class="edit-panda" placeholder="foodpanda 店家網址" value="'+esc(p.panda||'')+'">'+
+      '<div class="searchlinks">'+
+        '<a href="'+esc(uberSearch(p.name))+'" target="_blank" rel="noopener">開 Uber Eats 搜尋</a>'+
+        '<a href="'+esc(pandaSearch(p.name))+'" target="_blank" rel="noopener">開 foodpanda 搜尋</a>'+
+      '</div>'+
+      '<p class="small" style="text-align:left;margin:0">搜尋頁不是店家官方頁。找到店家後，再把網址貼到上面。</p>'+
+    '</details>'+
+    '<div class="editacts"><button type="submit" class="btn">儲存</button><button type="button" class="btn ghost" data-cancel>取消</button></div></form></div>';
+}
+function displayItems(){
+  const items=listItems();
+  if(!placeLike()||!S.sortDist)return items;
+  return items.slice().sort((a,b)=>{
+    const da=placeDist(a),db=placeDist(b);
+    if(da==null&&db==null)return 0;
+    if(da==null)return 1;
+    if(db==null)return -1;
+    return da-db;
+  });
+}
+function rowHTML(p){
+  if(p.id===editingId)return editHTML(p);
+  let extra='';
+  if(placeLike()){
+    const bits=[];
+    if(p.note)bits.push(esc(p.note));
+    if(p.address)bits.push(esc(p.address));
+    if(p.maps)bits.push('<a href="'+esc(p.maps)+'" target="_blank" rel="noopener">Google 地圖</a>');
+    const dt=distText(p);
+    if(dt)bits.push('<span class="dist">'+esc(dt)+'</span>');
+    if(bits.length)extra='<div class="note">'+bits.join('<br>')+'</div>';
+  }
+  const frontInner='<div class="info"><div class="name">'+rowNameText(p)+'</div>'+extra+'</div>'+
+    '<button type="button" class="edit" data-e="'+esc(p.id)+'">編輯</button>';
+  const sw='<label class="sw"><input type="checkbox" data-t="'+esc(p.id)+'"'+(p.on?' checked':'')+'><span></span></label>';
+  if(!placeLike()){
+    return '<div class="row'+(p.on?'':' off')+'" data-id="'+esc(p.id)+'">'+frontInner+sw+
+      '<button type="button" class="del" data-d="'+esc(p.id)+'" aria-label="刪除">🗑</button></div>';
+  }
+  const id=esc(p.id);
+  const back='<button type="button" class="act del" data-d="'+id+'">刪除</button>'+
+    '<button type="button" class="act copy" data-copy="'+id+'">複製</button>'+
+    '<button type="button" class="act go" data-move="'+id+'">移動</button>';
+  return '<div class="row swipe'+(p.on?'':' off')+(p.id===openId?' open':'')+'" data-id="'+id+'"><div class="swipe-back">'+back+'</div><div class="swipe-front">'+
+    frontInner+'<button type="button" class="mod" data-mod="'+id+'">修改</button>'+sw+'</div></div>';
+}
+function renderSound(){
+  const b=document.getElementById('soundBtn');
+  b.textContent=soundOn?'🔊 聲音開':'🔇 聲音關';
+  b.setAttribute('aria-pressed',soundOn?'true':'false');
+}
+function render(){
+  const c=current(),place=placeLike();
+  renderTabs();renderSound();
+  document.getElementById('title').textContent=c.emoji+' '+c.label;
+  document.getElementById('sub').textContent=c.id==='delivery'?'外送到家・跟出門吃飯分開記':(c.id==='eat'?'轉一個就決定':c.blurb);
+  document.getElementById('placeChips').hidden=!place;
+  document.getElementById('placeTools').hidden=!place;
+  document.getElementById('locMsg').hidden=!place;
+  document.getElementById('placeAdd').hidden=!place;
+  document.getElementById('itemAdd').hidden=place;
+  document.getElementById('catTools').hidden=!c.custom;
+  document.getElementById('listHint').textContent=place?'右邊開關關掉＝暫時不轉。左滑或點「修改」可以刪除、複製、移動。':'右邊開關關掉＝暫時不轉（例如昨天剛吃過），不會刪除。';
+  document.getElementById('listHeading').textContent=place?'📋 店家清單':'📋 清單';
+  const sortBtn=document.getElementById('sortBtn');
+  if(place){
+    document.getElementById('vegChip').classList.toggle('on',!!S.vegOnly);
+    document.getElementById('monChip').classList.toggle('on',!!S.autoMon);
+    document.getElementById('openChip').classList.toggle('on',!!S.openNow);
+    sortBtn.classList.toggle('on',!!S.sortDist);
+    const mon=isMon(),skipped=S.places.filter(p=>p.on&&p.mon).length;
+    let st='轉盤上 '+active().length+' 家';
+    if(mon&&S.autoMon&&skipped)st+='・今天週一，已略過 '+skipped+' 家公休';
+    if(S.vegOnly)st+='・只轉素食友善';
+    if(S.openNow)st+='・只轉現在有開的';
+    document.getElementById('status').textContent=st;
+    document.getElementById('count').textContent='（共 '+S.places.length+' 家）';
+    const msg=document.getElementById('locMsg');
+    if(loc){
+      const mins=Math.max(0,Math.round((Date.now()-loc.ts)/60000));
+      msg.textContent=mins<1?'已用現在位置。再按一次可以更新。':'位置是 '+mins+' 分鐘前的，再按一次可以更新。';
+    }
+  }else{
+    document.getElementById('status').textContent='轉盤上 '+active().length+' 項';
+    document.getElementById('count').textContent='（共 '+S.items.length+' 項）';
+  }
+  document.getElementById('list').innerHTML=displayItems().map(rowHTML).join('');
+  draw();
+}
+function openCat(id){
+  if(spinning)return;
+  const c=catById(id);if(!c)return;
+  const bucket=bucketOf(id);if(!bucket)return;
+  catId=id;S=bucket;DB.last=id;DB.screen='wheel';editingId=null;rot=0;
+  document.getElementById('mask').classList.remove('show');
+  persist();
+  document.getElementById('picker').hidden=true;
+  document.getElementById('wheelView').hidden=false;
+  render();
+}
+function showPicker(){
+  if(spinning)return;
+  DB.screen='picker';editingId=null;
+  document.getElementById('mask').classList.remove('show');
+  persist();
+  document.getElementById('wheelView').hidden=true;
+  document.getElementById('picker').hidden=false;
+  renderPicker();
+}
+function numOrNull(v){
+  if(v==null||String(v).trim()==='')return null;
+  const n=Number(v);
+  return Number.isFinite(n)?n:null;
+}
+function readHours(form){
+  const open=form.querySelector('.edit-open').value;
+  const close=form.querySelector('.edit-close').value;
+  const closed=new Set([...form.querySelectorAll('.edit-closed:checked')].map(x=>x.value));
+  if(!open&&!close&&!closed.size)return null;
+  const hours={};
+  for(let d=0;d<7;d++){
+    if(closed.has(String(d)))hours[d]=[];
+    else if(open&&close)hours[d]=[open,close];
+  }
+  return hours;
+}
+async function lookupAddress(form){
+  const msg=form.querySelector('.geoMsg');
+  const q=(form.querySelector('.edit-address').value||'').trim();
+  if(!q){msg.textContent='請先填地址';return;}
+  msg.textContent='查詢中…';
+  try{
+    const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=tw&q='+encodeURIComponent(q);
+    const res=await fetch(url,{headers:{Accept:'application/json'}});
+    if(!res.ok)throw new Error('bad');
+    const data=await res.json();
+    if(!data[0]){msg.textContent='查不到，可以自己填經緯度';return;}
+    form.querySelector('.edit-lat').value=Number(data[0].lat).toFixed(6);
+    form.querySelector('.edit-lng').value=Number(data[0].lon).toFixed(6);
+    msg.textContent='已填入座標，按儲存才會記住';
+  }catch(e){
+    msg.textContent='目前查不到，可以自己填經緯度';
+  }
+}
+document.getElementById('picks').addEventListener('click',e=>{
+  if(e.target.closest('[data-add]')){addCategory();return;}
+  const b=e.target.closest('[data-cat]');if(b)openCat(b.dataset.cat);
+});
+document.getElementById('tabs').addEventListener('click',e=>{
+  if(e.target.closest('[data-add]')){addCategory();return;}
+  const b=e.target.closest('[data-cat]');if(b)openCat(b.dataset.cat);
+});
+document.getElementById('backBtn').onclick=showPicker;
+document.getElementById('soundBtn').onclick=()=>{
+  soundOn=!soundOn;
+  localStorage.setItem(SOUND_KEY,soundOn?'1':'0');
+  renderSound();
+};
+document.getElementById('locBtn').onclick=()=>{
+  const msg=document.getElementById('locMsg');
+  if(!navigator.geolocation){msg.textContent='這支手機沒有提供定位，轉盤還是可以轉。';return;}
+  msg.textContent='正在定位…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    loc={lat:pos.coords.latitude,lng:pos.coords.longitude,ts:Date.now()};
+    try{sessionStorage.setItem(LOC_KEY,JSON.stringify(loc));}catch(e){}
+    render();
+  },err=>{
+    msg.textContent=(err&&err.code===1)?'沒有取得位置權限，轉盤還是可以轉。':'目前定不到位置，轉盤還是可以轉。';
+  },{enableHighAccuracy:false,timeout:8000,maximumAge:0});
+};
+document.getElementById('sortBtn').onclick=()=>{
+  if(!placeLike())return;
+  if(!loc){document.getElementById('locMsg').textContent='要依距離排序，請先按「用現在位置」。轉盤還是可以轉。';return;}
+  S.sortDist=!S.sortDist;save();render();
+};
+let undoTimer=null,undoBag=null,swipeDrag=null,suppressClick=false;
+function setOpen(id){
+  openId=id||null;
+  document.querySelectorAll('#list .swipe').forEach(row=>{
+    row.classList.toggle('open',!!openId&&row.dataset.id===openId);
+    const front=row.querySelector('.swipe-front');
+    if(front){front.style.transform='';front.style.transition='';}
+  });
+}
+function hideUndo(){
+  clearTimeout(undoTimer);undoTimer=null;undoBag=null;
+  const t=document.getElementById('undoToast');if(t)t.hidden=true;
+}
+function showUndo(bag){
+  undoBag=bag;
+  document.getElementById('undoText').textContent='已刪除「'+bag.item.name+'」';
+  document.getElementById('undoToast').hidden=false;
+  clearTimeout(undoTimer);
+  undoTimer=setTimeout(hideUndo,5000);
+}
+function undoDelete(){
+  const bag=undoBag;if(!bag)return;
+  hideUndo();
+  const bucket=bucketOf(bag.catId);if(!bucket)return;
+  const key=bag.place?'places':'items';
+  if(!Array.isArray(bucket[key]))bucket[key]=[];
+  const at=Math.max(0,Math.min(bag.index,bucket[key].length));
+  bucket[key].splice(at,0,bag.item);
+  if(bag.seedAdded)DB.seedGone=(DB.seedGone||[]).filter(k=>k!==bag.seedKey);
+  if(catId===bag.catId)S=bucket;
+  persist();
+  if(catId===bag.catId)render();
+}
+function deleteItem(id){
+  const place=placeLike();
+  const list=place?S.places:S.items;
+  const index=list.findIndex(x=>x&&x.id===id);
+  if(index<0)return;
+  const item=list[index];
+  if(!confirm('確定刪除「'+item.name+'」？'))return;
+  list.splice(index,1);
+  const seed=place?noteSeedDeletion(DB,item):{key:'',added:false};
+  if(editingId===id)editingId=null;
+  openId=null;
+  save();render();
+  showUndo({catId:catId,place:place,index:index,item:item,seedKey:seed.key,seedAdded:seed.added});
+}
+function copyItem(id){
+  if(!placeLike())return;
+  const index=S.places.findIndex(x=>x&&x.id===id);
+  if(index<0)return;
+  const src=S.places[index];
+  const copy=Object.assign({},src,{id:'u'+Date.now(),name:src.name+'（複製）',on:true});
+  S.places.splice(index+1,0,copy);
+  editingId=copy.id;openId=null;
+  save();render();
+  const input=document.querySelector('.edit-name');
+  if(input){input.focus();input.select();}
+}
+document.getElementById('list').addEventListener('click',e=>{
+  if(suppressClick){suppressClick=false;return;}
+  if(e.target.closest('[data-geo]')){e.preventDefault();lookupAddress(e.target.closest('form'));return;}
+  if(e.target.closest('[data-cancel]')){editingId=null;render();return;}
+  const mod=e.target.closest('[data-mod]');
+  if(mod){setOpen(openId===mod.dataset.mod?null:mod.dataset.mod);return;}
+  const cp=e.target.closest('[data-copy]');
+  if(cp){copyItem(cp.dataset.copy);return;}
+  const mv=e.target.closest('[data-move]');
+  if(mv){setOpen(null);openMove({fromId:catId,ids:[mv.dataset.move],thenDelete:false});return;}
+  const eb=e.target.closest('[data-e]');
+  if(eb){
+    editingId=eb.dataset.e;openId=null;render();
+    const input=document.querySelector('.edit-name');
+    if(input){input.focus();input.select();}
+    return;
+  }
+  const db=e.target.closest('[data-d]');
+  if(db)deleteItem(db.dataset.d);
+});
+document.getElementById('list').addEventListener('pointerdown',e=>{
+  suppressClick=false;
+  const front=e.target.closest('.swipe-front');
+  if(!front||e.target.closest('button,a,input,label'))return;
+  const row=front.closest('.swipe');
+  swipeDrag={id:row.dataset.id,x:e.clientX,y:e.clientY,dx:0,front:front,horiz:null,pid:e.pointerId};
+  if(front.setPointerCapture)front.setPointerCapture(e.pointerId);
+});
+document.getElementById('list').addEventListener('pointermove',e=>{
+  const d=swipeDrag;if(!d||e.pointerId!==d.pid)return;
+  const dx=e.clientX-d.x,dy=e.clientY-d.y;
+  if(d.horiz==null){
+    if(Math.abs(dx)<8&&Math.abs(dy)<8)return;
+    d.horiz=Math.abs(dx)>Math.abs(dy);
+    if(!d.horiz){swipeDrag=null;return;}
+  }
+  e.preventDefault();
+  d.dx=dx;
+  const base=d.id===openId?-228:0;
+  let x=base+dx;
+  if(x>0)x=0;
+  if(x<-228)x=-228;
+  d.front.style.transition='none';
+  d.front.style.transform='translateX('+x+'px)';
+},{passive:false});
+function endSwipe(e){
+  const d=swipeDrag;if(!d||(e&&e.pointerId!==d.pid))return;
+  swipeDrag=null;
+  if(!d.horiz)return;
+  suppressClick=Math.abs(d.dx)>10;
+  const open=d.id===openId?d.dx<40:d.dx<-48;
+  setOpen(open?d.id:null);
+}
+document.getElementById('list').addEventListener('pointerup',endSwipe);
+document.getElementById('list').addEventListener('pointercancel',endSwipe);
+document.addEventListener('pointerdown',e=>{
+  if(!openId||e.target.closest('.swipe.open')||e.target.closest('#undoToast'))return;
+  setOpen(null);
+},true);
+document.getElementById('undoBtn').onclick=undoDelete;
+document.getElementById('list').addEventListener('change',e=>{
+  const t=e.target.dataset.t;if(!t)return;
+  const p=listItems().find(x=>x.id===t);if(!p)return;
+  p.on=e.target.checked;save();render();
+});
+document.getElementById('list').addEventListener('submit',e=>{
+  const form=e.target;if(!form.classList||!form.classList.contains('editform'))return;
+  e.preventDefault();
+  const name=form.querySelector('.edit-name').value.trim();
+  if(!name)return;
+  const p=listItems().find(x=>x.id===form.dataset.editId);if(!p)return;
+  p.name=name;
+  if(placeLike()){
+    const noteEl=form.querySelector('.edit-note');
+    if(noteEl)p.note=noteEl.value.trim();
+    p.address=(form.querySelector('.edit-address').value||'').trim();
+    p.lat=numOrNull(form.querySelector('.edit-lat').value);
+    p.lng=numOrNull(form.querySelector('.edit-lng').value);
+    p.hours=readHours(form);
+    const mapsEl=form.querySelector('.edit-maps');
+    if(mapsEl)p.maps=mapsEl.value.trim();
+    p.uber=(form.querySelector('.edit-uber').value||'').trim();
+    p.panda=(form.querySelector('.edit-panda').value||'').trim();
+  }
+  editingId=null;save();render();
+});
+document.getElementById('addForm').addEventListener('submit',e=>{
+  e.preventDefault();const name=document.getElementById('newName').value.trim();if(!name)return;
+  S.places.push({id:'u'+Date.now(),name,note:document.getElementById('newNote').value.trim(),veg:document.querySelector('#addForm input[name=veg]:checked').value,mon:document.getElementById('newMon').checked,on:true,link:'',address:'',lat:null,lng:null,hours:null,uber:'',panda:'',maps:''});
+  save();e.target.reset();render();
+});
+document.getElementById('itemForm').addEventListener('submit',e=>{
+  e.preventDefault();const name=document.getElementById('itemName').value.trim();if(!name)return;
+  S.items.push({id:'u'+Date.now(),name,on:true});
+  save();e.target.reset();render();
+});
+document.getElementById('vegChip').onclick=()=>{if(!placeLike())return;S.vegOnly=!S.vegOnly;save();render();};
+document.getElementById('monChip').onclick=()=>{if(!placeLike())return;S.autoMon=!S.autoMon;save();render();};
+document.getElementById('openChip').onclick=()=>{if(!placeLike())return;S.openNow=!S.openNow;save();render();};
+document.getElementById('resetBtn').onclick=()=>{
+  const c=current();if(!c)return;
+  const place=placeLike();
+  const msg=c.custom?'清空這個專區的清單？':(place?'恢復預設清單？你新增、修改或刪除的店家會被重設。':'恢復預設清單？你新增、修改或刪除的項目會被重設。');
+  if(!confirm(msg))return;
+  if(c.custom)S.places=[];
+  else if(DB.mode==='blank'&&place)S.places=[];
+  else if(catId==='explore')S=freshExplore();
+  else if(catId==='delivery')S=freshDelivery();
+  else if(place)S=freshEat();
+  else S=freshItems(c.defaults);
+  editingId=null;save();render();
+};
+function addCategory(){
+  if(spinning)return;
+  const name=prompt('新專區的名稱？');
+  if(name==null||!String(name).trim())return;
+  if(!Array.isArray(DB.customCats))DB.customCats=[];
+  const id='c'+Date.now();
+  const cat=freshCustom(String(name).trim().slice(0,20));
+  cat.id=id;
+  DB.customCats.push(cat);
+  persist();
+  openCat(id);
+}
+function renameCategory(){
+  const c=current();if(!c||!c.custom)return;
+  const name=prompt('專區的新名稱？',c.label);
+  if(name==null||!String(name).trim())return;
+  S.name=String(name).trim().slice(0,20);
+  save();render();
+}
+function deleteCategory(){
+  const c=current();if(!c||!c.custom)return;
+  if(!confirm('刪除專區「'+c.label+'」？'))return;
+  const places=(S.places||[]).slice();
+  if(places.length){
+    if(confirm('這個專區有 '+places.length+' 項。\n按「確定」選一個專區把項目移過去。\n按「取消」則連項目一起刪除。')){
+      openMove({fromId:catId,ids:places.map(p=>p.id),thenDelete:true});
+      return;
+    }
+  }
+  DB.customCats=(DB.customCats||[]).filter(x=>x&&x.id!==catId);
+  if(DB.last===catId)DB.last=null;
+  DB.screen='picker';
+  persist();
+  catId=null;S=null;
+  showPicker();
+}
+let moveJob=null;
+function uniqueId(list,id){
+  const used={};
+  (list||[]).forEach(p=>{if(p&&p.id)used[p.id]=true;});
+  if(id&&!used[id])return id;
+  let n='m'+Date.now();
+  while(used[n])n+='x';
+  return n;
+}
+function asPlace(p){
+  return{id:p.id,name:p.name,on:p.on!==false,mon:!!p.mon,link:p.link||'',note:p.note||'',veg:p.veg||'',address:p.address||'',lat:p.lat==null?null:p.lat,lng:p.lng==null?null:p.lng,hours:p.hours||null,uber:p.uber||'',panda:p.panda||'',maps:p.maps||''};
+}
+function openMove(job){
+  moveJob=job;
+  document.getElementById('moveTitle').textContent=job.thenDelete?'移到哪個專區？':'移動到哪個專區？';
+  document.getElementById('moveTargets').innerHTML=allCats().filter(c=>c.id!==job.fromId).map(c=>
+    '<button type="button" class="btn ghost" data-target="'+c.id+'">'+c.emoji+' '+esc(c.label)+'</button>'
+  ).join('');
+  document.getElementById('moveMask').classList.add('show');
+}
+function closeMove(){
+  moveJob=null;
+  document.getElementById('moveMask').classList.remove('show');
+}
+function takeItems(fromId,ids){
+  const src=bucketOf(fromId);
+  const key=catById(fromId).kind==='item'?'items':'places';
+  const taken=[];
+  src[key]=(src[key]||[]).filter(p=>{
+    if(p&&ids.indexOf(p.id)>=0){taken.push(p);return false;}
+    return true;
+  });
+  return taken;
+}
+function putItems(targetId,items){
+  const cat=catById(targetId);
+  const bucket=bucketOf(targetId);
+  if(cat.kind==='item'){
+    if(!Array.isArray(bucket.items))bucket.items=[];
+    items.forEach(p=>bucket.items.push({id:uniqueId(bucket.items,p.id),name:p.name,on:p.on!==false}));
+  }else{
+    if(!Array.isArray(bucket.places))bucket.places=[];
+    items.forEach(p=>{
+      const o=asPlace(p);
+      o.id=uniqueId(bucket.places,o.id);
+      bucket.places.push(o);
+    });
+  }
+}
+function finishMove(targetId){
+  const job=moveJob;if(!job)return;
+  const taken=takeItems(job.fromId,job.ids);
+  putItems(targetId,taken);
+  closeMove();
+  if(job.thenDelete){
+    DB.customCats=(DB.customCats||[]).filter(x=>x&&x.id!==job.fromId);
+    if(DB.last===job.fromId)DB.last=targetId;
+    persist();
+    openCat(targetId);
+    return;
+  }
+  if(catId===job.fromId)S=bucketOf(catId);
+  persist();
+  render();
+}
+document.getElementById('renameCatBtn').onclick=renameCategory;
+document.getElementById('delCatBtn').onclick=deleteCategory;
+document.getElementById('moveCancel').onclick=closeMove;
+document.getElementById('moveTargets').addEventListener('click',e=>{
+  const b=e.target.closest('[data-target]');if(b)finishMove(b.dataset.target);
+});
+document.getElementById('spinBtn').onclick=spin;document.getElementById('hub').onclick=spin;
+document.getElementById('okBtn').onclick=()=>document.getElementById('mask').classList.remove('show');
+document.getElementById('againBtn').onclick=()=>{
+  document.getElementById('mask').classList.remove('show');
+  try{if(soundOn)ensureAudio();}catch(e){}
+  setTimeout(spin,250);
+};
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  if(sessionStorage.getItem('ej-food-share-install-hide'))return;
+  deferredPrompt=e;
+  document.getElementById('installHint').hidden=false;
+});
+document.getElementById('installGo').onclick=async()=>{
+  document.getElementById('installHint').hidden=true;
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  try{await deferredPrompt.userChoice;}catch(e){}
+  deferredPrompt=null;
+};
+document.getElementById('installNo').onclick=()=>{
+  document.getElementById('installHint').hidden=true;
+  try{sessionStorage.setItem('ej-food-share-install-hide','1');}catch(e){}
+};
+
+const cc=document.getElementById('confetti'),cx=cc.getContext('2d');
+function confetti(){
+  cc.width=innerWidth;cc.height=innerHeight;
+  const ps=Array.from({length:120},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*14,vy:-Math.random()*14-4,s:Math.random()*6+4,c:COLORS[Math.floor(Math.random()*COLORS.length)],r:Math.random()*6}));
+  let f=0;(function tick(){cx.clearRect(0,0,cc.width,cc.height);
+    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.4;p.r+=.2;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*1.6);cx.restore();});
+    if(++f<110)requestAnimationFrame(tick);else cx.clearRect(0,0,cc.width,cc.height);})();
+}
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  let reloading=false;
+  const hadController=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!hadController||reloading)return;
+    reloading=true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
+    if(reg&&reg.update)reg.update().catch(()=>{});
+  }).catch(()=>{});
+}
+function showShell(){
+  const started=!!DB;
+  document.getElementById('welcome').hidden=started;
+  if(!started){
+    document.getElementById('picker').hidden=true;
+    document.getElementById('wheelView').hidden=true;
+    return;
+  }
+  if(DB.screen==='wheel'&&DB.last&&catById(DB.last)&&bucketOf(DB.last)){
+    catId=DB.last;S=bucketOf(DB.last);
+    document.getElementById('picker').hidden=true;
+    document.getElementById('wheelView').hidden=false;
+    render();
+  }else{
+    document.getElementById('wheelView').hidden=true;
+    document.getElementById('picker').hidden=false;
+    renderPicker();
+  }
+}
+function begin(db){
+  DB=db;catId=null;S=null;editingId=null;openId=null;
+  persist();
+  showShell();
+}
+document.getElementById('startBlank').onclick=()=>begin(blankDB());
+document.getElementById('startTaichung').onclick=()=>begin(taichungDB());
+if(FEEDBACK_URL){
+  const fb=document.getElementById('feedbackBtn');
+  fb.hidden=false;
+  fb.onclick=()=>{location.href=FEEDBACK_URL;};
+}
+let pendingImport=null,pendingShare=null;
+function safeUrl(u){
+  const s=String(u||'').trim();
+  return /^https:\/\//i.test(s)&&s.length<500?s:'';
+}
+function sanitizeHours(h){
+  if(!h||typeof h!=='object')return null;
+  const out={};
+  for(let d=0;d<7;d++){
+    const slot=h[d]!=null?h[d]:h[String(d)];
+    if(slot==null)continue;
+    if(!Array.isArray(slot)||slot.length<2||!slot[0]||!slot[1])out[d]=[];
+    else out[d]=[String(slot[0]).slice(0,5),String(slot[1]).slice(0,5)];
+  }
+  return Object.keys(out).length?out:null;
+}
+function sanitizePlace(p,i){
+  if(!p||typeof p!=='object')return null;
+  const name=String(p.name||'').trim().slice(0,40);
+  if(!name)return null;
+  return expandPlace({
+    id:String(p.id||('s'+i)).replace(/[^\w-]/g,'').slice(0,40)||('s'+i),
+    name:name,on:p.on!==false,mon:!!p.mon,
+    note:String(p.note||'').slice(0,200),
+    veg:p.veg==='全素'||p.veg==='素OK'?p.veg:'',
+    address:String(p.address||'').slice(0,80),
+    maps:safeUrl(p.maps),link:safeUrl(p.link),uber:safeUrl(p.uber),panda:safeUrl(p.panda),
+    lat:numOrNull(p.lat),lng:numOrNull(p.lng),hours:sanitizeHours(p.hours)
+  },i);
+}
+function sanitizeItem(p,i){
+  if(!p||typeof p!=='object')return null;
+  const name=String(p.name||'').trim().slice(0,40);
+  if(!name)return null;
+  return{id:String(p.id||('i'+i)).replace(/[^\w-]/g,'').slice(0,40)||('i'+i),name:name,on:p.on!==false};
+}
+function exportBackup(){
+  if(!DB)return;
+  const blob=new Blob([JSON.stringify({app:'ej-food-share',v:1,exportedAt:new Date().toISOString(),db:DB})],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='food-share-backup.json';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+function mergeByName(dst,src){
+  const seen={};
+  dst.forEach(p=>{if(p&&p.name)seen[normName(p.name)]=true;});
+  src.forEach(p=>{
+    const k=normName(p&&p.name);
+    if(!k||seen[k])return;
+    seen[k]=true;dst.push(p);
+  });
+}
+function applyImport(mode){
+  const src=pendingImport;pendingImport=null;
+  document.getElementById('importMask').classList.remove('show');
+  if(!src)return;
+  if(!DB)DB=blankDB();
+  if(mode==='replace'){
+    src.mode=src.mode==='blank'?'blank':'taichung';
+    if(!Array.isArray(src.customCats))src.customCats=[];
+    if(!Array.isArray(src.seedGone))src.seedGone=[];
+    ['eat','delivery','explore'].forEach(id=>{
+      if(!src[id]||!Array.isArray(src[id].places))return;
+      src[id].places=src[id].places.map(sanitizePlace).filter(Boolean);
+    });
+    ['cook','breakfast','night'].forEach(id=>{
+      if(!src[id]||!Array.isArray(src[id].items))return;
+      src[id].items=src[id].items.map(sanitizeItem).filter(Boolean);
+    });
+    src.customCats=src.customCats.map(c=>{
+      if(!c||typeof c!=='object')return null;
+      const name=String(c.name||'').trim().slice(0,20);
+      if(!name)return null;
+      const raw=Array.isArray(c.places)?c.places:(c.items||[]).map(p=>({name:p&&p.name,on:!p||p.on!==false}));
+      return Object.assign(freshFrom([]),{id:String(c.id||('c'+Date.now())),name:name,places:raw.map(sanitizePlace).filter(Boolean)});
+    }).filter(Boolean);
+    DB=src;catId=null;S=null;DB.screen='picker';DB.last=null;
+  }else{
+    ['eat','delivery','explore'].forEach(id=>{
+      const list=src[id]&&src[id].places;
+      if(!Array.isArray(list)||!DB[id])return;
+      mergeByName(DB[id].places,list.map(sanitizePlace).filter(Boolean));
+    });
+    ['cook','breakfast','night'].forEach(id=>{
+      const list=src[id]&&src[id].items;
+      if(!Array.isArray(list)||!DB[id])return;
+      mergeByName(DB[id].items,list.map(sanitizeItem).filter(Boolean));
+    });
+    if(!Array.isArray(DB.customCats))DB.customCats=[];
+    (src.customCats||[]).forEach(c=>{
+      if(!c||!c.name)return;
+      const name=String(c.name).trim().slice(0,20);
+      const found=DB.customCats.find(x=>x&&x.name===name);
+      const places=(c.places||[]).map(sanitizePlace).filter(Boolean);
+      if(!found){
+        const o=freshFrom([]);o.name=name;o.id='c'+Date.now()+Math.floor(Math.random()*1000);o.places=places;
+        DB.customCats.push(o);
+      }else if(Array.isArray(found.places))mergeByName(found.places,places);
+    });
+    if(!Array.isArray(DB.seedGone))DB.seedGone=[];
+    (src.seedGone||[]).forEach(k=>{if(typeof k==='string'&&DB.seedGone.indexOf(k)<0)DB.seedGone.push(k);});
+  }
+  persist();showShell();
+}
+document.getElementById('exportBtn').onclick=exportBackup;
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+document.getElementById('importFile').addEventListener('change',e=>{
+  const file=e.target.files&&e.target.files[0];
+  e.target.value='';
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(String(reader.result||''));
+      if(!data||data.app!=='ej-food-share'||data.v!==1||!validDB(data.db))throw new Error('bad');
+      pendingImport=data.db;
+      const n=(data.db.eat&&data.db.eat.places||[]).length+(data.db.explore&&data.db.explore.places||[]).length;
+      document.getElementById('importSummary').textContent='讀到備份（約 '+n+' 家在吃飯和待探索）。合併會保留你現在的店，只補上沒有的名字。覆蓋會換成這份備份。';
+      document.getElementById('importMask').classList.add('show');
+    }catch(err){alert('這個檔案不是這個轉盤的備份。');}
+  };
+  reader.readAsText(file);
+});
+document.getElementById('importMerge').onclick=()=>{if(confirm('合併這份備份？現有的店會留著。'))applyImport('merge');};
+document.getElementById('importReplace').onclick=()=>{if(confirm('覆蓋現在的全部清單？這會換成備份裡的內容。'))applyImport('replace');};
+document.getElementById('importCancel').onclick=()=>{pendingImport=null;document.getElementById('importMask').classList.remove('show');};
+function b64url(bytes){
+  let bin='';
+  bytes.forEach(b=>{bin+=String.fromCharCode(b);});
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64bytes(code){
+  const b64=code.replace(/-/g,'+').replace(/_/g,'/');
+  const pad=b64+'==='.slice((b64.length+3)%4);
+  const bin=atob(pad);
+  const out=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);
+  return out;
+}
+async function packShare(obj){
+  return 'j'+b64url(new TextEncoder().encode(JSON.stringify(obj)));
+}
+async function unpackShare(code){
+  code=String(code||'').trim();
+  if(code.charAt(0)!=='j')throw new Error('bad');
+  return JSON.parse(new TextDecoder().decode(b64bytes(code.slice(1))));
+}
+function clearShareHash(){
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){location.hash='';}
+}
+async function shareCurrent(){
+  if(!DB||!catId)return;
+  const c=current();const bucket=bucketOf(catId);if(!c||!bucket)return;
+  const cat={name:c.label,kind:c.kind==='item'?'item':'place'};
+  if(cat.kind==='item')cat.items=(bucket.items||[]).map(p=>({id:p.id,name:p.name,on:p.on!==false}));
+  else cat.places=(bucket.places||[]).map(p=>({id:p.id,name:p.name,on:p.on!==false,mon:!!p.mon,note:p.note||'',veg:p.veg||'',address:p.address||'',maps:p.maps||'',link:p.link||'',lat:p.lat,lng:p.lng,hours:p.hours||null}));
+  const code=await packShare({app:'ej-food-share-cat',v:1,cat:cat});
+  const link=location.href.split('#')[0]+'#s='+encodeURIComponent(code);
+  document.getElementById('shareLink').value=link;
+  document.getElementById('shareCode').value=code;
+  document.getElementById('shareOut').classList.add('show');
+}
+function acceptShare(){
+  const cat=pendingShare;pendingShare=null;
+  document.getElementById('shareMask').classList.remove('show');
+  clearShareHash();
+  if(!cat)return;
+  if(!DB)DB=blankDB();
+  if(!Array.isArray(DB.customCats))DB.customCats=[];
+  let name=String(cat.name||'分享的專區').trim().slice(0,20)||'分享的專區';
+  if(DB.customCats.some(c=>c&&c.name===name))name=(name+' 2').slice(0,20);
+  const id='c'+Date.now();
+  const raw=cat.kind==='item'?(cat.items||[]).map(p=>({name:p&&p.name,on:p&&p.on!==false})):(cat.places||[]);
+  const o=freshFrom([]);o.id=id;o.name=name;o.places=raw.map(sanitizePlace).filter(Boolean);
+  DB.customCats.push(o);
+  DB.screen='wheel';DB.last=id;
+  persist();
+  showShell();
+}
+document.getElementById('shareCatBtn').onclick=()=>{shareCurrent().catch(()=>alert('目前做不出分享連結。'));};
+document.getElementById('shareClose').onclick=()=>document.getElementById('shareOut').classList.remove('show');
+document.getElementById('shareCopy').onclick=async()=>{
+  const v=document.getElementById('shareLink').value;
+  try{await navigator.clipboard.writeText(v);alert('已複製連結。');}
+  catch(e){document.getElementById('shareLink').select();alert('請手動複製連結。');}
+};
+document.getElementById('shareSkip').onclick=()=>{pendingShare=null;document.getElementById('shareMask').classList.remove('show');clearShareHash();};
+document.getElementById('shareAccept').onclick=acceptShare;
+let shareRead=false;
+async function readShareHash(){
+  if(shareRead||pendingShare)return;
+  const m=(location.hash||'').match(/^#s=(.+)$/);
+  if(!m)return;
+  shareRead=true;
+  try{
+    const data=await unpackShare(decodeURIComponent(m[1]));
+    if(!data||data.app!=='ej-food-share-cat'||data.v!==1||!data.cat||!data.cat.name)throw new Error('bad');
+    pendingShare=data.cat;
+    const items=data.cat.kind==='item'?data.cat.items:data.cat.places;
+    document.getElementById('sharePreviewTitle').textContent=String(data.cat.name);
+    document.getElementById('sharePreviewList').textContent=(items||[]).map(p=>p&&p.name).filter(Boolean).slice(0,40).join('、')||'（這個專區是空的）';
+    document.getElementById('shareMask').classList.add('show');
+  }catch(e){shareRead=false;alert('這個分享連結讀不到。');}
+}
+readShareHash();
+window.addEventListener('hashchange',()=>{readShareHash();});
+setTimeout(readShareHash,50);
+showShell();
+</script>
+</body>
+</html>
