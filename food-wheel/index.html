@@ -15,7 +15,7 @@
 <style>
 :root{--bg:#f7efe2;--card:#fffaf2;--brown:#8b5a2b;--brown-d:#5e3a1a;--caramel:#c98a4b;--line:#ead9c0;--muted:#9a7b5c;--green:#5f9e5a;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--brown-d);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;padding:env(safe-area-inset-top) 0 40px}
+body{margin:0;background:var(--bg);color:var(--brown-d);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;padding:env(safe-area-inset-top) 0 40px;overflow-x:hidden}
 button,input{font-family:inherit}
 .wrap{max-width:480px;margin:0 auto;padding:16px}
 header{text-align:center;margin:6px 0 10px}
@@ -90,6 +90,19 @@ input[type=text],input[type=url],input[type=time],input[type=number]{width:100%;
 .placeTools .btn.ghost{width:auto;flex:1 1 calc(50% - 8px);margin-top:0}
 .placeTools .btn.on{border-style:solid;border-color:var(--brown);color:var(--brown-d)}
 .edit,.move{flex:none;border:1.5px solid var(--line);background:#fff;color:var(--brown);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.mod{flex:none;border:0;background:var(--brown);color:#fff;border-radius:12px;padding:10px 14px;font:inherit;font-size:16px;font-weight:800;min-height:44px;cursor:pointer}
+.swipe{display:block;position:relative;overflow:hidden;padding:0}
+.swipe-back{position:absolute;top:0;right:0;bottom:0;width:228px;display:flex}
+.swipe-back .act{flex:1;border:0;color:#fff;font:inherit;font-size:18px;font-weight:800;min-width:76px;min-height:64px;cursor:pointer}
+.swipe-back .del{background:#b94b3e}
+.swipe-back .copy{background:#c98a4b}
+.swipe-back .go{background:#6d4c2b}
+.swipe-front{position:relative;z-index:1;display:flex;align-items:center;gap:8px;background:var(--card);padding:10px 0;transform:translateX(0);transition:transform .18s ease;touch-action:pan-y}
+.swipe.open .swipe-front{transform:translateX(-228px)}
+.toast{position:fixed;left:16px;right:16px;bottom:16px;z-index:20;display:flex;align-items:center;gap:10px;background:#5e3a1a;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.toast[hidden]{display:none}
+.toast span{flex:1;font-size:16px;font-weight:700;text-align:left}
+.toast .btn{width:auto;background:#fff;color:#5e3a1a;min-width:76px;min-height:44px}
 .movelist{display:flex;flex-direction:column;gap:8px;margin:12px 0;max-height:46vh;overflow:auto}
 .movelist .btn.ghost{margin-top:0}
 .row.editing{flex-direction:column;align-items:stretch}
@@ -208,6 +221,10 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
   </div>
 </div>
 
+<div id="undoToast" class="toast" hidden>
+  <span id="undoText">已刪除</span>
+  <button type="button" class="btn" id="undoBtn">復原</button>
+</div>
 <div class="mask" id="moveMask">
   <div class="result">
     <div class="rname" id="moveTitle" style="font-size:22px">移動到哪個專區？</div>
@@ -554,7 +571,7 @@ function ensureQingmei(list){
 }
 function ensureYongchun(list){
   if(!Array.isArray(list))return false;
-  const found=list.find(p=>p&&p.name==='大埔永春總店');
+  const found=list.find(p=>p&&normName(p.name).indexOf('大埔永春總店')>=0);
   if(found){
     let changed=false;
     if(!found.address){found.address='台中市南屯區永春東七路607號';changed=true;}
@@ -567,7 +584,7 @@ function ensureYongchun(list){
   return true;
 }
 function ensureWuhua(list){
-  if(!Array.isArray(list)||list.some(p=>p&&p.name==='五花馬'))return false;
+  if(!Array.isArray(list)||list.some(p=>p&&normName(p.name).indexOf('五花馬')>=0))return false;
   const used={};
   list.forEach(p=>{if(p&&p.id)used[p.id]=true;});
   const id=used.d20?'wuhua':'d20';
@@ -608,8 +625,8 @@ function migrateKnownPlaces(db){
       if(applyPlaceFix(p))changed=true;
       if(applyShowtimeRamen(p))changed=true;
     });
-    if(ensureWuhua(list))changed=true;
-    if(ensureYongchun(list))changed=true;
+    if(!seedBlocked(db,'wuhua')&&ensureWuhua(list))changed=true;
+    if(!seedBlocked(db,'yongchun')&&ensureYongchun(list))changed=true;
     if(fixMiaoshanUrl(list))changed=true;
   });
   return changed;
@@ -666,6 +683,31 @@ function pushRaw(list,idBase,raw){
   p.id=used[idBase]?idBase+'2':idBase;
   list.push(p);
   return true;
+}
+function seedKeyOf(p){
+  if(!p)return '';
+  const id=exploreMatch(p.name);
+  if(id)return id;
+  const n=normName(p.name);
+  if(n.indexOf('五花馬')>=0)return 'wuhua';
+  if(n.indexOf('大埔永春總店')>=0)return 'yongchun';
+  return '';
+}
+function seedBlocked(db,key){
+  return !!(key&&db&&Array.isArray(db.seedGone)&&db.seedGone.indexOf(key)>=0);
+}
+function anyHasKey(db,key){
+  if(key==='wuhua')return placeLists(db).some(list=>list.some(p=>p&&normName(p.name).indexOf('五花馬')>=0));
+  if(key==='yongchun')return placeLists(db).some(list=>list.some(p=>p&&normName(p.name).indexOf('大埔永春總店')>=0));
+  return anyHasExplore(db,key);
+}
+function noteSeedDeletion(db,item){
+  const key=seedKeyOf(item);
+  if(!key||anyHasKey(db,key))return {key:key,added:false};
+  if(!Array.isArray(db.seedGone))db.seedGone=[];
+  if(db.seedGone.indexOf(key)>=0)return {key:key,added:false};
+  db.seedGone.push(key);
+  return {key:key,added:true};
 }
 function ensureExploreReady(db){
   if(!db.explore||typeof db.explore!=='object'||!Array.isArray(db.explore.places))db.explore=freshFrom([]);
@@ -730,7 +772,7 @@ function ensureExploreSeeds(db){
     if(list.some(p=>p&&test(normName(p.name)))&&fn(list))changed=true;
   });
   EXPLORE_MATCH.forEach((spec,idx)=>{
-    if(anyHasExplore(db,spec.id))return;
+    if(seedBlocked(db,spec.id)||anyHasExplore(db,spec.id))return;
     const raw=EXPLORE_DEFAULTS[idx];
     if(!raw||!pushRaw(list,spec.id,raw))return;
     const p=list.pop();
@@ -754,6 +796,7 @@ function loadDB(){
       if(s.delivery.vegOnly===undefined)s.delivery.vegOnly=false;
       if(s.delivery.autoMon===undefined)s.delivery.autoMon=true;
       if(!Array.isArray(s.customCats))s.customCats=[];
+      if(!Array.isArray(s.seedGone))s.seedGone=[];
       let changed=migrateKnownPlaces(s);
       if(migrateToExplore(s))changed=true;
       if(ensureExploreSeeds(s))changed=true;
@@ -770,6 +813,7 @@ function loadDB(){
     delivery:freshDelivery(),
     explore:freshExplore(),
     customCats:[],
+    seedGone:[],
     exploreMoved:1
   };
   const old=readV1();
@@ -781,7 +825,7 @@ function loadDB(){
   return db;
 }
 let DB=loadDB();
-let catId=null,S=null,editingId=null;
+let catId=null,S=null,editingId=null,openId=null;
 let soundOn=localStorage.getItem(SOUND_KEY)!=='0';
 let loc=null;
 try{const saved=JSON.parse(sessionStorage.getItem(LOC_KEY)||'null');if(saved&&Number.isFinite(saved.lat)&&Number.isFinite(saved.lng))loc=saved;}catch(e){}
@@ -1108,12 +1152,19 @@ function rowHTML(p){
     if(dt)bits.push('<span class="dist">'+esc(dt)+'</span>');
     if(bits.length)extra='<div class="note">'+bits.join('<br>')+'</div>';
   }
-  const tools=
-    '<button type="button" class="edit" data-e="'+esc(p.id)+'">編輯</button>'+
-    '<button type="button" class="move" data-move="'+esc(p.id)+'">移動</button>'+
-    '<label class="sw"><input type="checkbox" data-t="'+esc(p.id)+'"'+(p.on?' checked':'')+'><span></span></label>'+
-    '<button type="button" class="del" data-d="'+esc(p.id)+'" aria-label="刪除">🗑</button>';
-  return '<div class="row'+(p.on?'':' off')+'" data-id="'+esc(p.id)+'"><div class="info"><div class="name">'+rowNameText(p)+'</div>'+extra+'</div>'+tools+'</div>';
+  const frontInner='<div class="info"><div class="name">'+rowNameText(p)+'</div>'+extra+'</div>'+
+    '<button type="button" class="edit" data-e="'+esc(p.id)+'">編輯</button>';
+  const sw='<label class="sw"><input type="checkbox" data-t="'+esc(p.id)+'"'+(p.on?' checked':'')+'><span></span></label>';
+  if(!placeLike()){
+    return '<div class="row'+(p.on?'':' off')+'" data-id="'+esc(p.id)+'">'+frontInner+sw+
+      '<button type="button" class="del" data-d="'+esc(p.id)+'" aria-label="刪除">🗑</button></div>';
+  }
+  const id=esc(p.id);
+  const back='<button type="button" class="act del" data-d="'+id+'">刪除</button>'+
+    '<button type="button" class="act copy" data-copy="'+id+'">複製</button>'+
+    '<button type="button" class="act go" data-move="'+id+'">移動</button>';
+  return '<div class="row swipe'+(p.on?'':' off')+(p.id===openId?' open':'')+'" data-id="'+id+'"><div class="swipe-back">'+back+'</div><div class="swipe-front">'+
+    frontInner+'<button type="button" class="mod" data-mod="'+id+'">修改</button>'+sw+'</div></div>';
 }
 function renderSound(){
   const b=document.getElementById('soundBtn');
@@ -1131,7 +1182,7 @@ function render(){
   document.getElementById('placeAdd').hidden=!place;
   document.getElementById('itemAdd').hidden=place;
   document.getElementById('catTools').hidden=!c.custom;
-  document.getElementById('listHint').textContent='右邊開關關掉＝暫時不轉（例如昨天剛吃過），不會刪除。點「移動」可換到別的專區。';
+  document.getElementById('listHint').textContent=place?'右邊開關關掉＝暫時不轉。左滑或點「修改」可以刪除、複製、移動。':'右邊開關關掉＝暫時不轉（例如昨天剛吃過），不會刪除。';
   document.getElementById('listHeading').textContent=place?'📋 店家清單':'📋 清單';
   const sortBtn=document.getElementById('sortBtn');
   if(place){
@@ -1244,29 +1295,125 @@ document.getElementById('sortBtn').onclick=()=>{
   if(!loc){document.getElementById('locMsg').textContent='要依距離排序，請先按「用現在位置」。轉盤還是可以轉。';return;}
   S.sortDist=!S.sortDist;save();render();
 };
+let undoTimer=null,undoBag=null,swipeDrag=null,suppressClick=false;
+function setOpen(id){
+  openId=id||null;
+  document.querySelectorAll('#list .swipe').forEach(row=>{
+    row.classList.toggle('open',!!openId&&row.dataset.id===openId);
+    const front=row.querySelector('.swipe-front');
+    if(front){front.style.transform='';front.style.transition='';}
+  });
+}
+function hideUndo(){
+  clearTimeout(undoTimer);undoTimer=null;undoBag=null;
+  const t=document.getElementById('undoToast');if(t)t.hidden=true;
+}
+function showUndo(bag){
+  undoBag=bag;
+  document.getElementById('undoText').textContent='已刪除「'+bag.item.name+'」';
+  document.getElementById('undoToast').hidden=false;
+  clearTimeout(undoTimer);
+  undoTimer=setTimeout(hideUndo,5000);
+}
+function undoDelete(){
+  const bag=undoBag;if(!bag)return;
+  hideUndo();
+  const bucket=bucketOf(bag.catId);if(!bucket)return;
+  const key=bag.place?'places':'items';
+  if(!Array.isArray(bucket[key]))bucket[key]=[];
+  const at=Math.max(0,Math.min(bag.index,bucket[key].length));
+  bucket[key].splice(at,0,bag.item);
+  if(bag.seedAdded)DB.seedGone=(DB.seedGone||[]).filter(k=>k!==bag.seedKey);
+  if(catId===bag.catId)S=bucket;
+  persist();
+  if(catId===bag.catId)render();
+}
+function deleteItem(id){
+  const place=placeLike();
+  const list=place?S.places:S.items;
+  const index=list.findIndex(x=>x&&x.id===id);
+  if(index<0)return;
+  const item=list[index];
+  if(!confirm('確定刪除「'+item.name+'」？'))return;
+  list.splice(index,1);
+  const seed=place?noteSeedDeletion(DB,item):{key:'',added:false};
+  if(editingId===id)editingId=null;
+  openId=null;
+  save();render();
+  showUndo({catId:catId,place:place,index:index,item:item,seedKey:seed.key,seedAdded:seed.added});
+}
+function copyItem(id){
+  if(!placeLike())return;
+  const index=S.places.findIndex(x=>x&&x.id===id);
+  if(index<0)return;
+  const src=S.places[index];
+  const copy=Object.assign({},src,{id:'u'+Date.now(),name:src.name+'（複製）',on:true});
+  S.places.splice(index+1,0,copy);
+  editingId=copy.id;openId=null;
+  save();render();
+  const input=document.querySelector('.edit-name');
+  if(input){input.focus();input.select();}
+}
 document.getElementById('list').addEventListener('click',e=>{
+  if(suppressClick){suppressClick=false;return;}
   if(e.target.closest('[data-geo]')){e.preventDefault();lookupAddress(e.target.closest('form'));return;}
   if(e.target.closest('[data-cancel]')){editingId=null;render();return;}
+  const mod=e.target.closest('[data-mod]');
+  if(mod){setOpen(openId===mod.dataset.mod?null:mod.dataset.mod);return;}
+  const cp=e.target.closest('[data-copy]');
+  if(cp){copyItem(cp.dataset.copy);return;}
   const mv=e.target.closest('[data-move]');
-  if(mv){openMove({fromId:catId,ids:[mv.dataset.move],thenDelete:false});return;}
+  if(mv){setOpen(null);openMove({fromId:catId,ids:[mv.dataset.move],thenDelete:false});return;}
   const eb=e.target.closest('[data-e]');
   if(eb){
-    editingId=eb.dataset.e;render();
+    editingId=eb.dataset.e;openId=null;render();
     const input=document.querySelector('.edit-name');
     if(input){input.focus();input.select();}
     return;
   }
   const db=e.target.closest('[data-d]');
-  if(db){
-    const p=listItems().find(x=>x.id===db.dataset.d);
-    if(p&&confirm('確定刪除「'+p.name+'」？')){
-      if(placeLike())S.places=S.places.filter(x=>x.id!==p.id);
-      else S.items=S.items.filter(x=>x.id!==p.id);
-      if(editingId===p.id)editingId=null;
-      save();render();
-    }
-  }
+  if(db)deleteItem(db.dataset.d);
 });
+document.getElementById('list').addEventListener('pointerdown',e=>{
+  suppressClick=false;
+  const front=e.target.closest('.swipe-front');
+  if(!front||e.target.closest('button,a,input,label'))return;
+  const row=front.closest('.swipe');
+  swipeDrag={id:row.dataset.id,x:e.clientX,y:e.clientY,dx:0,front:front,horiz:null,pid:e.pointerId};
+  if(front.setPointerCapture)front.setPointerCapture(e.pointerId);
+});
+document.getElementById('list').addEventListener('pointermove',e=>{
+  const d=swipeDrag;if(!d||e.pointerId!==d.pid)return;
+  const dx=e.clientX-d.x,dy=e.clientY-d.y;
+  if(d.horiz==null){
+    if(Math.abs(dx)<8&&Math.abs(dy)<8)return;
+    d.horiz=Math.abs(dx)>Math.abs(dy);
+    if(!d.horiz){swipeDrag=null;return;}
+  }
+  e.preventDefault();
+  d.dx=dx;
+  const base=d.id===openId?-228:0;
+  let x=base+dx;
+  if(x>0)x=0;
+  if(x<-228)x=-228;
+  d.front.style.transition='none';
+  d.front.style.transform='translateX('+x+'px)';
+},{passive:false});
+function endSwipe(e){
+  const d=swipeDrag;if(!d||(e&&e.pointerId!==d.pid))return;
+  swipeDrag=null;
+  if(!d.horiz)return;
+  suppressClick=Math.abs(d.dx)>10;
+  const open=d.id===openId?d.dx<40:d.dx<-48;
+  setOpen(open?d.id:null);
+}
+document.getElementById('list').addEventListener('pointerup',endSwipe);
+document.getElementById('list').addEventListener('pointercancel',endSwipe);
+document.addEventListener('pointerdown',e=>{
+  if(!openId||e.target.closest('.swipe.open')||e.target.closest('#undoToast'))return;
+  setOpen(null);
+},true);
+document.getElementById('undoBtn').onclick=undoDelete;
 document.getElementById('list').addEventListener('change',e=>{
   const t=e.target.dataset.t;if(!t)return;
   const p=listItems().find(x=>x.id===t);if(!p)return;
