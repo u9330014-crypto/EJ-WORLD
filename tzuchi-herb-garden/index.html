@@ -986,7 +986,7 @@ const PTAGS=HERBS.map(([zn,u,v,name,img,sci,lines])=>{const P=SECT["ABCDEFGH".in
   const b=document.createElement("button");b.className="tag ptag hide";{const m=name.replace("⚠ 名牌：","⚠").match(/^(.*?)（(.*)）$/);if(m){b.textContent=m[1];const sm=document.createElement("small");sm.textContent=m[2];b.appendChild(sm);}else b.textContent=name.replace("⚠ 名牌：","⚠");}b.setAttribute("aria-label",name);
   b.onclick=()=>{sheetin.innerHTML=`<button class="close" aria-label="關閉">✕</button><h2>${name}</h2><div class="sub">${ZN[zn]}區・${sci}</div><img src="${img}" alt="${name}">${OFFMAP[name]?`<figure style="margin:10px 0 0"><img src="${OFFIMG(OFFMAP[name])}" alt="${name}官方照片" style="margin-top:0"><figcaption class="sub">中醫部官方照片</figcaption></figure>`:""}<ul class="hlist">${lines.map(l=>`<li>${l}</li>`).join("")}</ul>${OFF[name]?`<div class="hint">台中慈濟中醫部官方中草藥園名錄：編號 ${OFF[name]}・<a href="${OFFICIAL_URL}" target="_blank" rel="noopener">看官方圖文</a></div>`:`<div class="hint"><a href="${OFFICIAL_URL}" target="_blank" rel="noopener">台中慈濟中醫部官方中草藥園頁面</a></div>`}<div class="hint">資料供教學參考，臨床使用請依辨證。</div>`;
     sheet.classList.add("open");sheetin.querySelector(".close").onclick=()=>sheet.classList.remove("open");};
-  tagsEl.appendChild(b);return {el:b,v:new THREE.Vector3(x,1.9,z)};});
+  tagsEl.appendChild(b);return {el:b,v:new THREE.Vector3(x,0.6,z)};});
 /* ===== 蛇杖守護者：約 30 公分的無毒大眼小蛇（依參考照片花紋：橄欖灰綠底、背上兩排黑色棋盤斑、兩側淡黃縱紋、白腹側緣黑斑、唇部黑色直紋、大圓眼）===== */
 const SNAKE=(function(){
   const N=34,SP=0.0092,R0=0.0115,segs=[],grp=new THREE.Group();scene.add(grp);
