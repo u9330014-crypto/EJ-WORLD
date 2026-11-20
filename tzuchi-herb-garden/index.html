@@ -1,0 +1,1295 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="台中慈濟醫院第二院區中草藥園 3D 現場還原：八大法印藥園區、藥草名牌、看圖猜藥草。">
+<title>慈院藥草園 3D 現場</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: full-screen 3D scene; floating title, view buttons at bottom, island info as a bottom sheet */
+:root{
+  --bg:#eaf6ff; --paper:#ffffff; --ink:#33352b; --ink-soft:#6b6a58; --line:#e6e0cc;
+  --leaf:#5e9a5a; --leaf-deep:#3f7440; --peach:#f2a07b; --sun:#f3c64f; --sky:#d8f0fb;
+  --shadow:0 4px 14px rgba(60,70,40,.18);
+  --display:"Huninn","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);overflow:hidden}
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;touch-action:none}
+.hud{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 12px) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));pointer-events:none;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.title{background:rgba(255,255,255,.92);border-radius:18px;padding:10px 16px;box-shadow:var(--shadow);pointer-events:auto;min-width:0}
+.tally{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:5px;max-width:200px}.tally .st{min-width:0;background:#eef6e6;border-radius:10px;padding:4px 6px 5px;text-align:center;line-height:1.15}.tally .st b{display:block;font-size:19px;font-weight:700;color:#3f7f3a;font-variant-numeric:tabular-nums;white-space:nowrap}.tally .st b i{font-style:normal;font-size:11.5px;font-weight:500;margin-left:2px}.tally .st span{display:block;font-size:11px;color:#5f7a58;white-space:nowrap}
+.title h1{font-family:var(--display);font-weight:400;font-size:22px;margin:0;line-height:1.2}
+.wx{pointer-events:auto;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;border:0;background:rgba(255,255,255,.92);box-shadow:var(--shadow);border-radius:14px;padding:7px 12px;max-width:46%;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;text-align:left}
+.rcol{flex:0 0 auto;max-width:46%;display:flex;flex-direction:column;align-items:flex-end;gap:6px}.rcol .wx{max-width:none}
+.visits{pointer-events:auto;background:rgba(255,255,255,.92);box-shadow:var(--shadow);border-radius:99px;padding:4px 12px;font-size:12px;color:var(--ink-soft);white-space:nowrap;display:flex;align-items:baseline;gap:6px}
+.visits b{font-family:var(--display);font-weight:400;font-size:17px;color:#3f7f3a;letter-spacing:2px;font-variant-numeric:tabular-nums}
+.wx #wxTime{font-family:var(--display);font-size:15px;font-variant-numeric:tabular-nums}
+.wx.night{background:rgba(38,50,74,.92);color:#e8eefc}
+.wx #wxSky{text-align:right;line-height:1.35}
+.title p{margin:2px 0 0;font-size:12px;color:var(--ink-soft)}
+.views{position:fixed;left:0;right:0;bottom:0;padding:0 max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 14px) max(16px,env(safe-area-inset-left,0px));display:flex;gap:8px;justify-content:center;flex-wrap:wrap;pointer-events:none}
+.views button{pointer-events:auto;border:0;border-radius:999px;padding:10px 16px;font-family:var(--display);font-size:15px;background:rgba(255,255,255,.95);color:var(--ink);box-shadow:var(--shadow);cursor:pointer}
+.views button[aria-pressed="true"]{background:var(--leaf);color:#fff}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.tag{position:fixed;left:0;top:0;transform:translate(-50%,-100%);pointer-events:auto;cursor:pointer;border:0;background:#fff;color:var(--ink);font-family:var(--display);font-size:14px;padding:4px 10px 5px;border-radius:12px;box-shadow:0 3px 8px rgba(0,0,0,.18);white-space:nowrap}
+.tag::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
+.tag i{font-style:normal;display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.tag.hide{display:none}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 84px);transform:translateX(-50%);background:#3f7440;color:#fff;font-family:var(--display);font-size:14px;padding:8px 14px;border-radius:999px;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;z-index:2000}
+.ptag{background:#3f7440;color:#fff;font-size:13px;line-height:1.05;letter-spacing:1px;padding:8px 4px 7px;border-radius:9px;writing-mode:vertical-rl;text-orientation:upright}
+.ptag small{font-size:10px;opacity:.85;letter-spacing:0;margin-top:3px}
+.ptag::after{border-top-color:#3f7440}
+.snaketag{background:#6b5a3a;color:#fff6d0;font-size:13px;z-index:2400}
+.snaketag::after{border-top-color:#6b5a3a}
+.ptag.hl{background:#f2a07b;transform:translate(-50%,-100%) scale(1.25);opacity:1!important;z-index:2500!important;animation:pulse 1s ease-in-out 3}
+.ptag.hl::after{border-top-color:#f2a07b}
+@keyframes pulse{50%{transform:translate(-50%,-100%) scale(1.45)}}
+.offh{font-family:var(--display);font-weight:400;font-size:16px;margin:16px 0 0}
+.offgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin-top:12px}
+.offc{border:2px solid #ece6d2;background:#fff;border-radius:12px;padding:4px 4px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;color:var(--ink)}
+.offc:not(.on){opacity:.75;border-style:dashed}
+.offc.on{border-color:#5e9a5a;background:#eef6e8}
+.offc img{width:100%;max-width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;margin:0}
+.offc b{font-family:var(--display);font-weight:400;font-size:14px}
+.offc span{font-size:11px;color:var(--ink-soft)}
+.back{margin-top:12px;border:0;background:#eef6e8;border-radius:12px;padding:8px 14px;font:inherit;cursor:pointer}
+.hlist{margin:12px 0 0;padding-left:20px;font-size:15px;line-height:1.7}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:72%;overflow:auto;background:var(--paper);border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);padding:16px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 20px) max(16px,env(safe-area-inset-left,0px));transform:translateY(105%);transition:transform .28s ease}
+.sheet.open{transform:none}
+.sheet{z-index:3000}
+body.sheet-open #tags{visibility:hidden}
+.sheet .in{max-width:560px;margin:0 auto}
+.sheet h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
+.sheet .sub{color:var(--ink-soft);font-size:13px;margin-top:2px}
+.sheet img{width:100%;max-width:100%;border-radius:14px;margin-top:12px;display:block}
+.sheet p{font-size:15px;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:13px;background:#eef6e8;border-radius:99px;padding:3px 10px}
+.chip.q{background:#fdf1c9}
+.close{float:right;border:0;background:#f3efe2;border-radius:12px;width:40px;height:40px;font-size:18px;cursor:pointer}
+.hint{font-size:12px;color:var(--ink-soft);background:#fffbe8;border-radius:12px;padding:8px 12px;margin-top:12px}
+.load{position:fixed;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:18px;color:var(--ink-soft)}
+
+/* ===== 認得我嗎：看圖猜藥草 ===== */
+.quiz{position:fixed;inset:0;z-index:3500;background:rgba(40,50,30,.45);display:flex;align-items:flex-end;justify-content:center}
+.quiz[hidden]{display:none}
+.qbox{background:var(--paper);width:100%;max-width:560px;max-height:94%;overflow:auto;border-radius:22px 22px 0 0;padding:14px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px);box-sizing:border-box}
+@media (min-width:700px){.quiz{align-items:center}.qbox{border-radius:22px}}
+.qtop{display:flex;align-items:center;gap:8px}
+.qtop h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0;flex:1}
+.qcount{font-size:13px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.qrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.qchip{border:0;background:#f1eee2;color:var(--ink);border-radius:99px;padding:5px 11px;font:inherit;font-size:13px;cursor:pointer}
+.qchip[aria-pressed="true"]{background:#3f7440;color:#fff}
+.qpic{position:relative;margin-top:10px;border-radius:16px;overflow:hidden;aspect-ratio:4/3;background:#dfe8d5}
+.qpic{touch-action:none;cursor:grab;user-select:none}
+.qpic img{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;pointer-events:none;user-select:none}
+.qtip{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.45);color:#fff;font-size:11.5px;border-radius:99px;padding:3px 9px;pointer-events:none}
+.qans .where{font-size:15px;color:#2f5a2c;font-weight:500}
+.qhints{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.qhints li{background:#fffbe8;border-radius:12px;padding:7px 12px;font-size:14.5px;line-height:1.5}
+.qhints li b{font-weight:500;color:#8a6a1a;margin-right:4px}
+.qopts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.qopts button{border:2px solid #e6e0cc;background:#fff;border-radius:12px;padding:9px 4px;font-family:var(--display);font-size:16px;cursor:pointer;color:var(--ink)}
+.qopts button.ok{border-color:#5e9a5a;background:#eef6e8}
+.qopts button.no{border-color:#e0a090;background:#fbeee9;opacity:.7}
+.qbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.qbtns button{flex:1 1 30%;border:0;border-radius:14px;padding:11px 8px;font-family:var(--display);font-size:16px;cursor:pointer;background:#f1eee2;color:var(--ink)}
+.qbtns .main{background:#3f7440;color:#fff}
+.qbtns .warm{background:#f2a07b;color:#fff}
+.qans{margin-top:12px;background:#eef6e8;border-radius:14px;padding:12px 14px}
+.qans h3{font-family:var(--display);font-weight:400;font-size:26px;margin:0;color:#2f5a2c}
+.qans .sci{font-size:13px;color:var(--ink-soft);margin-top:2px}
+.qans p{margin:6px 0 0;font-size:14px;line-height:1.55}
+.qans .warn{color:#a04020}
+@media (prefers-reduced-motion:reduce){.sheet{transition:none}.qpic img{transition:none}}
+</style>
+
+<div id="stage"></div>
+<div class="load" id="load">藥草園搭建中…</div>
+<div class="hud"><div class="title"><h1>慈院藥草園</h1><p>台中慈濟醫院第二院區・中草藥園 3D 現場還原</p><div class="tally" id="tally"></div></div><div class="rcol"><button class="wx" id="wx" title="點一下切換時段預覽"><span id="wxTime">—</span><span id="wxSky">—</span></button><div class="visits" title="累積參訪人次">參訪人次<b id="vnum">00878</b></div></div></div>
+<div class="views" id="views">
+  <button data-v="bird">鳥瞰</button>
+  <button data-v="spin" aria-pressed="true">自動散步</button>
+  <button data-v="plaza">最佳角度</button>
+  <button data-v="list">官方名錄</button>
+  <button data-v="quiz">認得我嗎</button>
+  <button data-v="snake">蛇杖守護者</button>
+</div>
+<div id="tags"></div>
+<div class="toast" id="toast" hidden>走近植物會出現名字，點名字看照片與藥草說明</div>
+<div class="sheet" id="sheet" aria-live="polite"><div class="in" id="sheetin"></div></div>
+<div class="quiz" id="quiz" hidden role="dialog" aria-label="認得我嗎"><div class="qbox" id="qbox"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ===== 暫定島嶼（名稱與植物待確認）===== */
+const ZN={A:"正見",B:"正思惟",C:"正語",D:"正業",E:"正命",F:"正精進",G:"正念",H:"正定"};
+const ISLANDS=[
+ {id:"welcome",n:"唐式迴廊",c:"#f2a07b",p:[0,3,32],img:"img/welcome.jpg",pos:"沿廣場三面相連的 U 字形古風木造迴廊",plants:["虎尾蘭（名牌）","吊蘭？","酢醬草？"],d:"木柱、灰瓦斜頂的唐式迴廊沿廣場西、南、東三面相連成 U 字形。迴廊旁圍著白色路燈的長條花壇是巡禮起點，種了虎尾蘭等日常好認的植物。"},
+ {id:"bed1",n:"正見區",c:"#5a9bc4",p:[0,0,0],img:"img/zoneA2.jpg",img2:"img/zoneA.jpg",more:[{src:"img/a_xiangmao.jpg",cap:"近照：香茅草，禾本科 Cymbopogon citratus。立在路燈底座旁，配有中醫部製作的正式解說牌（別名香草、檸檬草；性味辛溫；功效祛風濕等）。"}],pos:"八大法印藥園區・上排、靠 A 棟一側",plants:["薄荷（名牌）","甜菊（名牌）","香茅草（正式解說牌；路燈底座旁）","咖哩樹（名牌確認，芸香科；後方羽狀複葉小樹）","灰綠色小葉灌木叢（兩側）","蝶豆（藍色蝶形花，纏繞右側灌木）","其餘名牌待拍近照"],d:"從前門往花園方向拍。前半部是剛翻過的土，左前方插著「薄荷」名牌、右前方是「甜菊」；中間一片匍匐蔓延的綠色小葉植物，看起來就是薄荷。後半部正中央一株咖哩樹（羽狀複葉小樹），兩側各一叢灰綠色小葉灌木，樹下有一顆石頭，最後方是路燈和病媒蚊防治告示牌。"},
+ {id:"bed2",n:"正思惟區",c:"#e0786a",p:[0,0,0],img:"img/zoneB2.jpg",img2:"img/zoneB.jpg",more:[{src:"img/b_conglan.jpg",cap:"近照：兩側鑲邊的細圓柱狀葉叢，開白色六瓣花、黃色花蕊，應是蔥蘭（玉簾）。名牌字跡已褪色，建議重寫。旁邊有酢醬草。"}],pos:"八大法印藥園區・上排中（最大）",plants:["紫色穗狀花（鼠尾草類？）","紅繁星花？","粉紅長春花？","白色小花（右前）","黃色羽狀花穗（左側）","斑葉小灌木","灰綠葉低矮植物？","蔥蘭（玉簾，兩側鑲邊；名牌字跡模糊）","後方劍形葉叢與黃花灌木"],d:"從前門往花園方向拍（全景）。花圃呈梯形，兩側斜邊整排種著蔥蘭鑲邊（細圓柱狀葉、開白花）。前排三叢紅花，右前方一叢白色小花；左側有黃色羽狀花穗和粉紅色花；中段一整排紫色穗狀花，夾著斑葉小灌木和一叢灰綠色低矮植物；後方是劍形葉的草叢和開黃花的灌木。左邊路燈上掛著「藥草園區」和病媒蚊防治的牌子。"},
+ {id:"bed3",n:"正語區",c:"#7bb36a",p:[0,0,0],img:"img/zoneC2.jpg",img2:"img/zoneC.jpg",more:[{src:"img/c_diaolan2.jpg",cap:"全景：吊蘭兩叢（名牌）。右下角有葉緣乳白、圓齒的斑葉植物，像斑葉左手香；地面滿是蛇莓（黃花）與積雪草。"},{src:"img/c_diaolan.jpg",cap:"近照：吊蘭（名牌）。地面有開黃花的三出複葉地被（蛇莓？）與圓葉的積雪草？"},{src:"img/c_yiyi.jpg",cap:"近照：薏苡（正式解說牌）。禾本科高大草本，寬線形葉、中脈白色，高過人頭；基部葉鞘乾枯呈褐黃，前方是左手香與羽狀葉地被。"},{src:"img/c_zuoshouxiang2.jpg",cap:"近照：左手香（手寫名牌）。葉片圓卵形、邊緣鋸齒、密生絨毛，成片匍匐；名牌後方是羽狀蕨類，牌上停著一對蚱蜢。"},{src:"img/c_zuoshouxiang.jpg",cap:"近照：左手香（名牌）。葉片厚、密生絨毛、邊緣圓齒，成片生長；名牌後方是羽狀蕨類。"}],pos:"八大法印藥園區・上排、靠 B 棟一側",plants:["澳洲茶樹（互葉白千層）","吊蘭（名牌確認）","斑葉左手香？（葉緣乳白，右前方）","左手香（名牌確認）","蛇莓？（黃花、三出複葉地被）","積雪草？（圓腎形葉）","酢醬草類（心形三小葉）","羽狀細葉植物（含羞草類？）","薏苡（名牌確認，中央高禾草）","山蘇（鳥巢蕨）"],d:"從前門往花園方向拍。右側一棵澳洲茶樹，樹幹從右下往左上彎成弧形，樹皮層層剝落，細針狀的樹冠罩在花圃中央上方；樹腳是一叢山蘇。中間一叢薏苡（名牌確認），寬葉高稈、高過人頭；地面是心形葉的地被，夾著紫色小花，後方近中央立著路燈，附近開著小白花。名牌在前緣正中央和左側。"},
+ {id:"bed4",n:"正業區",c:"#d9904a",p:[0,0,0],img:"img/zoneD2.jpg",img2:"img/zoneD.jpg",more:[{src:"img/d_muzei.jpg",cap:"近照：台灣木賊（名牌）。莖細長中空、一節一節的，節上有黑褐色鞘齒，幾乎沒有葉子；叢間夾著寬披針形、平行脈的葉片（淡竹葉？）。"},{src:"img/d_chunbulao.jpg",cap:"近照：春不老（解說牌編號 C005，紫金牛科，附 QR code）。多分枝的小喬木，葉片長橢圓、厚而有光澤，新芽與葉柄帶紅色。"},{src:"img/d_xiaobogudan.jpg",cap:"近照：小駁骨丹（爵床科，學名 Gendarussa vulgaris Nees；附 QR code 解說牌，別名含接骨筒等，功效有活血、消腫止痛）。灌木，葉片細長披針形、對生，嫩綠有光澤，莖節略膨大。"},{src:"img/d_mutong.jpg",cap:"近照：五葉木通（名牌）。木質藤本，掌狀複葉由 5 片倒卵形小葉組成，紅褐色的莖互相纏繞，攀在支架上長成一大團圓球。地面開著淡紫色小菊花。"},{src:"img/d_maoxucao.jpg",cap:"近照：貓鬚草（又名化石草，名牌）。唇形科草本，莖略帶紫褐色、方形，葉對生、卵形有粗鋸齒，部分葉片有黃色斑；開花時白色花冠伸出長長的雄蕊，像貓的鬍鬚。"},{src:"img/d_yizhiren.jpg",cap:"近照：益智（解說牌 E005，薑科，學名 Alpinia oxyphylla Miq.，藥材名益智仁；功效溫脾…）。多年生草本，高可過人，莖叢生，葉片寬長披針形、兩列互生，像竹葉放大版。"}],pos:"八大法印藥園區・下排第 1 塊（最靠 A 棟）",plants:["貓鬚草（化石草，名牌確認）","益智仁（解說牌 E005，薑科）","台灣木賊（名牌確認）","五葉木通（名牌；纏繞成圓球形的藤本）","小駁骨丹（解說牌；中央細長披針葉灌木叢）","掌狀裂葉植物（木薯？）","左側大型小葉灌木","春不老（解說牌 C005，紫金牛科；中後方亮葉小喬木）","黃色小花","淡紫色小花地被"],d:"從前門往花園方向拍。右側一團纏繞成圓球的五葉木通最醒目，球前有一株掌狀裂葉植物；中間是一大叢細長披針葉往外披散的小駁骨丹；左側是枝葉茂密的小葉灌木，旁邊開著黃色小花；後方立著一棵亮綠葉的小喬木，是春不老（解說牌 C005）。前緣中央有一片乾草，右前方是淡紫色小花，名牌集中在中間前排。"},
+ {id:"bed5",n:"正命區",c:"#4aa59a",p:[0,0,0],img:"img/zoneE2.jpg",img2:"img/zoneE.jpg",more:[{src:"img/e_jinyinhua.jpg",cap:"近照：金銀花（忍冬，名牌）。藤蔓纏繞在交叉斜插的竹竿架上，葉對生、卵形，右上角可見白黃色的花。架下混生咸豐草（白色小花），上方有藍紫色小花。"},{src:"img/e_hanxiao.jpg",cap:"近照：含笑（名牌）。木蘭科常綠小喬木，枝條灰白、用繩子拉開整形；葉橢圓、厚革質、深綠有光澤，枝上有許多褐色毛絨的花苞。樹下開著淡紫色小菊花。"},{src:"img/e_heimianma.jpg",cap:"近照：黑面馬（又名烏面馬，名牌）。半蔓性亞灌木，莖細長多分枝、略帶紫色，葉互生、卵形全緣；枝端有白色小花的花序（已開過）。"},{src:"img/e_shannai.jpg",cap:"近照：山柰（名牌寫作「山奈」，藥材通用寫法為山柰）。在竹竿架下貼地叢生，葉片寬披針形、邊緣略波浪、基部包成鞘狀，一叢叢密集。"},{src:"img/e_malan.jpg",cap:"近照：馬蘭（菊科，名牌）。前緣成片開著淡藍紫色的小菊花，舌狀花細長、中心黃色；葉互生、披針形，邊緣疏齒。"},{src:"img/e_tongbancao.jpg",cap:"⚠ 近照：名牌寫「紫花地丁」，但植株是細長鋸齒葉、開白色細長管狀花（花冠末端五裂成星形），外觀符合同瓣草（長星花 Hippobroma longiflora），不是堇菜科的紫花地丁。同瓣草全株有毒，乳汁會刺激眼睛與皮膚，請現場確認並更正名牌。"}],pos:"八大法印藥園區・下排第 2 塊",plants:["南五味（紅骨蛇，名牌確認；藤本）","含笑（名牌確認，木蘭科小喬木）","黑面馬（烏面馬，名牌確認；白花丹）","山柰（名牌寫「山奈」，薑科；竹架下）","後方大樹：細羽狀葉、垂掛長莢（辣木？）","紫紅葉植物（朱蕉／紅竹？）","馬蘭（菊科，名牌確認；前緣成片的淡紫小菊）","威靈仙（名牌確認；照片待補）","⚠ 名牌寫「紫花地丁」，植株疑為同瓣草（長星花，有毒）","細長披針葉草本叢","金銀花（忍冬，名牌確認；攀在交叉竹架上）","咸豐草（白花，混生）","藍紫色穗狀小花（長穗木類？）","大葉千斤拔（名牌確認，豆科；右側闊葉灌木）","左後方深紫葉小灌木","橘紅色小花一朵"],d:"從前門往花園方向拍。後方一棵大樹枝葉細碎、垂掛著許多長條莢果，很像辣木。花圃前緣開滿馬蘭的淡紫色小菊花，中間是一大片細長披針葉的草本，夾著一朵橘紅色小花；中後方是紫紅葉的紅竹，右側一排交叉竹竿架上攀著金銀花，右側是闊葉灌木，左後方有一叢深紫色葉子的小灌木。名牌集中在右前方。"},
+ {id:"bed6",n:"正精進區",c:"#c4567e",p:[0,0,0],img:"img/zoneF2.jpg",img2:"img/zoneF.jpg",more:[{src:"img/f_guoshanxiang.jpg",cap:"近照：過山香（名牌）。芸香科小喬木，數枝深褐色主幹，奇數羽狀複葉、小葉多而細長，排列整齊像蕨葉；揉葉有特殊香氣。右側那叢寬大長葉就是月桃，樹下纏著心形葉的藤蔓。"},{src:"img/f_yuetao.jpg",cap:"近照：月桃（薑科，學名 Alpinia speciosa K. Schum.；中醫部正式解說牌：別名草蔻、玉桃、良羌、豔山薑等，味辛性溫，種子芳香健胃）。高大叢生，葉片長披針形、兩列互生、葉緣光滑有中肋。地面有開黃色小菊花的地被。"},{src:"img/f_yinchen.jpg",cap:"近照：茵陳蒿（菊科，學名 Artemisia capillaris Thunb.；中醫部正式解說牌，功效清熱利濕）。左側亮綠色、葉細如絲、直立成穗狀的就是茵陳蒿；右側葉片較寬、細裂成羽狀的另一種蒿類，可能是黃花蒿（青蒿），兩者正好對照。"},{src:"img/f_maimendong.jpg",cap:"近照：麥門冬（名牌）。叢生，葉片細長帶狀、深綠，有平行脈，葉尖常乾枯成黃褐色；地下塊根即藥材麥冬。"}],pos:"八大法印藥園區・下排第 3 塊（中央）",plants:["枸骨（名牌確認，冬青科）","修剪過、落葉的扭曲小樹","南嶺蕘花（正式解說牌，瑞香科；灰綠小圓葉灌木）","黃綠色肉質輪生葉小草本（景天類？）","過山香（名牌確認，芸香科；羽狀複葉小樹）","月桃（正式解說牌，薑科 Alpinia speciosa）","茵陳蒿（正式解說牌，菊科 Artemisia capillaris）","細裂葉蒿類（黃花蒿／青蒿？）","麥門冬（名牌確認；前緣叢生）","仙鶴草／龍芽草（手寫名牌確認；前方中段）","鯽魚膽／闊苞菊（正式解說牌 C017；左側步道邊灌木）","萬點金／燈稱花（手寫名牌；左後方，植株待確認）","黃色小菊花地被（蟛蜞菊類？）","後方大型灌木","左後方細枝幼樹","禾草地被"],d:"從前門往花園方向拍。夾在兩條步道間的細長花圃，地面幾乎都是禾草。中間一株修剪過、枝幹扭曲、目前落葉的小樹；右邊緊鄰一株細幹的灌木，小圓葉灰綠色，右側枝頭開著淡粉紅色小花；前右方是一叢黃綠色、葉片肉質輪生的小草本。後方有羽狀複葉的過山香和一大叢灌木，左後方是一株細枝幼樹。"},
+ {id:"bed7",n:"正念區",c:"#9a7ac4",p:[0,0,0],img:"img/zoneG2.jpg",img2:"img/zoneG.jpg",more:[{src:"img/g_heshouwu.jpg",cap:"近照：何首烏（名牌）。纏繞性藤本，攀成一大團；葉互生、三角狀心形、先端尖，莖細長帶紅褐色。辨識小訣竅：蓼科植物的莖節上有膜質「托葉鞘」，可在現場翻看確認。"}],pos:"八大法印藥園區・下排第 4 塊",plants:["何首烏（名牌確認；纏繞藤本成團）","左側卵形葉大灌木","馬利筋（橘紅花，左前與右側各一叢）？","麥門冬（手寫名牌確認；右前兩叢）","右側羽毛狀細葉直立草本（茵陳蒿？）","金針（萱草；手寫名牌確認，右側中段）","艾草（手寫名牌確認，左前方）","葉下珠屬（名牌寫雷公根／蝴蝶草，右後方大樹旁）","月桃（正式解說牌確認，左後方步道邊）","紫蘇（用戶確認；中段，紫葉斜倚數株）","淡藍紫色小花地被","土芭樂（番石榴；右後方斜幹，主幹上著生山蘇）"],d:"從前門往花園方向拍。左側一株多分枝的卵形葉大灌木最醒目；左前角與右側各有一叢開橘紅色小花、葉片細長的植物，很像馬利筋；右前方是兩叢細長葉片的叢生草本，旁邊插著名牌；右側中後段有幾株羽毛狀細葉、直立如穗的草本；地面滿是地被，夾著淡藍紫色小花。右後方小樹上著生山蘇，旁邊就是大樓。"},
+ {id:"bed8",n:"正定區",c:"#8a8f4a",p:[0,0,0],img:"img/zoneH2.jpg",img2:"img/zoneH.jpg",more:[{src:"img/h_fengweicao.jpg",cap:"近照：鳳尾草（名牌）。低矮蕨類，羽片細長、邊緣有細齒，葉片中央沿主脈有一條銀白色斑紋，外觀像劍葉鳳尾蕨的白斑變種（白斑鳳尾蕨）。民間「鳳尾草」也常指井欄邊草，兩者同屬，可對照教學。周圍是積雪草與酢醬草地被，後方有馬蘭的淡紫小花。"}],pos:"八大法印藥園區・下排第 5 塊（最靠 B 棟）",plants:["虎耳草（名牌確認；貼地小圓葉）","虎尾蘭（名牌確認；路燈基座旁）","鳳尾草（名牌確認；葉中央帶銀白斑，似白斑鳳尾蕨）","射干（手寫名牌確認；後方步道邊）","蘇鐵", "披針形葉灌木（馬藍／板藍類？）", "蕨類（腎蕨或鳳尾蕨類？）", "後方小喬木", "白色小花地被"],d:"從前門往花園方向拍。中央偏左一株蘇鐵，左右被披針形葉的灌木叢圍著，下層是蕨類；後方一棵樹幹彎曲的小喬木，樹下是一排細長葉的草叢；地面滿是地被。前緣與右側一共插了六塊名牌。右手邊是 B 棟大樓前的白色花台。"},
+ {id:"zone",n:"八大法印藥園區",c:"#3f7440",p:[0,7,-19],img:"img/herbs.jpg",pos:"中庭盡頭，上下兩排弧形分區",plants:["正見","正思惟","正語","正業","正命","正精進","正念","正定"],d:"中庭盡頭的主要藥草園，以八正道命名分成八區：上排正見、正思惟、正語，下排正業、正命、正精進、正念、正定。點各區標籤可看該區植物。"},
+ {id:"forest",n:"林蔭島",c:"#3f7440",p:[8,0,-60],img:null,pos:"花園最後方，大樹與草坪",plants:["藥用喬木待拍照確認"],d:"高大喬木圍出的林下草坪，適合觀察耐陰植物與藥用樹木。"}
+];
+const OVERVIEW={n:"全區概覽",img:"img/pano1.jpg",img2:"img/pano2.jpg",img3:"img/herbs.jpg",d:"醫院大樓三面圍著石磚廣場，花園從廣場北側往後延伸：前段是幾塊被步道隔開、呈放射狀的花圃，後段是樹林與草坪。"};
+
+/* ===== 場景 ===== */
+const stage=document.getElementById("stage");
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const skyCv=document.createElement("canvas");skyCv.width=4;skyCv.height=256;const skyTex=new THREE.CanvasTexture(skyCv);scene.background=skyTex;
+function paintSky(top,mid,bot){const g=skyCv.getContext("2d");const gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,top);gr.addColorStop(.55,mid);gr.addColorStop(1,bot);g.fillStyle=gr;g.fillRect(0,0,4,256);skyTex.needsUpdate=true;}
+paintSky("#7fb8e6","#bfe0f5","#eef7fb");
+scene.fog=new THREE.Fog("#dcecf2",120,300);
+const camera=new THREE.PerspectiveCamera(45,1,0.12,1000);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.maxPolarAngle=Math.PI*0.49;controls.minDistance=0.3;controls.screenSpacePanning=false;controls.maxDistance=260;
+
+const LAMPMAT=new THREE.MeshLambertMaterial({color:"#3e3e3e",emissive:"#000000"});
+const LAMPS=[];let LAMPON=0;
+const hemi=new THREE.HemisphereLight("#dff0ff","#8fa86a",0.7);scene.add(hemi);
+const sun=new THREE.DirectionalLight("#fff1d6",0.95);
+sun.position.set(60,110,50);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-110,right:110,top:110,bottom:-110,near:10,far:300});
+scene.add(sun);
+
+const M=(c,o={})=>new THREE.MeshLambertMaterial(Object.assign({color:c},o));
+const leafCols=["#5e9a5a","#6fae58","#4f8a4c","#86b85f","#7aa64e","#a4c25a"];
+const flowerCols=["#f2a07b","#e86f6f","#f3c64f","#b48ad8","#ffffff","#f08fb0"];
+function add(geo,mat,x,y,z,cast=true,recv=true){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=recv;scene.add(m);return m;}
+function canvasTex(w,h,draw,rx=1,ry=1){const c=document.createElement("canvas");c.width=w;c.height=h;draw(c.getContext("2d"),w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.anisotropy=4;return t;}
+
+/* 地面：石磚、草地 */
+const paver=canvasTex(256,256,(g,w,h)=>{g.fillStyle="#5f615c";g.fillRect(0,0,w,h);
+  // 連鎖磚：交錯的「工」字形磚塊，深淺灰
+  const bw=32,bh=16;for(let y=0;y<h/bh;y++)for(let x=-1;x<w/bw+1;x++){const ox=(y%2)*bw/2;const L=60+Math.random()*12;
+    g.fillStyle=`hsl(${35+Math.random()*15},${3+Math.random()*4}%,${L*0.75}%)`;const px=x*bw+ox+1,py=y*bh+1;
+    g.beginPath();g.moveTo(px,py);g.lineTo(px+bw-2,py);g.lineTo(px+bw-2,py+bh*0.35);g.lineTo(px+bw-5,py+bh*0.5);g.lineTo(px+bw-2,py+bh*0.65);g.lineTo(px+bw-2,py+bh-2);g.lineTo(px,py+bh-2);g.lineTo(px,py+bh*0.65);g.lineTo(px+3,py+bh*0.5);g.lineTo(px,py+bh*0.35);g.closePath();g.fill();
+    for(let k=0;k<5;k++){g.fillStyle=`rgba(255,255,255,${Math.random()*.06})`;g.fillRect(px+Math.random()*bw,py+Math.random()*bh,3,2);}}
+  for(let i=0;i<260;i++){const y=Math.floor(Math.random()*h/bh)*bh,x=Math.random()*w;g.fillStyle=`hsl(${80+Math.random()*30},${35+Math.random()*20}%,${30+Math.random()*15}%)`;g.fillRect(x,y-1,Math.random()*4+1,2.5);}
+  for(let i=0;i<40;i++){g.fillStyle="rgba(150,120,80,.5)";g.fillRect(Math.random()*w,Math.random()*h,4,2);}
+},16,16);
+const lawn=canvasTex(128,128,(g,w,h)=>{g.fillStyle="#9fcf7a";g.fillRect(0,0,w,h);for(let i=0;i<500;i++){g.fillStyle=`hsl(${90+Math.random()*20},45%,${48+Math.random()*16}%)`;g.fillRect(Math.random()*w,Math.random()*h,2,3);}},30,30);
+const ground=add(new THREE.PlaneGeometry(400,400),M("#a9c98a",{map:lawn,side:THREE.DoubleSide}),0,-0.02,0,false,true);ground.rotation.x=-Math.PI/2;
+const plaza=add(new THREE.PlaneGeometry(1,1),M("#ffffff",{map:paver}),0,-5,0,false,true);plaza.rotation.x=-Math.PI/2;
+
+/* ===== 大樓 ===== */
+const facade=(floors,bays)=>canvasTex(512,512,(g,w,h)=>{
+  g.fillStyle="#efefea";g.fillRect(0,0,w,h);
+  const fh=h/floors,bw=w/bays;
+  for(let f=0;f<floors;f++){
+    const y=f*fh;
+    for(let b=0;b<bays;b++){const x=b*bw;
+      if(f===floors-1){ // 一樓拱廊
+        g.fillStyle="#c9cbc4";g.beginPath();g.moveTo(x+bw*.18,y+fh);g.lineTo(x+bw*.18,y+fh*.45);g.arc(x+bw*.5,y+fh*.45,bw*.32,Math.PI,0);g.lineTo(x+bw*.82,y+fh);g.fill();
+      }else{
+        g.fillStyle="#b7c4c9";g.fillRect(x+bw*.2,y+fh*.22,bw*.6,fh*.5);
+        g.fillStyle="#f6f6f2";g.fillRect(x+bw*.2,y+fh*.22,bw*.6,3);
+        g.fillStyle="#c8d9a8";for(let r=0;r<6;r++)g.fillRect(x+bw*(.08+r*.15),y+fh*.72,2,fh*.2);
+        g.fillStyle="#d6dfc0";g.fillRect(x,y+fh*.72,bw,3);
+      }
+    }
+    g.fillStyle="#d2d2cc";g.fillRect(0,y+fh-5,w,5);
+  }
+},1,1);
+
+/* 斜屋頂（四坡）＋太陽能板，依空拍圖 */
+const solarTex=canvasTex(128,128,(g,w,h)=>{g.fillStyle="#2e4a7d";g.fillRect(0,0,w,h);g.strokeStyle="#9fb4d8";g.lineWidth=2;for(let i=0;i<=8;i++){g.beginPath();g.moveTo(i*16,0);g.lineTo(i*16,h);g.stroke();}for(let j=0;j<=4;j++){g.beginPath();g.moveTo(0,j*32);g.lineTo(w,j*32);g.stroke();}},1,1);
+function hipRoof(x,y,z,w,d,h,solar=true,col="#f1f1ec"){
+  const along=w>=d, L=along?w:d, D=along?d:w, r=Math.max(0,L/2-D/2);
+  const P=along?(a,b,c)=>[a,b,c]:(a,b,c)=>[c,b,a];
+  const v=[P(-L/2,0,D/2),P(L/2,0,D/2),P(r,h,0),P(-r,h,0),P(L/2,0,-D/2),P(-L/2,0,-D/2)];
+  const f=[[0,1,2],[0,2,3],[4,5,3],[4,3,2],[1,4,2],[5,0,3]];
+  const pos=[];f.forEach(t=>t.forEach(i=>pos.push(...v[i])));
+  const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();
+  const m=add(g,M(col,{side:THREE.DoubleSide}),x,y,z);
+  if(solar){const ang=Math.atan2(h,D/2),sl=Math.hypot(h,D/2);
+    [1,-1].forEach(sg=>{const pw=(r*2+D*0.25)*0.85;if(pw<3)return;const pt=add(new THREE.BoxGeometry(along?pw:0.15,0.15,along?0.15:pw),M("#ffffff",{map:solarTex}),x,y,z,false,false);
+      const box=new THREE.BoxGeometry(along?pw:sl*0.62,0.12,along?sl*0.62:pw);pt.geometry=box;
+      const off=D/4;if(along){pt.position.set(x,y+h/2+0.12,z+sg*off);pt.rotation.x=sg*ang;}else{pt.position.set(x+sg*off,y+h/2+0.12,z);pt.rotation.z=-sg*ang;}});}
+  return m;
+}
+function building(x,z,w,d,floors=5,{bays=6,solar=true}={}){
+  const H=floors*4;
+  const tx=facade(floors,bays);const tx2=tx.clone();tx2.needsUpdate=true;tx.repeat.set(Math.max(1,Math.round(w/14)),1);tx2.repeat.set(Math.max(1,Math.round(d/14)),1);
+  const mw=M("#ffffff",{map:tx}),md=M("#ffffff",{map:tx2}),top=M("#d9d9d2");
+  const b=add(new THREE.BoxGeometry(w,H,d),[md,md,top,top,mw,mw],x,H/2,z);
+  // 每層陽台挑簷
+  for(let f=1;f<=floors;f++){const s=add(new THREE.BoxGeometry(w+1.4,0.35,d+1.4),M("#eeeeea"),x,f*4-0.1,z,true,false);}
+  add(new THREE.BoxGeometry(w+2.4,0.6,d+2.4),M("#e8e8e2"),x,H+0.3,z);
+  hipRoof(x,H+0.6,z,w+3,d+3,Math.min(w,d)*(solar?0.28:0.42),solar);
+  return b;
+}
+/* ===== 依 Google 地圖立體圖的配置：左右對稱 U 形中庭，開口朝北（花園與高架道路）===== */
+const SEGS=[]; // 建築物佔地，用來避開樹木
+function oriented(cx,cz,theta,fn){const n0=scene.children.length;fn();const grp=new THREE.Group();grp.position.set(cx,0,cz);grp.rotation.y=theta;
+  scene.children.slice(n0).forEach(c=>grp.add(c));scene.add(grp);return grp;}
+function blk(x,z,w,d,floors=5,rot=0,solar=true){oriented(x,z,rot,()=>{if(solar)building(0,0,w,d,floors,{bays:4});else{const H=floors*4;building(0,0,w,d,floors,{bays:6});}});SEGS.push({x1:x,z1:z,x2:x,z2:z,r:Math.max(w,d)/2+2});}
+// 左右兩翼各三棟，往花園方向微微張開
+// 依合心樓 1 樓平面圖（約 0.072 公尺／像素）：大廳居中、前門朝馬路；B 棟（西）、A 棟（東）各三段
+const segs=[ // [中心x, 中心z, 寬, 長, 傾斜(往外為正)]
+  [33.5,35.4,19,35,0.24],   // 前段：往馬路方向外斜
+  [27,-4.1,20.5,34,0],      // 中段：兩翼平行
+  [31.5,-43.6,20,39,0.12]   // 後段：往花園方向外斜
+];
+[-1,1].forEach(sg=>{segs.forEach(([x,z,w,l,t],k)=>{const rot=(k===0?1:-1)*sg*t;blk(sg*x,z,w,l,5,rot);});
+  // 段與段之間的連接走廊棟
+  [[27.5,14.5,6],[28,-22.5,5]].forEach(([x,z,d])=>{add(new THREE.BoxGeometry(17,17,d),M("#e9e9e3"),sg*x,8.5,z);add(new THREE.BoxGeometry(18,0.6,d+1),M("#dcdcd5"),sg*x,17.3,z);});});
+// 中央：大廳＋兩側服務台／藥局連接棟（大屋頂、無太陽能板）
+oriented(0,25,0,()=>{building(0,0,42,24,5,{bays:6,solar:false});});SEGS.push({x1:-21,z1:25,x2:21,z2:25,r:13});
+// 大廳往中庭延伸的低矮部分：平頂、玻璃門、靜思語石牆
+add(new THREE.BoxGeometry(16.5,7,13),M("#ecece6"),0,3.5,6.5);add(new THREE.BoxGeometry(17.5,0.6,14),M("#dcdcd5"),0,7.3,6.5);
+add(new THREE.BoxGeometry(11,5,0.4),M("#9eb3ba",{transparent:true,opacity:.85}),0,2.5,-0.1,false,false);
+add(new THREE.BoxGeometry(5,4.5,0.6),M("#8d8f88"),6.5,2.25,-0.5);
+// 東側大型館舍與機房（示意）
+oriented(72,-30,-0.3,()=>{add(new THREE.BoxGeometry(44,14,62),M("#ecece6"),0,7,0);hipRoof(0,14,0,46,64,4,false,"#e9e9e3");});SEGS.push({x1:72,z1:-30,x2:72,z2:-30,r:34});
+oriented(68,24,-0.3,()=>{add(new THREE.BoxGeometry(30,11,30),M("#e6e6e0"),0,5.5,0);[-8,0,8].forEach(a=>add(new THREE.CylinderGeometry(2.6,2.6,0.6,20),M("#55595c"),a,11.2,4));});SEGS.push({x1:68,z1:24,x2:68,z2:24,r:20});
+// 正門：主樓正面的弧形大屋簷，朝馬路
+const GATE=(function(){const gx=0,gz=40,dx=0,dz=1;
+  oriented(gx,gz,0,()=>{
+  // 正門：人字形大屋簷門廊（依大門口照片）
+  (function(){const x=0,z=0,base=5;
+    const granite=M("#e3d9c6"),tile=M("#6c6e6d"),stone=M("#cfc9bd");
+    const outer=(sh)=>{sh.moveTo(-11,0);sh.quadraticCurveTo(-1.4,2.5,0,17);sh.quadraticCurveTo(1.4,2.5,11,0);sh.lineTo(-11,0);return sh;};
+    const inner=(sh)=>{sh.moveTo(-9.2,0.6);sh.quadraticCurveTo(-1.1,3.2,0,15.2);sh.quadraticCurveTo(1.1,3.2,9.2,0.6);sh.lineTo(-9.2,0.6);return sh;};
+    const roof=add(new THREE.ExtrudeGeometry(outer(new THREE.Shape()),{depth:12,bevelEnabled:false}),tile,x,base,z-12);
+    const band=outer(new THREE.Shape());band.holes.push(inner(new THREE.Path()));
+    add(new THREE.ExtrudeGeometry(band,{depth:1,bevelEnabled:true,bevelSize:0.15,bevelThickness:0.15,bevelSegments:2}),granite,x,base,z+0.1);
+    add(new THREE.ExtrudeGeometry(inner(new THREE.Shape()),{depth:0.5,bevelEnabled:false}),M("#ece4d3"),x,base,z+0.2);
+    // 屋脊頂端捲雲裝飾
+    [[-0.9,0],[0.9,0],[0,0.9]].forEach(([a,b])=>{const t=add(new THREE.TorusGeometry(0.55,0.22,8,16),granite,x+a,base+17.2+b,z+0.8);});
+    // 慈濟標誌與院名
+    add(new THREE.CircleGeometry(1.1,24),M("#ffffff"),x,base+8.5,z+0.75,false,false);
+    add(new THREE.BoxGeometry(9,0.5,0.1),M("#b9ab90"),x,base+6.2,z+0.75,false,false);
+    // 圓形石柱與車道
+    [[-6,-1],[6,-1],[-6,-9],[6,-9],[-1.5,-1],[1.5,-1]].forEach(([a,b])=>add(new THREE.CylinderGeometry(0.85,0.95,base,16),stone,x+a,base/2,z+b));
+    add(new THREE.BoxGeometry(22,1.2,12),granite,x,base+0.1,z-5);
+    add(new THREE.PlaneGeometry(40,26),M("#ffffff",{map:paver}),x,0.01,z+6,false,true).rotation.x=-Math.PI/2;
+    // 門口兩側的石頭堆花台
+    [[x-14,z+6,3.2],[x+13,z+5,4]].forEach(([cx,cz,r])=>{add(new THREE.CylinderGeometry(r+0.6,r+0.8,0.5,24),M("#b8b09c"),cx,0.25,cz);
+      for(let k=0;k<26;k++){const a=Math.random()*Math.PI*2,t=Math.random()*r*0.85,hh=Math.max(0.3,(1-t/r)*1.6+Math.random()*0.3);
+        const b=add(new THREE.DodecahedronGeometry(0.55+Math.random()*0.35,0),M(["#c9a88a","#d8bfa0","#b9967a"][k%3]),cx+Math.cos(a)*t,hh,cz+Math.sin(a)*t);b.scale.y=0.7;}
+      for(let k=0;k<8;k++)bush(cx+(Math.random()-.5)*r*1.6,cz+(Math.random()-.5)*r*1.6,0.4,0.4);});
+    tree(x+12,z+3,7,2.6);tree(x-15,z+4,6,2.2);
+  })();
+  });return {gx,gz,dx,dz};})();
+// 正門前停車場
+(function(){const pk=add(new THREE.PlaneGeometry(40,22),M("#8c8f90"),0,0.012,64,false,true);pk.rotation.x=-Math.PI/2;
+  for(let k=0;k<16;k++)add(new THREE.BoxGeometry(2,1.4,4.4),M(["#f4f4f4","#c94c4c","#3c5a8a","#9a9a9a"][k%4]),-17+(k%8)*4.8,0.7,58+Math.floor(k/8)*11);
+  for(let k=0;k<11;k++)tree(-50+k*10,82,7,2.6);})();
+/* 木造門廊 */
+function porch(x,z,w,d,rot=0){
+  const grp=new THREE.Group();grp.position.set(x,0,z);grp.rotation.y=rot;scene.add(grp);
+  const wood=M("#7a5636"),roof=M("#5a5f63");
+  [[-w/2+0.6,-d/2+0.6],[w/2-0.6,-d/2+0.6],[-w/2+0.6,d/2-0.6],[w/2-0.6,d/2-0.6],[0,-d/2+0.6],[0,d/2-0.6]].forEach(([a,b])=>{const p=new THREE.Mesh(new THREE.BoxGeometry(0.6,5,0.6),wood);p.position.set(a,2.5,b);p.castShadow=true;grp.add(p);});
+  const beam=new THREE.Mesh(new THREE.BoxGeometry(w,0.7,d),wood);beam.position.y=5.2;grp.add(beam);
+  const r=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*0.78,2.6,4),roof);r.position.y=6.8;r.rotation.y=Math.PI/4;r.scale.set(w/Math.max(w,d),1,d/Math.max(w,d));r.castShadow=true;grp.add(r);
+}
+/* 唐式迴廊：沿廣場三面相連的 U 字形木造迴廊 */
+function corridor(x1,z1,x2,z2,wd=7){
+  const L=Math.hypot(x2-x1,z2-z1),cx=(x1+x2)/2,cz=(z1+z2)/2,alongX=Math.abs(x2-x1)>Math.abs(z2-z1);
+  const wood=M("#7a5636"),n=Math.max(2,Math.round(L/4));
+  for(let i=0;i<=n;i++){const t=i/n;const px=x1+(x2-x1)*t,pz=z1+(z2-z1)*t;
+    [-1,1].forEach(sg=>add(new THREE.CylinderGeometry(0.28,0.32,4.6,8),wood,px+(alongX?0:sg*wd/2),2.3,pz+(alongX?sg*wd/2:0)));}
+  add(new THREE.BoxGeometry(alongX?L+1:wd+0.6,0.6,alongX?wd+0.6:L+1),wood,cx,4.8,cz);
+  hipRoof(cx,5.1,cz,alongX?L+2.4:wd+2.6,alongX?wd+2.6:L+2.4,2.4,false,"#5f6466");
+  add(new THREE.BoxGeometry(alongX?L:wd,0.12,alongX?wd:L),M("#c9c3b4"),cx,0.06,cz,false,true);
+}
+function corridorSeg(p1,p2,wd=7){const L=Math.hypot(p2[0]-p1[0],p2[1]-p1[1]);oriented((p1[0]+p2[0])/2,(p1[1]+p2[1])/2,Math.atan2(-(p2[1]-p1[1]),p2[0]-p1[0]),()=>corridor(-L/2,0,L/2,0,wd));}
+// 唐式迴廊：沿兩翼內側與大廳前，連成 U 字形
+corridorSeg([-12.5,-2],[12.5,-2]);[-1,1].forEach(sg=>{corridorSeg([sg*13,12],[sg*13,-21]);});
+ISLANDS[0].p=[0,5,-2];
+
+/* 白色矮花台（沿大樓） */
+function planter(x,z,w,d){add(new THREE.BoxGeometry(w,1,d),M("#e6e6e0"),x,0.5,z);const s=add(new THREE.BoxGeometry(w-0.6,0.3,d-0.6),M("#6f9f4f"),x,1.05,z);for(let i=0;i<w*d/14;i++){bush(x+(Math.random()-.5)*(w-1.5),z+(Math.random()-.5)*(d-1.5),0.6+Math.random()*0.7,1.1);}}
+
+/* ===== 植物元件 ===== */
+function bush(x,z,r=1,y=0,col){const m=add(new THREE.IcosahedronGeometry(r,0),M(col||leafCols[Math.floor(Math.random()*leafCols.length)]),x,y+r*0.7,z);m.rotation.set(Math.random(),Math.random(),0);return m;}
+function flower(x,z,y=0){const c=flowerCols[Math.floor(Math.random()*flowerCols.length)];add(new THREE.SphereGeometry(0.22,6,4),M(c),x,y+0.5,z,false,false);}
+function tree(x,z,h=8,r=4,kind=0){(window.TREEQ=window.TREEQ||[]).push([x,z,h,r,kind]);}
+function buildTrees(){
+  const leafSet=[["#5f9a45","#4f8a3c","#76ad52"],["#7bb04e","#8fc25a","#6a9f45"],["#3f7a35","#4f8a3c","#5d8f4a"],["#9bc461","#86b552","#a8cc6e"]];
+  (window.TREEQ||[]).forEach(([x,z,h,r,kind])=>{const pal=leafSet[Math.floor(Math.random()*leafSet.length)];const tk=["#7a6a58","#8a7a66","#6e6052"][Math.floor(Math.random()*3)];
+    const lean=R(-.08,.08),yaw0=R(0,6.28),th=h*R(.5,.62);
+    bput(GEO.cyl,tk,x,0,z,{yaw:yaw0,tilt:lean,sx:r*.06+.12,sy:th,sz:r*.06+.12});
+    if(kind===1){for(let k=0;k<4;k++)bput(GEO.cone,pal[k%3],x,th*0.6+k*h*0.12,z,{sx:r*(0.75-k*.14),sy:h*0.3,sz:r*(0.75-k*.14)});return;}
+    const nb=3+Math.floor(Math.random()*3);
+    for(let b=0;b<nb;b++){const yaw=yaw0+b*6.28/nb+R(-.4,.4),tilt=R(.45,.9),len=r*R(.6,.95),y0=th*R(.7,.95);
+      bput(GEO.cyl,tk,x,y0,z,{yaw,tilt,sx:.07+r*.02,sy:len,sz:.07+r*.02});
+      const ex=x+Math.sin(yaw)*Math.sin(tilt)*len,ey=y0+Math.cos(tilt)*len,ez=z+Math.cos(yaw)*Math.sin(tilt)*len;
+      for(let q=0;q<5;q++)bput(GEO.ico,pal[q%3],ex+R(-r*.35,r*.35),ey+R(-r*.15,r*.3),ez+R(-r*.35,r*.35),{sx:r*R(.28,.42),sy:r*R(.22,.32),sz:r*R(.28,.42)});}
+    for(let q=0;q<4;q++)bput(GEO.ico,pal[q%3],x+R(-r*.3,r*.3),th+r*R(.3,.6),z+R(-r*.3,r*.3),{sx:r*R(.3,.45),sy:r*R(.25,.35),sz:r*R(.3,.45)});});
+  window.TREEQ=[];bflush();}
+
+function cycad(x,z){for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const f=add(new THREE.BoxGeometry(0.25,0.08,2.4),M("#55806a"),x+Math.cos(a)*1.1,1.2,z+Math.sin(a)*1.1,true,false);f.rotation.y=-a+Math.PI/2;f.rotation.x=-0.35;}add(new THREE.CylinderGeometry(0.35,0.45,1,8),M("#6b5a40"),x,0.5,z);}
+function lamp(x,z){LAMPS.push([x,z]);add(new THREE.CylinderGeometry(0.6,0.7,0.8,10),M("#e8e8e4"),x,0.4,z);add(new THREE.CylinderGeometry(0.13,0.16,5.5,8),M("#f7f7f5"),x,3.5,z);add(new THREE.CylinderGeometry(0.35,0.2,0.6,6),LAMPMAT,x,6.5,z);}
+
+
+/* 花圃：不規則圓角形 */
+function blobShape(cx,cz,rx,rz,rot=0,seed=1){
+  const s=new THREE.Shape();const N=28;
+  for(let i=0;i<=N;i++){const a=i/N*Math.PI*2;const k=1+0.08*Math.sin(a*3+seed)+0.05*Math.sin(a*5+seed*2);
+    let px=Math.cos(a)*rx*k,pz=Math.sin(a)*rz*k;const X=px*Math.cos(rot)-pz*Math.sin(rot),Z=px*Math.sin(rot)+pz*Math.cos(rot);
+    i?s.lineTo(cx+X,cz+Z):s.moveTo(cx+X,cz+Z);}
+  return s;
+}
+function bed(cx,cz,rx,rz,rot,{seed=1,density=1,trees=0,flowers=0.3}={}){
+  const g=new THREE.ExtrudeGeometry(blobShape(0,0,rx,rz,rot,seed),{depth:0.35,bevelEnabled:true,bevelThickness:0.1,bevelSize:0.25,bevelSegments:2});
+  const m=new THREE.Mesh(g,[M("#7fb35e"),M("#8b6a48")]);m.rotation.x=Math.PI/2;m.position.set(cx,0.35,cz);m.receiveShadow=true;scene.add(m);
+  const n=Math.round(rx*rz*0.5*density);
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,t=Math.sqrt(Math.random())*0.85;let px=Math.cos(a)*rx*t,pz=Math.sin(a)*rz*t;const X=px*Math.cos(rot)-pz*Math.sin(rot),Z=px*Math.sin(rot)+pz*Math.cos(rot);
+    if(Math.random()<flowers)flower(cx+X,cz+Z,0.4);else bush(cx+X,cz+Z,0.35+Math.random()*0.75,0.35);}
+  for(let i=0;i<trees;i++)tree(cx+(Math.random()-.5)*rx*0.6,cz+(Math.random()-.5)*rz*0.6,6+Math.random()*3,2.5);
+  // 名牌
+  for(let i=0;i<Math.min(6,Math.round(rx));i++){const a=Math.random()*Math.PI*2;const X=Math.cos(a)*rx*0.75,Z=Math.sin(a)*rz*0.75;const px=X*Math.cos(rot)-Z*Math.sin(rot),pz=X*Math.sin(rot)+Z*Math.cos(rot);
+    add(new THREE.BoxGeometry(0.06,0.9,0.06),M("#f2f2f2"),cx+px,0.8,cz+pz,false,false);add(new THREE.BoxGeometry(0.6,0.4,0.05),M("#ffffff"),cx+px,1.3,cz+pz,false,false);}
+}
+
+/* ===== 花園配置 ===== */
+// 廣場與花園之間的步道（石磚延伸）
+function dirtPath(pts,w){const curve=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p[0],0.02,p[1])));const N=60,pos=[],idx=[];
+  for(let i=0;i<=N;i++){const t=i/N,p=curve.getPoint(t),d=curve.getTangent(t);const nx=-d.z,nz=d.x;pos.push(p.x+nx*w/2,0.03,p.z+nz*w/2,p.x-nx*w/2,0.03,p.z-nz*w/2);if(i<N){const k=i*2;idx.push(k,k+1,k+2,k+1,k+3,k+2);}}
+  const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,M("#b3ad9e",{side:THREE.DoubleSide}));m.receiveShadow=true;scene.add(m);}
+const OX=0;
+const plaza2=add(new THREE.PlaneGeometry(36,74),M("#ffffff",{map:paver.clone()}),0,0.004,-35,false,true);plaza2.rotation.x=-Math.PI/2;plaza2.material.map.repeat.set(10,18);plaza2.material.map.needsUpdate=true;
+const path=add(new THREE.PlaneGeometry(44,20),M("#ffffff",{map:paver.clone()}),0,0.005,-58,false,true);path.rotation.x=-Math.PI/2;path.material.map.repeat.set(13,6);path.material.map.needsUpdate=true;
+// 八塊實際花圃：依空拍照片圈出的輪廓，換算到平面圖位置（照片 1 像素≈0.021 公尺）
+const PH=(px,py)=>[(px-1000)*0.021-0.5,-37.8-py*0.021];
+function inPoly(x,z,P){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const [xi,zi]=P[i],[xj,zj]=P[j];if(((zi>z)!==(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi)+xi))c=!c;}return c;}
+function polyBed(P,{density=1,flowers=0.3,trees=0}={}){
+  const sh=new THREE.Shape();P.forEach(([x,z],k)=>k?sh.lineTo(x,z):sh.moveTo(x,z));sh.closePath();
+  const g=new THREE.ExtrudeGeometry(sh,{depth:0.35,bevelEnabled:true,bevelThickness:0.08,bevelSize:0.2,bevelSegments:2});
+  const m=new THREE.Mesh(g,[M("#7fb35e"),M("#8b6a48")]);m.rotation.x=Math.PI/2;m.position.set(0,0.35,0);m.receiveShadow=true;scene.add(m);
+  const xs=P.map(p=>p[0]),zs=P.map(p=>p[1]);const x0=Math.min(...xs),x1=Math.max(...xs),z0=Math.min(...zs),z1=Math.max(...zs);
+  let area=0;for(let i=0,j=P.length-1;i<P.length;j=i++)area+=(P[j][0]+P[i][0])*(P[j][1]-P[i][1]);area=Math.abs(area/2);
+  const n=Math.round(area*0.7*density);let k=0,tries=0;
+  while(k<n&&tries<n*20){tries++;const x=x0+Math.random()*(x1-x0),z=z0+Math.random()*(z1-z0);if(!inPoly(x,z,P))continue;k++;
+    if(Math.random()<flowers)flower(x,z,0.4);else bush(x,z,0.3+Math.random()*0.6,0.35);}
+  for(let t=0;t<trees;t++){for(let q=0;q<50;q++){const x=x0+Math.random()*(x1-x0),z=z0+Math.random()*(z1-z0);if(inPoly(x,z,P)){tree(x,z,6+Math.random()*3,2.3);break;}}}
+  for(let t=0;t<Math.min(5,Math.round(area/6));t++){for(let q=0;q<50;q++){const x=x0+Math.random()*(x1-x0),z=z0+Math.random()*(z1-z0);if(inPoly(x,z,P)){add(new THREE.BoxGeometry(0.06,0.9,0.06),M("#f2f2f2"),x,0.8,z,false,false);add(new THREE.BoxGeometry(0.6,0.4,0.05),M("#ffffff"),x,1.3,z,false,false);break;}}}
+  return [(x0+x1)/2,(z0+z1)/2];
+}
+const BEDS=[];
+// 八大法印藥園區：上下兩排弧形帶，A–C 在上、D–H 在下（依手繪紅線分區）
+const ARC_C=[0,40],R_TOP=64,R_MID=85,R_BOT=108;
+const arcZ=(x,R)=>ARC_C[1]-Math.sqrt(R*R-x*x);
+function edgeHit(xa,za,xb,zb,R){let x=xa;for(let k=0;k<8;k++){const z=arcZ(x,R);const t=(z-za)/(zb-za);x=xa+(xb-xa)*t;}return x;}
+function sector(L,Rr,R1,R2,gap=1.0){ // L/Rr：左右邊界 [x上, x下]，R1/R2：上下弧半徑
+  const z1=arcZ(0,R1),z2=arcZ(0,R2);
+  const xl1=edgeHit(L[0],z1,L[1],z2,R1)+gap,xr1=edgeHit(Rr[0],z1,Rr[1],z2,R1)-gap,xl2=edgeHit(L[0],z1,L[1],z2,R2)+gap,xr2=edgeHit(Rr[0],z1,Rr[1],z2,R2)-gap;
+  const P=[];const N=10;
+  for(let k=0;k<=N;k++){const x=xl1+(xr1-xl1)*k/N;P.push([x,arcZ(x,R1+gap)]);}
+  for(let k=0;k<=N;k++){const x=xr2+(xl2-xr2)*k/N;P.push([x,arcZ(x,R2-gap)]);}
+  P.meta={xl1,xr1,xl2,xr2,R1:R1+gap,R2:R2-gap};return P;}
+const TOPB=[[-15.5,-19],[-9,-6.5],[9,6.5],[15.5,19]];
+const BOTB=[[-19,-21],[-11.4,-12.6],[-3.8,-4.2],[3.8,4.2],[11.4,12.6],[19,21]];
+const SECT=[];
+for(let k=0;k<3;k++)SECT.push(sector(TOPB[k],TOPB[k+1],R_TOP,R_MID));
+for(let k=0;k<5;k++)SECT.push(sector(BOTB[k],BOTB[k+1],R_MID,R_BOT));
+const BEDOPT=[{density:1.1,flowers:0.2},{density:1,flowers:0.3,trees:1},{density:1.1,flowers:0.25},{density:0.9,flowers:0.2},{density:1,flowers:0.3},{density:1,flowers:0.35},{density:1,flowers:0.4},{density:0.9,flowers:0.3}];
+// 依最新分區圖：上排從 A 棟側起為 A、B、C；下排從 A 棟側起為 D、E、F、G、H
+const SECT2BED=[1,2,3,4,5,6,7,8]; // 花園朝上時：上排左起 A、B、C；下排左起 D–H
+/* ===== 八區細緻地景（依各區現場照片，由前門往花園看：u 左→右、v 前→後）===== */
+const BATCH={};
+const _q=new THREE.Quaternion(),_v=new THREE.Vector3(),_s=new THREE.Vector3(),_m=new THREE.Matrix4(),_e=new THREE.Euler();
+function bput(geo,col,x,y,z,{yaw=0,tilt=0,roll=0,sx=1,sy=1,sz=1}={}){
+  const g=geo.index?geo.toNonIndexed():geo.clone();
+  _e.set(tilt,yaw,roll,"YXZ");_q.setFromEuler(_e);_m.compose(_v.set(x,y,z),_q,_s.set(sx,sy,sz));g.applyMatrix4(_m);
+  (BATCH[col]=BATCH[col]||[]).push(g);}
+function bflush(){for(const col in BATCH){const gs=BATCH[col];let n=0;gs.forEach(g=>n+=g.attributes.position.count);
+  const pos=new Float32Array(n*3),nor=new Float32Array(n*3);let o=0;
+  gs.forEach(g=>{pos.set(g.attributes.position.array,o*3);if(g.attributes.normal)nor.set(g.attributes.normal.array,o*3);o+=g.attributes.position.count;g.dispose();});
+  const G=new THREE.BufferGeometry();G.setAttribute("position",new THREE.BufferAttribute(pos,3));G.setAttribute("normal",new THREE.BufferAttribute(nor,3));
+  const mesh=new THREE.Mesh(G,M(col,{side:THREE.DoubleSide}));mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);delete BATCH[col];}}
+// 共用幾何
+const GEO={};
+GEO.blade=new THREE.PlaneGeometry(1,1);GEO.blade.translate(0,0.5,0);
+GEO.lance=(()=>{const s=new THREE.Shape();s.moveTo(0,0);s.quadraticCurveTo(0.5,0.35,0,1);s.quadraticCurveTo(-0.5,0.35,0,0);const g=new THREE.ShapeGeometry(s,6);return g;})();
+GEO.oval=(()=>{const s=new THREE.Shape();s.moveTo(0,0);s.bezierCurveTo(0.6,0.15,0.6,0.85,0,1);s.bezierCurveTo(-0.6,0.85,-0.6,0.15,0,0);return new THREE.ShapeGeometry(s,6);})();
+GEO.heart=(()=>{const s=new THREE.Shape();s.moveTo(0,0.05);s.bezierCurveTo(0.7,0.3,0.6,1,0.05,0.85);s.lineTo(0,0.75);s.lineTo(-0.05,0.85);s.bezierCurveTo(-0.6,1,-0.7,0.3,0,0.05);return new THREE.ShapeGeometry(s,6);})();
+GEO.frond=(()=>{const s=new THREE.Shape();const N=14;const P=[];for(let i=0;i<=N;i++){const t=i/N,w=0.22*Math.sin(Math.PI*Math.min(1,t*1.15))*(1-t*0.3);P.push([w*(i%2?1:0.45),t]);}
+  s.moveTo(0,0);P.forEach(([w,t])=>s.lineTo(w,t));for(let i=P.length-1;i>=0;i--)s.lineTo(-P[i][0],P[i][1]);s.lineTo(0,0);return new THREE.ShapeGeometry(s);})();
+GEO.star=(()=>{const s=new THREE.Shape();for(let i=0;i<=10;i++){const a=Math.PI/2+i*Math.PI/5,r=i%2?0.18:0.5;const x=Math.cos(a)*r,y=Math.sin(a)*r+0.5;i?s.lineTo(x,y):s.moveTo(x,y);}return new THREE.ShapeGeometry(s);})();
+GEO.ico=new THREE.IcosahedronGeometry(1,1);GEO.ico2=new THREE.IcosahedronGeometry(1,2);GEO.sph=new THREE.SphereGeometry(1,7,5);
+GEO.cyl=new THREE.CylinderGeometry(1,1,1,6);GEO.cyl.translate(0,0.5,0);GEO.cone=new THREE.ConeGeometry(1,1,5);GEO.cone.translate(0,0.5,0);
+const R=(a,b)=>a+Math.random()*(b-a);
+const C={dk:"#3f6e3a",md:"#5f9150",lt:"#86b85f",yl:"#a9c94e",bg:"#4f7a63",gray:"#9aa88f",soil:"#8b6a48",dry:"#c2a878",stem:"#6b5a40",bark:"#7a6650"};
+// 植物元件（全部合併成少量網格，畫面才順）
+function tuft(x,z,h,col=C.md,n=7,w=0.05){for(let i=0;i<n;i++)bput(GEO.blade,col,x+R(-.05,.05),0.35,z+R(-.05,.05),{yaw:R(0,6.28),tilt:R(0.15,0.7),sx:w,sy:h*R(0.6,1.1)});}
+function strap(x,z,h,col=C.dk,n=14,w=0.06){for(let i=0;i<n;i++)bput(GEO.blade,col,x,0.35,z,{yaw:R(0,6.28),tilt:R(0.35,1.15),sx:w,sy:h*R(0.7,1.1)});}
+function dots(x,z,col,n=6,r=0.3,y=0.42,s=0.05){for(let i=0;i<n;i++)bput(GEO.sph,col,x+R(-r,r),y+R(0,0.08),z+R(-r,r),{sx:s,sy:s,sz:s});}
+function mound(x,z,r,col=C.md,h=0.6){for(let i=0;i<3;i++)bput(GEO.ico,col,x+R(-r,r)*0.4,0.35+r*h*0.6,z+R(-r,r)*0.4,{sx:r*R(.7,1),sy:r*h*R(.8,1.1),sz:r*R(.7,1)});}
+function salvia(x,z){mound(x,z,0.35,C.md,0.7);for(let i=0;i<7;i++){const xx=x+R(-.3,.3),zz=z+R(-.3,.3),h=R(.55,.85);bput(GEO.cyl,"#5b6b3a",xx,0.35,zz,{sx:.015,sy:h,sz:.015});bput(GEO.cone,"#5b3f9a",xx,0.35+h*0.55,zz,{sx:.06,sy:h*0.5,sz:.06});}}
+function pentas(x,z,col="#d8283c"){mound(x,z,0.3,C.md,0.9);for(let i=0;i<6;i++)dots(x+R(-.22,.22),z+R(-.22,.22),col,5,0.06,0.75+R(0,.15),0.045);}
+function roundShrub(x,z,r,col=C.md,h=0.85){bput(GEO.ico2,col,x,0.35+r*h,z,{sx:r,sy:r*h,sz:r});for(let i=0;i<14;i++){const a=R(0,6.28),b=R(-.2,1.2);bput(GEO.ico,col,x+Math.cos(a)*r*.9*Math.cos(b*.6),0.35+r*h+Math.sin(b)*r*h*.8,z+Math.sin(a)*r*.9*Math.cos(b*.6),{sx:r*.28,sy:r*.22,sz:r*.28});}}
+function leafy(x,z,h,r,col=C.dk,n=6){bput(GEO.cyl,C.stem,x,0.35,z,{sx:.04,sy:h*0.5,sz:.04});for(let i=0;i<n;i++)bput(GEO.ico,col,x+R(-r,r)*.6,0.35+h*R(.45,.95),z+R(-r,r)*.6,{sx:r*R(.45,.7),sy:r*R(.4,.6),sz:r*R(.45,.7)});}
+function pinnate(x,z,h,col="#6a9a48",stems=5){for(let k=0;k<stems;k++){const yaw=R(0,6.28),lean=R(0.15,0.55),len=h*R(.7,1);
+    const dx=Math.sin(yaw)*Math.sin(lean),dz=Math.cos(yaw)*Math.sin(lean),dy=Math.cos(lean);
+    bput(GEO.cyl,C.stem,x,0.35,z,{yaw,tilt:lean,sx:.025,sy:len,sz:.025});
+    for(let j=2;j<9;j++){const t=j/9*len;const px=x+dx*t,py=0.35+dy*t,pz=z+dz*t;
+      [-1,1].forEach(sd=>bput(GEO.lance,col,px,py,pz,{yaw:yaw+sd*1.4,tilt:1.25,sx:.16,sy:.32}));}}}
+function fern(x,z,s=1,col="#4f8a3c",n=9){for(let i=0;i<n;i++)bput(GEO.frond,col,x,0.36,z,{yaw:i/n*6.28+R(-.2,.2),tilt:R(0.7,1.2),sx:s*1.1,sy:s*R(.8,1.1)});}
+function birdsNest(x,y,z,s=1){for(let i=0;i<11;i++)bput(GEO.lance,"#6fae3e",x,y,z,{yaw:i/11*6.28,tilt:R(0.35,0.8),sx:s*0.55,sy:s*R(0.8,1.05)});}
+function cordyline(x,z,h){bput(GEO.cyl,"#6b4a3a",x,0.35,z,{sx:.035,sy:h*0.55,sz:.035});for(let i=0;i<16;i++)bput(GEO.lance,i%3?"#7a2638":"#9b3a4a",x,0.35+h*0.55,z,{yaw:R(0,6.28),tilt:R(0.2,1.1),sx:.22,sy:R(.55,.8)});}
+function feathery(x,z,h,col="#9ccc4a"){for(let i=0;i<34;i++){const a=R(0,6.28),r=R(0,.35);bput(GEO.cone,i%4?col:"#86b53e",x+Math.cos(a)*r,0.35,z+Math.sin(a)*r,{yaw:a,tilt:R(0,.3),sx:R(.05,.11),sy:h*R(.6,1.05),sz:R(.05,.11)});}}
+function coix(x,z,h){for(let i=0;i<10;i++)bput(GEO.blade,i%3?"#b89a62":"#9a7c48",x+R(-.18,.18),0.35,z+R(-.18,.18),{yaw:R(0,6.28),tilt:R(0.9,1.4),sx:R(.05,.08),sy:R(.4,.7)});for(let i=0;i<4;i++)bput(GEO.cyl,"#c88a3a",x+R(-.1,.1),0.35,z+R(-.1,.1),{sx:.03,sy:R(.3,.5),sz:.03});for(let i=0;i<26;i++)bput(GEO.blade,i%2?"#6c9a45":"#7fae52",x+R(-.15,.15),0.35,z+R(-.15,.15),{yaw:R(0,6.28),tilt:R(0.1,0.65),sx:R(.06,.1),sy:h*R(.65,1.05)});for(let i=0;i<5;i++)bput(GEO.cyl,"#8aa060",x+R(-.12,.12),0.35,z+R(-.12,.12),{sx:.02,sy:h*R(.7,1),sz:.02});}
+function palmate(x,z,h){for(let i=0;i<4;i++){const yaw=R(0,6.28),hh=h*R(.7,1);bput(GEO.cyl,"#7a5a4a",x,0.35,z,{yaw,tilt:R(.1,.35),sx:.03,sy:hh,sz:.03});bput(GEO.star,"#5d8f3e",x+Math.sin(yaw)*hh*.2,0.35+hh*.95,z+Math.cos(yaw)*hh*.2,{yaw,tilt:1.2,sx:.55,sy:.55});}}
+function lanceShrub(x,z,h,col="#7fae4a",stems=6){for(let k=0;k<stems;k++){const xx=x+R(-.4,.4),zz=z+R(-.4,.4),hh=h*R(.7,1);bput(GEO.cyl,"#6d7d45",xx,0.35,zz,{sx:.02,sy:hh,sz:.02});
+  for(let j=0;j<4;j++){const y=0.35+hh*(0.45+j*0.15);for(let q=0;q<4;q++)bput(GEO.lance,j===3&&q%2?"#c9c25a":col,xx,y,zz,{yaw:q*1.57+j*0.6,tilt:R(0.9,1.3),sx:.13,sy:.32});}}}
+function asclepias(x,z){for(let k=0;k<5;k++){const xx=x+R(-.25,.25),zz=z+R(-.25,.25),hh=R(.7,1);bput(GEO.cyl,"#6d7d45",xx,0.35,zz,{sx:.012,sy:hh,sz:.012});
+  for(let j=0;j<5;j++)bput(GEO.lance,"#5f8f3e",xx,0.35+hh*(0.3+j*.13),zz,{yaw:j*2.1,tilt:1,sx:.06,sy:.22});dots(xx,zz,"#f05a23",6,0.05,0.35+hh,0.035);dots(xx,zz,"#f6c23a",3,0.04,0.37+hh,0.03);}}
+function arching(x,z,h,col="#6f9a4a"){for(let k=0;k<8;k++){const yaw=R(0,6.28);const pts=[];for(let j=0;j<=6;j++){const t=j/6;pts.push([Math.sin(yaw)*t*h*0.6,0.35+Math.sin(t*2.2)*h*0.7,Math.cos(yaw)*t*h*0.6]);}
+  for(let j=1;j<pts.length;j++){const [ax,ay,az]=pts[j-1],[bx,by,bz]=pts[j];const L=Math.hypot(bx-ax,by-ay,bz-az);bput(GEO.cyl,"#8a7a5a",x+ax,ay,z+az,{yaw:Math.atan2(bx-ax,bz-az),tilt:Math.acos((by-ay)/L),sx:.012,sy:L,sz:.012});
+    for(let q=0;q<3;q++)bput(GEO.oval,col,x+(ax+bx)/2,(ay+by)/2,z+(az+bz)/2,{yaw:R(0,6.28),tilt:R(0.6,1.4),sx:.08,sy:.14});}}}
+function bareTree(x,z,h){const br=(px,py,pz,len,yaw,tilt,d)=>{bput(GEO.cyl,"#6e6458",px,py,pz,{yaw,tilt,sx:.03*(d+1),sy:len,sz:.03*(d+1)});
+  if(d===0)return;const ex=px+Math.sin(yaw)*Math.sin(tilt)*len,ey=py+Math.cos(tilt)*len,ez=pz+Math.cos(yaw)*Math.sin(tilt)*len;for(let i=0;i<3;i++)br(ex,ey,ez,len*0.65,yaw+R(-1.3,1.3),Math.min(1.2,tilt+R(0.2,0.6)),d-1);};
+  br(x,0.35,z,h*0.45,0,0.05,2);}
+function smallTree(x,z,h,crown=2.2,leaf="#5f9a4a",trunk="#7a6650"){bput(GEO.cyl,trunk,x,0.35,z,{sx:.12,sy:h*0.6,sz:.12});for(let i=0;i<6;i++)bput(GEO.ico,i%2?leaf:"#4f8a3c",x+R(-crown,crown)*.5,h*R(.6,.95),z+R(-crown,crown)*.5,{sx:crown*R(.5,.8),sy:crown*R(.35,.55),sz:crown*R(.5,.8)});}
+function melaleuca(x,z){ // 澳洲茶樹（互葉白千層）：樹幹彎曲、樹皮剝落，樹冠細針狀
+  const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(x,0.3,z),new THREE.Vector3(x+0.2,2.2,z-0.3),new THREE.Vector3(x-0.6,4.5,z-1),new THREE.Vector3(x-2.2,6.6,z-1.6),new THREE.Vector3(x-4,7.8,z-2.2)]);
+  const tex=canvasTex(64,256,(g,w,h)=>{g.fillStyle="#e9dcc7";g.fillRect(0,0,w,h);for(let i=0;i<60;i++){g.fillStyle=["#d8c4a6","#f3ebe0","#c9a888","#e2b99a"][i%4];g.fillRect(Math.random()*w,Math.random()*h,R(6,20),R(10,40));}},1,3);
+  const t=add(new THREE.TubeGeometry(curve,40,0.28,8,false),M("#ffffff",{map:tex}),0,0,0);
+  const top=curve.getPoint(1),mid=curve.getPoint(0.7);
+  [[top,1.6],[mid,1.2]].forEach(([p,s])=>{for(let i=0;i<55;i++){const a=R(0,6.28),r=R(0,s*1.3);bput(GEO.cone,i%3?"#3d5a3a":"#4c6b45",p.x+Math.cos(a)*r,p.y+R(-.4,.6),p.z+Math.sin(a)*r,{yaw:a,tilt:R(2.2,2.9),sx:.12,sy:R(.8,1.5),sz:.12});}});
+  return curve;}
+function stake(x,z,h){bput(GEO.cyl,"#cdb27a",x+0.08,0.35,z,{tilt:0.08,sx:.015,sy:h,sz:.015});}
+function sapling(x,z,h,col="#6f9a4a"){bput(GEO.cyl,"#6e5a44",x,0.35,z,{sx:.02,sy:h,sz:.02});for(let i=0;i<8;i++)bput(GEO.oval,col,x,0.35+h*R(.35,1),z,{yaw:R(0,6.28),tilt:R(.8,1.4),sx:.12,sy:.2});stake(x,z,h*0.9);}
+function nameTag(x,z){bput(GEO.cyl,"#e8e8e8",x,0.35,z,{sx:.02,sy:.55,sz:.02});bput(new THREE.BoxGeometry(0.32,0.2,0.02),"#ffffff",x,0.95,z,{yaw:R(-.3,.3),tilt:-0.5});}
+function patch(U,u0,u1,v0,v1,col,y=0.43){const P=[U(u0,v0),U(u1,v0),U(u1,v1),U(u0,v1)];const s=new THREE.Shape();P.forEach(([px,pz],k)=>k?s.lineTo(px,pz):s.moveTo(px,pz));
+  const g=new THREE.ShapeGeometry(s);g.rotateX(Math.PI/2);bput(g,col,0,y,0);}
+function scatter(U,n,fn,u0=0.03,u1=0.97,v0=0.03,v1=0.97){for(let i=0;i<n;i++){const [x,z]=U(R(u0,u1),R(v0,v1));fn(x,z);}}
+function at(U,u,v,fn,...a){const [x,z]=U(u,v);return fn(x,z,...a);}
+function zoneBase(P,top){const sh=new THREE.Shape();P.forEach(([x,z],k)=>k?sh.lineTo(x,z):sh.moveTo(x,z));sh.closePath();
+  const g=new THREE.ExtrudeGeometry(sh,{depth:0.35,bevelEnabled:true,bevelThickness:0.06,bevelSize:0.12,bevelSegments:2});
+  const m=new THREE.Mesh(g,[M(top),M("#7d5f42")]);m.rotation.x=Math.PI/2;m.position.set(0,0.35,0);m.receiveShadow=true;scene.add(m);}
+const ZONES={
+ A(U){ // 前半翻土：左前「薄荷」、右前「甜菊」名牌，中央薄荷匍匐成片；後半中央羽狀複葉小樹、兩側灰綠小葉灌木、樹下石頭，最後方路燈與告示牌
+  patch(U,0.02,0.98,0.02,0.62,"#8d6b47");
+  scatter(U,90,(x,z)=>{for(let i=0;i<4;i++)bput(GEO.oval,Math.random()<.5?"#5f9a45":"#73ad52",x+R(-.12,.12),0.45+R(0,.06),z+R(-.12,.12),{yaw:R(0,6.28),tilt:R(1.2,1.5),sx:.09,sy:.11});},0.32,0.68,0.25,0.62);
+  scatter(U,14,(x,z)=>mound(x,z,R(.1,.16),C.md,.5),0.08,0.92,0.05,0.3);
+  at(U,0.12,0.06,nameTag);at(U,0.85,0.07,nameTag);at(U,0.62,0.35,nameTag);
+  at(U,0.86,0.12,(x,z)=>{for(let i=0;i<3;i++){bput(GEO.cyl,"#6d8a45",x+R(-.1,.1),0.4,z+R(-.1,.1),{sx:.012,sy:.35,sz:.012});for(let j=0;j<6;j++)bput(GEO.oval,"#7fb04a",x,0.5+j*.04,z,{yaw:j*1.1,tilt:1.2,sx:.06,sy:.1});}});
+  at(U,0.5,0.8,(x,z)=>{bput(GEO.cyl,"#7a6650",x,0.35,z,{sx:.06,sy:2.0,sz:.06});
+    for(let k=0;k<9;k++){const yaw=k/9*6.28+R(-.2,.2),tilt=R(0.7,1.3),len=R(1.1,1.5),y0=1.6+R(0,.8);
+      const dx=Math.sin(yaw)*Math.sin(tilt),dy=Math.cos(tilt),dz=Math.cos(yaw)*Math.sin(tilt);
+      for(let j=1;j<10;j++){const t=j/10*len;[-1,1].forEach(sd=>bput(GEO.lance,"#3f7a3a",x+dx*t,y0+dy*t,z+dz*t,{yaw:yaw+sd*1.45,tilt:1.3,sx:.11,sy:.28}));}}});
+  at(U,0.32,0.8,roundShrub,0.75,"#7d9470",1.0);at(U,0.68,0.8,roundShrub,0.8,"#7d9470",1.0);at(U,0.25,0.68,leafy,0.6,0.4,C.lt,4);
+  at(U,0.52,0.72,(x,z)=>bput(GEO.ico,"#c9c4b8",x,0.5,z,{sx:.3,sy:.2,sz:.25}));
+  at(U,0.45,0.74,nameTag);at(U,0.56,0.73,nameTag);
+  // 蝶豆（用戶確認）：纏繞在右側灰綠灌木與咖哩樹下，羽狀複葉、小葉圓卵形，點綴深藍色蝶形花（中心白黃）
+  at(U,0.63,0.76,(x,z)=>{for(let v=0;v<4;v++){const pts=[];let px=x+R(-.3,.3),pz=z+R(-.3,.3);for(let k=0;k<6;k++){pts.push(new THREE.Vector3(px+Math.cos(k*1.3+v)*0.25,0.35+k*0.28,pz+Math.sin(k*1.3+v)*0.25));}
+      const c=new THREE.CatmullRomCurve3(pts);add(new THREE.TubeGeometry(c,20,0.008,4,false),M("#7fa05a"),0,0,0);
+      for(let k=0;k<10;k++){const p=c.getPoint(R(.1,1));for(let j=0;j<3;j++)bput(GEO.oval,k%3?"#5f9a45":"#6fa850",p.x+R(-.12,.12),p.y+R(-.05,.05),p.z+R(-.12,.12),{yaw:R(0,6.28),tilt:R(.8,1.4),sx:.06,sy:.075});}
+      for(let f=0;f<2;f++){const p=c.getPoint(R(.3,.95));bput(GEO.heart,"#2f3fd8",p.x+0.08,p.y,p.z+0.05,{yaw:R(0,6.28),tilt:R(.2,.6),sx:.07,sy:.07});bput(GEO.sph,"#f4f0d0",p.x+0.08,p.y+0.005,p.z+0.06,{sx:.015,sy:.015,sz:.015});}}});
+  scatter(U,25,(x,z)=>tuft(x,z,R(.3,.6),C.md,6),0.05,0.95,0.62,0.97);
+  at(U,0.42,0.93,(x,z)=>{for(let i=0;i<30;i++)bput(GEO.blade,i%3?"#7fb05a":"#93c06a",x+R(-.08,.08),0.35,z+R(-.08,.08),{yaw:R(0,6.28),tilt:R(.08,.6),sx:.05,sy:R(.9,1.4)});});
+  at(U,0.36,0.9,(x,z)=>{bput(GEO.cyl,"#c9ccd0",x,0.35,z,{sx:.015,sy:.5,sz:.015});bput(new THREE.BoxGeometry(0.45,0.3,0.02),"#ffffff",x,0.88,z,{tilt:-0.6});});
+  const [lx,lz]=U(0.5,0.97);add(new THREE.CylinderGeometry(0.45,0.5,0.7,16),M("#c8c6bf"),lx,0.7,lz);lamp(lx,lz);add(new THREE.BoxGeometry(1.4,1.8,0.08),M("#f4f8ff"),lx,3.4,lz+0.2);add(new THREE.BoxGeometry(1.4,0.35,0.09),M("#e45454"),lx,4.15,lz+0.2);},
+ B(U){ // 花色最多：紫色穗狀花帶、前排紅花、兩側沿階草鑲邊、後方黃花灌木
+  patch(U,0.06,0.94,0.04,0.7,"#8b6a48");
+  for(let v=0.03;v<0.97;v+=0.045){[0.035,0.965].forEach(u=>{at(U,u,v,strap,R(.45,.6),"#2f5a2c",14,.025);if(Math.random()<.35)at(U,u,v,(x,z)=>{for(let i=0;i<6;i++)bput(GEO.lance,"#ffffff",x,0.85,z,{yaw:i*1.05,tilt:0.9,sx:.06,sy:.12});dots(x,z,"#f3c21a",2,.01,0.87,.02);});});}
+  [[0.25,0.42],[0.35,0.45],[0.45,0.43],[0.55,0.46],[0.62,0.42],[0.3,0.52],[0.5,0.53],[0.78,0.5],[0.85,0.44]].forEach(([u,v])=>at(U,u,v,salvia));
+  at(U,0.68,0.36,mound,0.45,C.gray,0.5);
+  [[0.32,0.18],[0.46,0.2],[0.6,0.17]].forEach(([u,v])=>at(U,u,v,pentas));
+  at(U,0.12,0.3,pentas,"#e0559c");at(U,0.1,0.42,(x,z)=>{strap(x,z,0.6,"#8fb048",10,.04);dots(x,z,"#f3c64f",5,.2,0.85,.06);});
+  at(U,0.86,0.22,(x,z)=>{mound(x,z,.25,C.md,.7);dots(x,z,"#ffffff",10,.2,0.6,.05);});
+  scatter(U,26,(x,z)=>mound(x,z,R(.12,.2),C.lt,.5),0.1,0.9,0.05,0.35);
+  at(U,0.45,0.66,strap,1.0,"#7fae52",16,.07);at(U,0.55,0.68,strap,0.9,"#7fae52",16,.07);
+  scatter(U,10,(x,z)=>{mound(x,z,.25,C.md,.8);dots(x,z,["#e0559c","#f05a5a","#f3a0c0"][Math.floor(R(0,3))],6,.2,.65,.05);},0.15,0.85,0.58,0.75);
+  at(U,0.35,0.86,(x,z)=>{leafy(x,z,1.6,1.1,C.md,7);dots(x,z,"#f3d23a",18,.7,1.6,.07);});
+  at(U,0.7,0.88,leafy,1.4,1.0,C.dk,7);at(U,0.85,0.78,leafy,1.1,.7,C.lt);
+  at(U,0.66,0.28,(x,z)=>{mound(x,z,.3,C.md,.8);dots(x,z,"#ffffff",16,.25,0.75,.05);});
+  at(U,0.2,0.4,(x,z)=>{for(let i=0;i<6;i++){const xx=x+R(-.2,.2),zz=z+R(-.2,.2);bput(GEO.cyl,"#8aa050",xx,0.35,zz,{sx:.012,sy:.7,sz:.012});bput(GEO.cone,"#e8cc3a",xx,0.95,zz,{sx:.06,sy:.3,sz:.06});}});
+  at(U,0.38,0.5,(x,z)=>{for(let i=0;i<20;i++)bput(GEO.oval,i%2?"#e6edc8":"#7aa050",x+R(-.3,.3),0.4+R(0,.4),z+R(-.3,.3),{yaw:R(0,6.28),tilt:R(.6,1.3),sx:.08,sy:.12});});
+  at(U,0.7,0.55,(x,z)=>{bput(GEO.cyl,"#6d8a45",x,0.35,z,{sx:.012,sy:1,sz:.012});dots(x,z,"#f39a1a",3,.05,1.35,.06);});
+  at(U,0.8,0.32,(x,z)=>add(new THREE.CylinderGeometry(0.12,0.12,0.15,12),M("#c9ccd0"),x,0.45,z));
+  [[0.2,0.25],[0.5,0.3],[0.8,0.35],[0.6,0.6]].forEach(([u,v])=>at(U,u,v,nameTag));},
+ C(U){ // 右側澳洲茶樹往左上彎、樹腳山蘇；中央寬葉高禾草；心形葉地被與紫色小花；後方中央路燈與白色小花
+  scatter(U,50,(x,z)=>tuft(x,z,R(.2,.4),C.md,5),0.03,0.97,0.03,0.97);
+  scatter(U,26,(x,z)=>{for(let i=0;i<5;i++)bput(GEO.heart,"#5d9a45",x+R(-.15,.15),0.42+R(0,.18),z+R(-.15,.15),{yaw:R(0,6.28),tilt:R(1,1.4),sx:.2,sy:.2});},0.08,0.92,0.05,0.5);
+  scatter(U,30,(x,z)=>dots(x,z,"#8a4fd8",2,.05,0.5,.055),0.05,0.95,0.03,0.4);
+  at(U,0.8,0.52,melaleuca);at(U,0.84,0.56,(x,z)=>birdsNest(x,0.4,z,1.1));
+  at(U,0.42,0.55,coix,2.6);at(U,0.4,0.45,nameTag);at(U,0.5,0.62,coix,2.0);at(U,0.36,0.66,coix,1.6);
+  at(U,0.2,0.4,fern,0.8);at(U,0.65,0.4,fern,0.7);
+  at(U,0.7,0.76,(x,z)=>{mound(x,z,.35,C.md,.8);dots(x,z,"#ffffff",10,.3,0.8,.05);});
+  scatter(U,10,(x,z)=>mound(x,z,R(.2,.35),C.md,.7),0.1,0.9,0.7,0.95);
+  // 吊蘭（斑葉，名牌確認）與周圍的左手香、蛇莓
+  at(U,0.25,0.22,(x,z)=>{for(let i=0;i<28;i++){const yaw=R(0,6.28),t=R(.5,1.25),L=R(.35,.6);bput(GEO.blade,"#6fa04a",x,0.36,z,{yaw,tilt:t,sx:.045,sy:L});bput(GEO.blade,"#eef2d8",x,0.362,z,{yaw,tilt:t,sx:.015,sy:L*.98});}});
+  at(U,0.3,0.24,nameTag);
+  at(U,0.18,0.24,(x,z)=>{for(let i=0;i<20;i++){const yaw=R(0,6.28),t=R(.5,1.25),L=R(.3,.5);bput(GEO.blade,"#6fa04a",x,0.36,z,{yaw,tilt:t,sx:.045,sy:L});bput(GEO.blade,"#eef2d8",x,0.362,z,{yaw,tilt:t,sx:.015,sy:L*.98});}});
+  at(U,0.36,0.2,(x,z)=>{for(let i=0;i<12;i++){const xx=x+R(-.2,.2),zz=z+R(-.2,.2),y=0.4+R(0,.3),yaw=R(0,6.28);bput(GEO.oval,"#f1f0dc",xx,y,zz,{yaw,tilt:1.3,sx:.2,sy:.22});bput(GEO.oval,"#7fae5a",xx,y+0.005,zz,{yaw,tilt:1.3,sx:.14,sy:.16});}});
+  [[0.15,0.3],[0.22,0.36],[0.12,0.2]].forEach(([u,v])=>at(U,u,v,(x,z)=>{for(let i=0;i<14;i++)bput(GEO.oval,"#9cc47a",x+R(-.2,.2),0.4+R(0,.45),z+R(-.2,.2),{yaw:R(0,6.28),tilt:R(.9,1.4),sx:.16,sy:.18});}));
+  scatter(U,18,(x,z)=>dots(x,z,"#f3d21a",2,.1,0.46,.035),0.05,0.5,0.05,0.35);
+  at(U,0.5,0.1,nameTag);at(U,0.15,0.45,nameTag);
+  const [lx,lz]=U(0.48,0.95);lamp(lx,lz);},
+ D(U){ // 右側修剪圓球灌木＋前方掌葉植物；中央細長葉叢；左側大型小葉灌木與黃花；後方亮葉小喬木；前緣乾草與淡紫小花
+  patch(U,0.48,0.78,0.03,0.2,C.dry,0.44);scatter(U,14,(x,z)=>tuft(x,z,R(.15,.3),C.dry,6),0.5,0.76,0.04,0.2);
+  scatter(U,55,(x,z)=>tuft(x,z,R(.3,.6),C.md,6),0.03,0.97,0.18,0.97);scatter(U,14,(x,z)=>tuft(x,z,R(.3,.5),C.md,6),0.05,0.45,0.03,0.18);
+  scatter(U,30,(x,z)=>dots(x,z,"#a58ad8",3,.08,0.45,.05),0.75,0.97,0.1,0.4);
+  at(U,0.68,0.5,(x,z)=>{const r=1.1,cy=0.35+r*0.9;bput(GEO.ico2,"#2f5a2c",x,cy,z,{sx:r*.85,sy:r*.8,sz:r*.85});
+    for(let q=0;q<70;q++){const a=R(0,6.28),b=R(-.4,1.3);const px=x+Math.cos(a)*Math.cos(b)*r,py=cy+Math.sin(b)*r*.85,pz=z+Math.sin(a)*Math.cos(b)*r;
+      for(let k=0;k<5;k++)bput(GEO.oval,q%9?(q%2?"#3f7a35":"#4f8a3c"):"#d8c84a",px,py,pz,{yaw:a+k*1.257,tilt:R(.6,1.3),sx:.13,sy:.24});}
+    for(let k=0;k<14;k++){const a=R(0,6.28);bput(GEO.cyl,"#7a4a32",x+Math.cos(a)*r*.9,cy-r*.6,z+Math.sin(a)*r*.9,{yaw:a,tilt:R(.3,1.2),sx:.02,sy:R(.8,1.4),sz:.02});}});at(U,0.8,0.42,(x,z)=>{for(let i=0;i<10;i++)bput(GEO.oval,"#b8d45a",x+R(-.3,.3),1.6+R(0,.4),z+R(-.2,.2),{yaw:R(0,6.28),tilt:R(.6,1.3),sx:.1,sy:.16});});
+  at(U,0.56,0.36,palmate,1.3);
+  at(U,0.45,0.55,(x,z)=>{bput(new THREE.BoxGeometry(0.5,0.35,0.02),"#f4f4f0",x+0.1,0.7,z-0.9,{tilt:-0.5});for(let i=0;i<70;i++)bput(GEO.lance,i%2?"#6f9f45":"#86b552",x+R(-.7,.7),0.35+R(.3,1.9),z+R(-.6,.6),{yaw:R(0,6.28),tilt:R(.6,1.3),sx:.09,sy:R(.45,.7)});for(let i=0;i<8;i++)bput(GEO.cyl,"#7a8a4a",x+R(-.2,.2),0.35,z+R(-.2,.2),{yaw:R(0,6.28),tilt:R(0,.4),sx:.012,sy:R(1.2,1.8),sz:.012});});
+  at(U,0.2,0.68,leafy,3.0,1.5,"#3a5a36",12);at(U,0.25,0.42,lanceShrub,0.9,"#7fae4a",4);
+  at(U,0.22,0.36,(x,z)=>dots(x,z,"#f3c21a",14,.35,0.95,.06));
+  at(U,0.4,0.82,(x,z)=>{[[0,0,.1],[-.35,.15,-.25]].forEach(([dx,dz,lean])=>bput(GEO.cyl,"#9a8a72",x+dx,0.35,z+dz,{roll:lean,sx:.11,sy:3.4,sz:.11}));
+    for(let q=0;q<160;q++){const a=R(0,6.28),r=R(0,2.2),y=R(1.2,4.6);bput(GEO.oval,q%7?(q%3?"#3f7a35":"#4f8a3c"):"#a84a3a",x+Math.cos(a)*r,y,z+Math.sin(a)*r,{yaw:R(0,6.28),tilt:R(.5,1.5),sx:.16,sy:.42});}
+    bput(new THREE.BoxGeometry(0.5,0.35,0.02),"#f4f4f0",x+0.2,0.7,z-0.6,{tilt:-0.5});bput(GEO.cyl,"#c9ccd0",x+0.2,0.35,z-0.6,{sx:.012,sy:.3,sz:.012});});
+  // 台灣木賊：細長分節的綠色空心莖，節上黑褐色鞘
+  at(U,0.33,0.3,(x,z)=>{for(let i=0;i<40;i++){const xx=x+R(-.35,.35),zz=z+R(-.3,.3),h=R(.9,1.7),yaw=R(0,6.28),t=R(0,.18);
+    bput(GEO.cyl,i%6?"#5f9a45":"#a88a4a",xx,0.35,zz,{yaw,tilt:t,sx:.018,sy:h,sz:.018});
+    for(let k=1;k<6;k++){const y=k/6*h;bput(GEO.cyl,"#3a3428",xx+Math.sin(yaw)*Math.sin(t)*y,0.35+Math.cos(t)*y,zz+Math.cos(yaw)*Math.sin(t)*y,{sx:.022,sy:.025,sz:.022});}}});
+  at(U,0.3,0.22,nameTag);
+  // 貓鬚草（化石草）：紫褐方莖、對生鋸齒卵葉
+  at(U,0.16,0.2,(x,z)=>{for(let k=0;k<10;k++){const xx=x+R(-.4,.4),zz=z+R(-.35,.35),h=R(.5,.95);bput(GEO.cyl,"#5a4038",xx,0.35,zz,{tilt:R(0,.3),yaw:R(0,6.28),sx:.015,sy:h,sz:.015});
+    for(let j=1;j<5;j++){const y=0.35+h*j/5,yaw=j*1.57;[-1,1].forEach(sd=>bput(GEO.oval,Math.random()<.15?"#c9c25a":"#4f8a3c",xx,y,zz,{yaw:yaw+sd*1.57,tilt:R(.9,1.3),sx:.1,sy:.16}));}}});
+  at(U,0.14,0.12,nameTag);
+  // 益智（薑科）：叢生高莖、兩列寬長披針葉
+  at(U,0.3,0.55,(x,z)=>{for(let k=0;k<14;k++){const xx=x+R(-.45,.45),zz=z+R(-.4,.4),h=R(1.5,2.3),yaw=R(0,6.28);bput(GEO.cyl,"#6f8f45",xx,0.35,zz,{tilt:R(0,.15),yaw,sx:.025,sy:h,sz:.025});
+    for(let j=2;j<8;j++){const y=0.35+h*j/8;bput(GEO.lance,j%3?"#3f7a35":"#5a8f40",xx,y,zz,{yaw:yaw+(j%2?1.57:-1.57),tilt:R(.9,1.3),sx:.16,sy:R(.7,.95)});}}
+    bput(new THREE.BoxGeometry(0.5,0.35,0.02),"#f4f4f0",x+0.3,0.7,z-0.7,{tilt:-0.5});});
+  [[0.36,0.24],[0.44,0.2],[0.58,0.1],[0.42,0.4]].forEach(([u,v])=>at(U,u,v,nameTag));},
+ E(U){ // 前緣淡紫小花、中央細長披針葉草本、紅竹、竹竿小苗、右側闊葉灌木、左後深紫小灌木、後方垂莢大樹（辣木？）
+  scatter(U,60,(x,z)=>tuft(x,z,R(.3,.6),Math.random()<.5?C.md:C.lt,6),0.03,0.97,0.03,0.97);
+  // 馬蘭：淡藍紫色小菊花（舌狀花一圈、黃心）
+  GEO.daisy=GEO.daisy||(()=>{const g=new THREE.CircleGeometry(1,12);return g;})();
+  scatter(U,90,(x,z)=>{const y=0.5+R(0,.25),yaw=R(0,6.28);bput(GEO.cyl,"#5f8f42",x,0.35,z,{sx:.008,sy:y-0.35,sz:.008});
+    bput(GEO.star,"#c8c4f0",x,y,z,{yaw,tilt:-1.45,sx:.16,sy:.16});bput(GEO.sph,"#f3c21a",x,y+0.01,z,{sx:.025,sy:.015,sz:.025});},0.03,0.97,0.03,0.4);
+  at(U,0.12,0.12,nameTag);
+  scatter(U,22,(x,z)=>{for(let i=0;i<10;i++)bput(GEO.lance,i%2?"#4f8a3c":"#5f9a45",x+R(-.15,.15),0.35+R(.1,.7),z+R(-.15,.15),{yaw:R(0,6.28),tilt:R(.4,1.1),sx:.07,sy:R(.3,.45)});},0.15,0.85,0.2,0.62);
+  at(U,0.5,0.45,(x,z)=>dots(x,z,"#f06a2a",3,.05,1.0,.06));
+  at(U,0.58,0.64,cordyline,1.8);
+  // 金銀花：交叉斜插的竹竿架，藤蔓纏繞、對生卵葉、白黃花
+  (function(){const [x0,z0]=U(0.62,0.3),[x1,z1]=U(0.95,0.62);const n=9;
+    for(let k=0;k<n;k++){const t=k/(n-1),x=x0+(x1-x0)*t,z=z0+(z1-z0)*t;const yaw=Math.atan2(x1-x0,z1-z0);
+      [-1,1].forEach(sd=>bput(GEO.cyl,"#c9a45a",x,0.35,z,{yaw:yaw+Math.PI/2,roll:sd*0.45,sx:.025,sy:1.8,sz:.025}));
+      for(let q=0;q<14;q++)bput(GEO.oval,q%5?"#7aa64e":"#b8c86a",x+R(-.4,.4),R(.6,2),z+R(-.3,.3),{yaw:R(0,6.28),tilt:R(.6,1.4),sx:.09,sy:.15});
+      for(let q=0;q<4;q++)bput(GEO.cyl,"#8a6a4a",x+R(-.3,.3),R(.4,1.4),z+R(-.2,.2),{yaw:R(0,6.28),tilt:R(.3,1.3),sx:.008,sy:R(.5,1),sz:.008});
+      if(k%2)dots(x,z,k%4===1?"#ffffff":"#f3d26a",4,.3,R(1.4,1.9),.05);}
+    const [nx,nz]=U(0.6,0.22);nameTag(nx,nz);
+    // 山柰：竹架下貼地叢生的寬披針葉
+    for(let k=0;k<7;k++){const t=k/6,x=x0+(x1-x0)*t+R(-.3,.3),z=z0+(z1-z0)*t+R(-.3,.3);for(let i=0;i<9;i++)bput(GEO.lance,i%3?"#5f9a45":"#73ad52",x,0.37,z,{yaw:i*0.7+R(-.2,.2),tilt:R(.9,1.35),sx:.22,sy:R(.35,.5)});}
+    nameTag(x0+0.4,z0-0.3);
+    // 同瓣草（名牌誤寫紫花地丁）：鋸齒狹葉蓮座、白色長管星形花
+    (function(){const x=x0-0.6,z=z0+0.6;for(let i=0;i<22;i++)bput(GEO.lance,"#3f7a35",x,0.4+R(0,.25),z,{yaw:R(0,6.28),tilt:R(.6,1.3),sx:.08,sy:R(.3,.45)});
+      for(let i=0;i<6;i++){const yaw=R(0,6.28),t=R(.6,1.2),L=.35;const ex=x+Math.sin(yaw)*Math.sin(t)*L,ey=0.55+Math.cos(t)*L,ez=z+Math.cos(yaw)*Math.sin(t)*L;
+        bput(GEO.cyl,"#f4f4ec",x,0.55,z,{yaw,tilt:t,sx:.012,sy:L,sz:.012});bput(GEO.star,"#ffffff",ex,ey,ez,{yaw,tilt:t-1.57,sx:.09,sy:.09});}
+      nameTag(x-0.3,z-0.3);})();})();
+  scatter(U,12,(x,z)=>dots(x,z,"#ffffff",2,.05,0.7,.05),0.55,0.97,0.2,0.65);
+  at(U,0.7,0.5,(x,z)=>{for(let i=0;i<5;i++){const xx=x+R(-.3,.3),zz=z+R(-.3,.3);bput(GEO.cyl,"#5f7a45",xx,0.35,zz,{sx:.01,sy:1.4,sz:.01});dots(xx,zz,"#5a4ad8",4,.03,1.6,.04);}});
+  // 黑面馬（烏面馬）：半蔓性亞灌木叢，卵形葉互生，枝端白色小花
+  at(U,0.2,0.3,(x,z)=>{for(let k=0;k<14;k++){const xx=x+R(-.5,.5),zz=z+R(-.4,.4),h=R(.5,1.1),yaw=R(0,6.28),t=R(.2,.7);
+      bput(GEO.cyl,"#5f5a42",xx,0.35,zz,{yaw,tilt:t,sx:.012,sy:h,sz:.012});
+      for(let j=1;j<6;j++){const y=j/6*h;bput(GEO.oval,j%2?"#4f8a3c":"#5f9a45",xx+Math.sin(yaw)*Math.sin(t)*y,0.35+Math.cos(t)*y,zz+Math.cos(yaw)*Math.sin(t)*y,{yaw:yaw+j*2.4,tilt:R(.8,1.3),sx:.12,sy:.2});}
+      if(k%3===0)dots(xx+Math.sin(yaw)*Math.sin(t)*h,zz+Math.cos(yaw)*Math.sin(t)*h,"#f4f4f0",4,.05,0.35+Math.cos(t)*h+.05,.035);}
+    nameTag(x+0.1,z-0.6);});
+  // 含笑：灰白枝條往兩側拉開、橢圓革質葉、褐色毛絨花苞
+  at(U,0.36,0.52,(x,z)=>{bput(GEO.cyl,"#b9b2a2",x,0.35,z,{sx:.06,sy:1.1,sz:.06});
+    for(let k=0;k<6;k++){const yaw=k/6*6.28+R(-.2,.2),tilt=R(.9,1.3),len=R(.9,1.4);bput(GEO.cyl,"#c2bcae",x,1.4,z,{yaw,tilt,sx:.025,sy:len,sz:.025});
+      const ex=x+Math.sin(yaw)*Math.sin(tilt)*len,ez=z+Math.cos(yaw)*Math.sin(tilt)*len,ey=1.4+Math.cos(tilt)*len;
+      for(let q=0;q<16;q++)bput(GEO.oval,q%4?"#2f5a2c":"#6f9a45",ex+R(-.5,.5),ey+R(-.2,.7),ez+R(-.5,.5),{yaw:R(0,6.28),tilt:R(.5,1.4),sx:.13,sy:.22});
+      dots(ex,ez,"#8a6a3a",4,.4,ey+.2,.035);}
+    bput(new THREE.BoxGeometry(0.32,0.2,0.02),"#ffffff",x+0.1,0.6,z-0.3,{tilt:-0.5});});
+  at(U,0.86,0.56,(x,z)=>{for(let k=0;k<7;k++)bput(GEO.cyl,"#4a3a30",x+R(-.3,.3),0.35,z+R(-.3,.3),{yaw:R(0,6.28),tilt:R(0,.25),sx:.025,sy:R(1.4,2),sz:.025});for(let q=0;q<40;q++){const a=R(0,6.28),r=R(0,.7),y=0.6+R(0,1.4),yy=R(0,6.28);for(let t=0;t<3;t++)bput(GEO.lance,q%4?"#6aa04a":"#7fb052",x+Math.cos(a)*r,y,z+Math.sin(a)*r,{yaw:yy+(t-1)*0.7,tilt:R(.8,1.3),sx:.18,sy:.42});}for(let q=0;q<8;q++)dots(x+R(-.5,.5),z+R(-.5,.5),"#7f9a45",5,.04,0.9+R(0,1),.03);nameTag(x,z-0.75);});at(U,0.15,0.76,leafy,1.4,0.8,"#5a3a3a",6);
+  at(U,0.42,0.95,(x,z)=>{bput(GEO.cyl,"#8a7a62",x,0.35,z,{sx:.18,sy:4,sz:.18});
+    for(let k=0;k<7;k++){const yaw=k/7*6.28,tilt=R(.4,.9),len=R(2.5,4);bput(GEO.cyl,"#8a7a62",x,4,z,{yaw,tilt,sx:.07,sy:len,sz:.07});
+      const ex=x+Math.sin(yaw)*Math.sin(tilt)*len,ey=4+Math.cos(tilt)*len,ez=z+Math.cos(yaw)*Math.sin(tilt)*len;
+      for(let q=0;q<10;q++)bput(GEO.ico,q%3?"#9cc46a":"#b5cf7d",ex+R(-1.2,1.2),ey+R(-.8,.6),ez+R(-1.2,1.2),{sx:R(.5,.9),sy:R(.3,.5),sz:R(.5,.9)});
+      for(let q=0;q<6;q++)bput(GEO.cyl,"#8b7a55",ex+R(-1,1),ey-R(.6,1.4),ez+R(-1,1),{sx:.025,sy:R(.5,.9),sz:.025});}});
+  // 南五味（紅骨蛇）：紅褐藤莖、光亮長橢圓葉成團
+  at(U,0.5,0.76,(x,z)=>{for(let k=0;k<14;k++)bput(GEO.cyl,"#8a3a2a",x+R(-.5,.5),0.35,z+R(-.5,.5),{yaw:R(0,6.28),tilt:R(.4,1.3),sx:.012,sy:R(.6,1.2),sz:.012});
+    for(let q=0;q<110;q++){const a=R(0,6.28),r=R(0,.7);bput(GEO.oval,q%6?"#3f6e30":"#6a3a2a",x+Math.cos(a)*r,0.4+R(0,.75),z+Math.sin(a)*r,{yaw:R(0,6.28),tilt:R(.6,1.4),sx:.09,sy:.2});}
+    nameTag(x,z-0.8);});
+  [[0.68,0.18],[0.78,0.21],[0.86,0.24],[0.24,0.28]].forEach(([u,v])=>at(U,u,v,nameTag));},
+ F(U){ // 禾草地被；中間扭曲落葉小樹；右側灰綠小圓葉灌木開淡粉紅花；前右黃綠肉質草本；後方羽狀複葉幼樹、大灌木、左後細枝幼樹
+  scatter(U,110,(x,z)=>tuft(x,z,R(.3,.7),Math.random()<.6?C.md:C.lt,7),0.03,0.97,0.03,0.97);
+  at(U,0.42,0.32,bareTree,2.0);
+  at(U,0.6,0.4,(x,z)=>{bput(GEO.cyl,"#6e5a44",x,0.35,z,{tilt:0.12,yaw:0.8,sx:.04,sy:1.6,sz:.04});
+    for(let k=0;k<7;k++){const yaw=R(0,6.28),tilt=R(.5,1.1),len=R(.6,1.1),y0=R(1.1,1.8);bput(GEO.cyl,"#6e5a44",x+0.1,y0,z,{yaw,tilt,sx:.015,sy:len,sz:.015});
+      const ex=x+0.1+Math.sin(yaw)*Math.sin(tilt)*len,ey=y0+Math.cos(tilt)*len,ez=z+Math.cos(yaw)*Math.sin(tilt)*len;
+      for(let q=0;q<9;q++)bput(GEO.oval,"#7d9a6a",ex+R(-.3,.3),ey+R(-.3,.2),ez+R(-.3,.3),{yaw:R(0,6.28),tilt:R(.8,1.4),sx:.09,sy:.11});}
+    dots(x+0.6,z,"#f0c6d0",16,.4,1.9,.05);});
+  at(U,0.66,0.2,(x,z)=>{for(let i=0;i<5;i++){const xx=x+R(-.25,.25),zz=z+R(-.25,.25);for(let j=0;j<5;j++)bput(GEO.oval,"#a9d04e",xx,0.4+j*0.05,zz,{yaw:j*1.26,tilt:1.25,sx:.1,sy:.14});}});
+  at(U,0.3,0.1,(x,z)=>{for(let i=0;i<8;i++)bput(GEO.lance,"#5f9a45",x,0.4,z,{yaw:i*0.8,tilt:R(.4,.9),sx:.08,sy:.35});});
+  at(U,0.35,0.58,(x,z)=>dots(x,z,"#f3b51a",4,.1,0.7,.05));
+  // 過山香：數枝深褐主幹、密生細小葉的羽狀複葉
+  at(U,0.5,0.7,(x,z)=>{for(let k=0;k<4;k++){const yaw=k*1.6+R(-.3,.3),t=R(.1,.3);bput(GEO.cyl,"#4a3a30",x,0.35,z,{yaw,tilt:t,sx:.05,sy:2.6,sz:.05});}
+    for(let k=0;k<22;k++){const yaw=R(0,6.28),tilt=R(.8,1.5),len=R(.8,1.2),y0=R(.8,2.6);const dx=Math.sin(yaw)*Math.sin(tilt),dy=Math.cos(tilt),dz=Math.cos(yaw)*Math.sin(tilt);
+      for(let j=1;j<12;j++){const t=j/12*len;[-1,1].forEach(sd=>bput(GEO.lance,"#5f9a45",x+dx*t,y0+dy*t,z+dz*t,{yaw:yaw+sd*1.5,tilt:1.3,sx:.06,sy:.16}));}}
+    nameTag(x+0.1,z-0.8);});
+  // 仙鶴草（龍芽草，手寫名牌）：叢生，奇數羽狀複葉，大小葉片相間、邊緣粗鋸齒
+  [[0.42,0.2],[0.46,0.24],[0.39,0.25]].forEach(([u,v])=>at(U,u,v,(x,z)=>{for(let l=0;l<7;l++){const yaw=R(0,6.28),t=R(.7,1.2),L=R(.3,.45);const cx=Math.cos(yaw),cz=Math.sin(yaw);
+    for(let k=0;k<4;k++){const d=0.06+k*L/4,px=x+cx*d,pz=z+cz*d,py=0.4+d*Math.cos(t)*0.8;bput(GEO.oval,"#6fa850",px,py,pz,{yaw:yaw+1.4,tilt:1.35,sx:.05,sy:.09});bput(GEO.oval,"#6fa850",px,py,pz,{yaw:yaw-1.4,tilt:1.35,sx:.05,sy:.09});}
+    bput(GEO.oval,"#7fb558",x+cx*(L+0.08),0.4+L*Math.cos(t)*0.8,z+cz*(L+0.08),{yaw:yaw-1.57,tilt:1.35,sx:.06,sy:.1});}}));at(U,0.42,0.14,nameTag);
+  // 萬點金（燈稱花，手寫名牌）：左後方，細枝落葉小灌木，枝上散生小卵形葉；周圍禾草與開白色小花的草本
+  at(U,0.28,0.74,(x,z)=>{for(let b=0;b<5;b++){const yaw=R(0,6.28),t=R(.15,.6),H=R(.7,1.1);bput(GEO.cyl,"#6e5a44",x,0.35,z,{yaw,tilt:t,sx:.012,sy:H,sz:.012});for(let k=2;k<7;k++){const d=H*k/7,px=x+Math.cos(yaw)*Math.sin(t)*d,py=0.35+Math.cos(t)*d,pz=z+Math.sin(yaw)*Math.sin(t)*d;bput(GEO.oval,"#7aa860",px,py,pz,{yaw:R(0,6.28),tilt:R(.9,1.4),sx:.05,sy:.08});}}
+    for(let i=0;i<8;i++){const xx=x+R(-.5,.5),zz=z-R(.2,.6);bput(GEO.cyl,"#6f9a48",xx,0.35,zz,{sx:.006,sy:.5,sz:.006});bput(GEO.lance,"#5f8f42",xx,0.7,zz,{yaw:R(0,6.28),tilt:1.1,sx:.05,sy:.16});dots(xx,zz,"#ffffff",2,.03,0.85,.025);}});at(U,0.3,0.66,nameTag);
+  // 鯽魚膽（闊苞菊，正式解說牌 C017）：左側步道邊，2 公尺多的多分枝灌木，灰綠倒卵形葉，枝端繖房狀頭花轉褐、帶白色冠毛
+  at(U,0.1,0.55,(x,z)=>{for(let b=0;b<6;b++){const yaw=b*1.05+R(-.2,.2),t=R(.15,.5),L=R(1.6,2.3);const ex=x+Math.cos(yaw)*Math.sin(t)*L,ey=0.35+Math.cos(t)*L,ez=z+Math.sin(yaw)*Math.sin(t)*L;
+      add(new THREE.CylinderGeometry(0.015,0.035,L,5).translate(0,L/2,0).rotateZ(-t).rotateY(-yaw),M("#5e4a3a"),x,0.35,z);
+      for(let k=0;k<16;k++){const f=R(.3,1.05);bput(GEO.oval,k%3?"#6f9a6a":"#86ad7a",x+(ex-x)*f+R(-.3,.3),0.35+(ey-0.35)*f+R(-.2,.2),z+(ez-z)*f+R(-.3,.3),{yaw:R(0,6.28),tilt:R(.6,1.4),sx:.09,sy:.15});}
+      for(let k=0;k<3;k++){const hx=ex+R(-.2,.2),hy=ey+R(0,.2),hz=ez+R(-.2,.2);dots(hx,hz,k?"#b07850":"#efe8dc",8,.12,hy,.035);}}
+    bput(new THREE.BoxGeometry(0.5,0.35,0.02),"#f4f4f0",x+0.2,0.7,z-0.9,{tilt:-0.5});});
+  // 月桃：高大叢生，紅褐色假莖、兩列長披針葉
+  at(U,0.72,0.62,(x,z)=>{for(let k=0;k<9;k++){const xx=x+R(-.4,.4),zz=z+R(-.4,.4),h=R(1.4,2.2),yaw=R(0,6.28);bput(GEO.cyl,k%2?"#7a8a45":"#8a4a3a",xx,0.35,zz,{yaw,tilt:R(0,.15),sx:.035,sy:h,sz:.035});
+      for(let j=2;j<7;j++)bput(GEO.lance,j%4?"#4f8a3c":"#b8b04a",xx,0.35+h*j/7,zz,{yaw:yaw+(j%2?1.57:-1.57),tilt:R(.6,1.1),sx:.18,sy:R(.9,1.2)});}
+    bput(new THREE.BoxGeometry(0.5,0.35,0.02),"#f4f4f0",x-0.2,0.7,z-0.8,{tilt:-0.5});});
+  scatter(U,20,(x,z)=>{bput(GEO.star,"#f3c21a",x,0.55,z,{yaw:R(0,6.28),tilt:-1.45,sx:.12,sy:.12});},0.55,0.95,0.3,0.75);at(U,0.45,0.88,leafy,3.0,1.6,"#3f7a35",12);at(U,0.2,0.84,sapling,2.6,"#5f8f42");
+  // 茵陳蒿（絲狀細葉直立）與旁邊細裂葉蒿類
+  [[0.3,0.55],[0.36,0.62],[0.26,0.66],[0.33,0.48]].forEach(([u,v])=>at(U,u,v,(x,z)=>{for(let i=0;i<16;i++)bput(GEO.cone,i%3?"#9ccc4a":"#86b53e",x+R(-.1,.1),0.35+R(0,.6),z+R(-.1,.1),{yaw:R(0,6.28),tilt:R(0,.2),sx:R(.06,.1),sy:R(.7,1.4),sz:R(.06,.1)});}));
+  at(U,0.33,0.42,(x,z)=>bput(new THREE.BoxGeometry(0.5,0.35,0.02),"#f4f4f0",x,0.7,z,{tilt:-0.5}));
+  at(U,0.5,0.55,(x,z)=>{for(let k=0;k<6;k++){const xx=x+R(-.3,.3),zz=z+R(-.3,.3),h=R(.8,1.3);bput(GEO.cyl,"#8a7a5a",xx,0.35,zz,{tilt:R(0,.3),yaw:R(0,6.28),sx:.02,sy:h,sz:.02});
+    for(let j=0;j<12;j++)bput(GEO.frond,"#6fae3e",xx,0.35+h*R(.3,1),zz,{yaw:R(0,6.28),tilt:R(.6,1.3),sx:.35,sy:.35});}});
+  // 麥門冬：前緣叢生帶狀葉，葉尖黃褐
+  [[0.15,0.08],[0.25,0.1],[0.35,0.07]].forEach(([u,v])=>at(U,u,v,(x,z)=>{strap(x,z,0.45,"#2f6a2c",26,.035);for(let i=0;i<6;i++)bput(GEO.blade,"#c9a04a",x,0.36,z,{yaw:R(0,6.28),tilt:R(.9,1.2),sx:.035,sy:.4});}));
+  at(U,0.26,0.14,nameTag);
+  // 枸骨：深綠革質刺葉灌木
+  at(U,0.28,0.36,(x,z)=>{for(let k=0;k<6;k++)bput(GEO.cyl,"#6a6a4a",x+R(-.3,.3),0.35,z+R(-.3,.3),{yaw:R(0,6.28),tilt:R(0,.4),sx:.02,sy:R(.8,1.3),sz:.02});
+    for(let q=0;q<140;q++){const a=R(0,6.28),r=R(0,.65);bput(GEO.star,q%5?"#1f4a26":"#2f5e30",x+Math.cos(a)*r,0.45+R(0,1.0),z+Math.sin(a)*r,{yaw:R(0,6.28),tilt:R(.4,1.4),sx:.13,sy:.13});}
+    nameTag(x+0.2,z-0.75);});
+  at(U,0.4,0.42,nameTag);at(U,0.68,0.46,nameTag);},
+ G(U){ // 左側卵形葉大灌木；左前與右側馬利筋；右前兩叢細長葉叢生草本；右側羽毛狀直立細葉草本；淡藍紫小花地被；右後小樹著生山蘇
+  scatter(U,80,(x,z)=>tuft(x,z,R(.2,.4),C.md,6),0.03,0.97,0.03,0.97);
+  scatter(U,60,(x,z)=>{for(let i=0;i<3;i++)bput(GEO.oval,"#5f9a45",x+R(-.1,.1),0.45,z+R(-.1,.1),{yaw:R(0,6.28),tilt:R(1.2,1.5),sx:.08,sy:.1});},0.05,0.95,0.03,0.6);
+  scatter(U,35,(x,z)=>dots(x,z,"#a9a6ee",2,.08,0.47,.045),0.2,0.65,0.03,0.35);
+  at(U,0.3,0.55,(x,z)=>{for(let k=0;k<6;k++)bput(GEO.cyl,"#8a6a50",x+R(-.3,.3),0.35,z+R(-.3,.3),{yaw:R(0,6.28),tilt:R(0,.35),sx:.035,sy:R(1.4,2),sz:.035});
+    for(let q=0;q<70;q++)bput(GEO.oval,q%3?"#3f6e3a":"#4f7d42",x+R(-1.3,1.3),R(1,2.7),z+R(-1.1,1.1),{yaw:R(0,6.28),tilt:R(.5,1.4),sx:.22,sy:.36});});
+  at(U,0.1,0.3,asclepias);at(U,0.86,0.45,asclepias);
+  // 麥門冬（手寫名牌確認）：兩叢寬線形葉，部分葉尖轉黃
+  [[0.6,0.24,0.7],[0.74,0.3,0.65]].forEach(([u,v,h])=>at(U,u,v,(x,z)=>{strap(x,z,h,"#2f6a2c",34,.07);strap(x,z,h*.9,"#3f7d34",14,.065);strap(x,z,h*.8,"#c9a43a",6,.06);}));at(U,0.67,0.22,nameTag);
+  // 金針（萱草，手寫名牌）：拱垂的寬帶狀葉成叢，中央一枝乾枯花葶
+  at(U,0.76,0.46,(x,z)=>{for(let i=0;i<30;i++)bput(GEO.blade,i%4?"#4f9a3a":"#6fae48",x+R(-.08,.08),0.35,z+R(-.08,.08),{yaw:R(0,6.28),tilt:R(0.5,1.25),sx:R(.05,.07),sy:R(.6,.95)});bput(GEO.cyl,"#a08a62",x,0.35,z,{tilt:.12,sx:.012,sy:1.25,sz:.012});bput(GEO.cyl,"#a08a62",x+0.04,1.5,z,{tilt:.7,sx:.008,sy:.25,sz:.008});});at(U,0.76,0.4,nameTag);
+  // 艾草（手寫名牌）：數株直立小苗，羽狀深裂葉，葉背灰白；周圍夾雜含羞草類羽狀小葉
+  [[0.38,0.24],[0.42,0.27],[0.35,0.29]].forEach(([u,v])=>at(U,u,v,(x,z)=>{const h=R(.35,.5);bput(GEO.cyl,"#6f8a4a",x,0.35,z,{sx:.012,sy:h,sz:.012});for(let i=0;i<9;i++){const y=0.38+h*(i/9),yaw=i*2.4;bput(GEO.frond,i%3?"#5f9a45":"#73ad55",x,y,z,{yaw,tilt:R(.9,1.3),sx:.13,sy:.17});bput(GEO.frond,"#c9d3b8",x,y-0.01,z,{yaw,tilt:R(1.4,1.6),sx:.1,sy:.13});}}));at(U,0.36,0.2,nameTag);
+  // 紫蘇（用戶確認）：數株斜倚的紫褐色莖，對生寬卵形紫葉、邊緣鋸齒，枝端淡紫小花穗
+  [[0.5,0.36],[0.56,0.4],[0.47,0.42],[0.53,0.46]].forEach(([u,v])=>at(U,u,v,(x,z)=>{const yaw=R(0,6.28),t=R(.6,1.0),H=R(.5,.8);bput(GEO.cyl,"#5a3a4a",x,0.35,z,{yaw,tilt:t,sx:.01,sy:H,sz:.01});
+    for(let k=1;k<5;k++){const d=H*k/4,px=x+Math.cos(yaw)*Math.sin(t)*d,py=0.35+Math.cos(t)*d,pz=z+Math.sin(yaw)*Math.sin(t)*d;for(const sd of[1.57,-1.57])bput(GEO.oval,k%2?"#6a3f5e":"#5e4a62",px,py,pz,{yaw:yaw+sd+k*0.3,tilt:R(1.1,1.45),sx:.1,sy:.12});if(k>2)dots(px,pz,"#c99ad8",3,.04,py+0.06,.02);}}));
+  // 名牌「雷公根（蝴蝶草）」：植株為葉下珠屬，直立細莖、水平小枝如羽狀葉，枝下排列紅褐色小圓果
+  at(U,0.84,0.76,(x,z)=>{for(let s2=0;s2<3;s2++){const sx=x+R(-.15,.15),sz=z+R(-.15,.15),H=R(.8,1.1);bput(GEO.cyl,"#5a7a3a",sx,0.35,sz,{tilt:R(0,.12),sx:.01,sy:H,sz:.01});
+    for(let b=0;b<9;b++){const y=0.55+H*(b/9)*0.95,yaw=R(0,6.28),L=R(.18,.3);for(let k=0;k<7;k++){const d=0.04+k*L/7,px=sx+Math.cos(yaw)*d,pz=sz+Math.sin(yaw)*d;bput(GEO.oval,"#7f9e78",px,y+0.012,pz,{yaw:yaw+1.57,tilt:1.45,sx:.035,sy:.05});bput(GEO.oval,"#7f9e78",px,y+0.012,pz,{yaw:yaw-1.57,tilt:1.45,sx:.035,sy:.05});if(k%2==0)bput(GEO.sph,"#b8643a",px,y-0.02,pz,{sx:.018,sy:.018,sz:.018});}}}});at(U,0.8,0.7,nameTag);
+  // 月桃（正式解說牌）：靠後方步道，叢生假莖、兩列長披針葉，部分老葉有褐色病斑；腳下是披針形葉的開黃花地被
+  at(U,0.22,0.8,(x,z)=>{for(let k=0;k<8;k++){const xx=x+R(-.35,.35),zz=z+R(-.35,.35),h=R(1.3,2.0),yaw=R(0,6.28);bput(GEO.cyl,k%2?"#7a8a45":"#8a4a3a",xx,0.35,zz,{yaw,tilt:R(0,.15),sx:.03,sy:h,sz:.03});
+      for(let j=2;j<7;j++)bput(GEO.lance,j==3&&k%3==0?"#b8a84a":(j%3?"#3f7f3a":"#4f8f42"),xx,0.35+h*j/7,zz,{yaw:yaw+(j%2?1.57:-1.57),tilt:R(.5,1.0),sx:.16,sy:R(.8,1.1)});}
+    bput(new THREE.BoxGeometry(0.5,0.35,0.02),"#f4f4f0",x,0.7,z-0.7,{tilt:-0.5});});
+  [[0.74,0.58],[0.82,0.55],[0.88,0.62],[0.78,0.68]].forEach(([u,v])=>at(U,u,v,(x,z)=>{for(let i=0;i<14;i++)bput(GEO.cone,i%3?"#9ccc4a":"#86b53e",x+R(-.08,.08),0.35+R(0,.4),z+R(-.08,.08),{yaw:R(0,6.28),tilt:R(0,.2),sx:R(.05,.09),sy:R(.6,1.2),sz:R(.05,.09)});}));
+  // 何首烏：纏繞藤蔓成團，三角狀心形葉
+  at(U,0.45,0.72,(x,z)=>{const r=0.9,cy=0.35+r*0.7;bput(GEO.ico2,"#3f6e3a",x,cy,z,{sx:r*.8,sy:r*.6,sz:r*.8});
+    for(let q=0;q<90;q++){const a=R(0,6.28),b=R(-.3,1.3);bput(GEO.heart,q%6?"#4f8a3c":"#6fa04a",x+Math.cos(a)*Math.cos(b)*r,cy+Math.sin(b)*r*.7,z+Math.sin(a)*Math.cos(b)*r,{yaw:a,tilt:R(.5,1.4),sx:.28,sy:.32});}
+    for(let k=0;k<10;k++)bput(GEO.cyl,"#7a4a3a",x+R(-.5,.5),0.35,z+R(-.5,.5),{yaw:R(0,6.28),tilt:R(.2,1),sx:.01,sy:R(.6,1.3),sz:.01});
+    nameTag(x,z-1);});at(U,0.65,0.85,leafy,1.6,1,C.dk);
+  // 土芭樂（番石榴，用戶確認）：斜生光滑褐色主幹、樹皮斑駁剝落；主幹中段著生一大叢山蘇；上方分枝細長，對生橢圓葉，秋冬部分葉轉黃橙
+  at(U,0.92,0.88,(x,z)=>{const c=new THREE.CatmullRomCurve3([new THREE.Vector3(x+0.5,0.3,z+0.3),new THREE.Vector3(x+0.1,1.5,z),new THREE.Vector3(x-0.2,2.6,z-0.2),new THREE.Vector3(x-0.1,3.6,z-0.3)]);
+    add(new THREE.TubeGeometry(c,20,0.13,7,false),M("#7a5e48"),0,0,0);
+    for(let i=0;i<6;i++){const p=c.getPoint(R(.1,.7));bput(GEO.oval,"#a08670",p.x+0.12,p.y,p.z,{yaw:R(0,6.28),tilt:0,sx:.08,sy:.1});}
+    const fp=c.getPoint(0.42);birdsNest(fp.x,fp.y-0.3,fp.z,1.2);
+    const top=c.getPoint(1);for(let b=0;b<7;b++){const yaw=b*0.9+R(-.2,.2),t=R(.3,.9),L=R(1.4,2.4);const ex=top.x+Math.cos(yaw)*Math.sin(t)*L,ey=top.y+Math.cos(t)*L,ez=top.z+Math.sin(yaw)*Math.sin(t)*L;
+      add(new THREE.CylinderGeometry(0.015,0.035,L,5).translate(0,L/2,0).rotateZ(-t).rotateY(-yaw),M("#6e5a44"),top.x,top.y,top.z);
+      for(let k=0;k<12;k++){const f=R(.35,1.05);const col=k%5==0?"#e0a040":k%4==0?"#d8c040":(k%2?"#4f8a3c":"#5f9a45");bput(GEO.oval,col,top.x+(ex-top.x)*f+R(-.25,.25),top.y+(ey-top.y)*f+R(-.2,.2),top.z+(ez-top.z)*f+R(-.25,.25),{yaw:R(0,6.28),tilt:R(.6,1.4),sx:.14,sy:.24});}}});
+  [[0.55,0.5],[0.62,0.3],[0.78,0.36],[0.94,0.4],[0.3,0.3],[0.45,0.2],[0.7,0.5],[0.85,0.25]].forEach(([u,v])=>at(U,u,v,nameTag));},
+ H(U){ // 中央偏左蘇鐵、兩側披針葉灌木、下層蕨類、後方彎幹小喬木與細長葉草叢、六塊名牌
+  scatter(U,70,(x,z)=>tuft(x,z,R(.2,.4),C.md,5),0.03,0.97,0.03,0.97);
+  scatter(U,60,(x,z)=>{for(let i=0;i<3;i++)bput(GEO.oval,"#5f9a45",x+R(-.1,.1),0.45,z+R(-.1,.1),{yaw:R(0,6.28),tilt:R(1.2,1.5),sx:.08,sy:.1});},0.05,0.95,0.03,0.5);
+  scatter(U,30,(x,z)=>dots(x,z,"#ffffff",3,.08,0.45,.045),0.05,0.95,0.03,0.3);
+  at(U,0.42,0.5,(x,z)=>{bput(GEO.cyl,"#6b5a40",x,0.35,z,{sx:.3,sy:0.6,sz:.3});for(let i=0;i<16;i++)bput(GEO.frond,"#2f5548",x,0.9,z,{yaw:i/16*6.28,tilt:R(0.55,1.05),sx:1.6,sy:1.5});});
+  [[0.22,0.45],[0.28,0.6],[0.58,0.42],[0.65,0.55],[0.55,0.62],[0.35,0.36]].forEach(([u,v])=>at(U,u,v,lanceShrub,1.4,"#7fb04a",4));
+  // 鳳尾草（白斑）：低矮蕨叢，羽片中央銀白
+  at(U,0.25,0.18,(x,z)=>{for(let i=0;i<16;i++){const yaw=R(0,6.28),t=R(.7,1.25);bput(GEO.frond,"#4f8a3c",x,0.37,z,{yaw,tilt:t,sx:.6,sy:R(.45,.6)});bput(GEO.frond,"#e8eee0",x,0.372,z,{yaw,tilt:t,sx:.18,sy:R(.42,.55)});}});
+  at(U,0.18,0.14,nameTag);
+  // 虎耳草：貼地小圓葉、灰白脈紋
+  at(U,0.12,0.1,(x,z)=>{for(let i=0;i<14;i++)bput(GEO.heart,i%3?"#3f6e4a":"#557a5a",x+R(-.3,.3),0.38,z+R(-.3,.3),{yaw:R(0,6.28),tilt:1.5,sx:.14,sy:.14});});
+  at(U,0.08,0.06,nameTag);
+  // 虎尾蘭：路燈基座旁，直立劍葉、金邊橫紋
+  at(U,0.86,0.12,(x,z)=>{for(let i=0;i<14;i++){const xx=x+R(-.3,.3),zz=z+R(-.3,.3),yaw=R(0,6.28),t=R(0,.45),h=R(.5,.9);
+      bput(GEO.lance,"#2f5a3a",xx,0.35,zz,{yaw,tilt:t,sx:.16,sy:h});bput(GEO.lance,"#d8c43a",xx,0.348,zz,{yaw,tilt:t,sx:.2,sy:h*1.01});}
+    nameTag(x-0.3,z-0.4);lamp(x+0.6,z+0.3);});
+  at(U,0.3,0.3,fern,0.9);at(U,0.45,0.3,fern,0.8);at(U,0.2,0.38,fern,0.7);
+  at(U,0.7,0.9,(x,z)=>{const c=new THREE.CatmullRomCurve3([new THREE.Vector3(x,0.3,z),new THREE.Vector3(x-0.3,2,z),new THREE.Vector3(x+0.3,3.6,z-0.2),new THREE.Vector3(x-0.4,5.5,z-0.4)]);
+    add(new THREE.TubeGeometry(c,24,0.16,6,false),M("#6a5a4a"),0,0,0);const t=c.getPoint(1);for(let i=0;i<9;i++)bput(GEO.ico,i%2?"#4f8a3c":"#3f7a35",t.x+R(-2.2,2.2),t.y+R(-.8,1),t.z+R(-2,2),{sx:R(1,1.6),sy:R(.6,.9),sz:R(1,1.6)});});
+  [[0.5,0.8],[0.78,0.8],[0.85,0.7]].forEach(([u,v])=>at(U,u,v,strap,0.7,"#5f8f42",14,.05));
+  // 射干（手寫名牌，鳶尾科）：靠後方步道邊，劍形葉排成扇面；細長花莖頂端黃花與綠色蒴果，夾雜枯褐老葉
+  at(U,0.62,0.84,(x,z)=>{const fan=R(0,3.14);for(let i=0;i<16;i++){const a=fan+(i%2?0:Math.PI)+R(-.15,.15);bput(GEO.lance,i%4?"#3f7f3a":"#4f8f42",x+R(-.12,.12),0.35,z+R(-.12,.12),{yaw:a,tilt:R(.15,.7),sx:.12,sy:R(.55,.85)});}
+    for(let i=0;i<4;i++)bput(GEO.lance,"#a0784a",x+R(-.2,.2),0.35,z+R(-.2,.2),{yaw:R(0,6.28),tilt:R(.6,1.1),sx:.08,sy:.7});
+    for(let k=0;k<2;k++){const sx=x+R(-.15,.15),sz=z+R(-.15,.15);bput(GEO.cyl,"#6f9a48",sx,0.35,sz,{tilt:R(.05,.2),sx:.01,sy:1.25,sz:.01});for(let f=0;f<3;f++){const fx=sx+R(-.12,.12),fz=sz+R(-.12,.12);bput(GEO.star,"#f2c21a",fx,1.62+R(0,.1),fz,{yaw:R(0,6.28),tilt:R(0,.5),sx:.06,sy:.06});bput(GEO.sph,"#8fbf4a",fx+0.05,1.5,fz,{sx:.035,sy:.045,sz:.035});}}});at(U,0.6,0.78,nameTag);
+  [[0.1,0.35],[0.25,0.15],[0.5,0.2],[0.68,0.3],[0.72,0.58],[0.78,0.72]].forEach(([u,v])=>at(U,u,v,nameTag));}
+};
+function frameOf(P){const m=P.meta;return (u,v)=>{const xa=m.xl1+(m.xr1-m.xl1)*u,xb=m.xl2+(m.xr2-m.xl2)*u;const x=xa+(xb-xa)*v;const Rr=m.R1+(m.R2-m.R1)*v;return [x,arcZ(x,Rr)];};}
+
+SECT.forEach((P,k)=>{const L="ABCDEFGH"[SECT2BED[k]-1];zoneBase(P,"#6f9f4f");ZONES[L](frameOf(P));const xs=P.map(p=>p[0]),zs=P.map(p=>p[1]);const c=[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...zs)+Math.max(...zs))/2];BEDS.push([c[0],c[1],4]);const is=ISLANDS.find(t=>t.id==="bed"+SECT2BED[k]);if(is)is.p=[c[0],0,c[1]];});
+// 步道細節：石磚縫裡的小草、散落的落葉
+(function(){const inBed=(x,z)=>SECT.some(P=>inPoly(x,z,P));
+  for(let i=0;i<900;i++){const x=R(-23,23),z=R(-72,-4);if(inBed(x,z))continue;
+    if(Math.random()<0.55)bput(GEO.oval,["#b58a5a","#c9a46a","#9c7a50","#d6b880"][i%4],x,0.03,z,{yaw:R(0,6.28),tilt:1.5+R(-.05,.05),sx:R(.06,.1),sy:R(.12,.2)});
+    else for(let k=0;k<4;k++)bput(GEO.blade,"#7aa04a",x+R(-.05,.05),0.01,z+R(-.05,.05),{yaw:R(0,6.28),tilt:R(.2,.8),sx:.02,sy:R(.06,.14)});}})();
+// A 區路燈上的「藥草園區」直式牌
+(function(){const P=SECT[SECT2BED.indexOf(1)];const [lx,lz]=frameOf(P)(0.5,0.97);add(new THREE.BoxGeometry(0.35,1.2,0.05),M("#f4f8ff"),lx,1.6,lz+0.18,false,false);add(new THREE.BoxGeometry(0.36,0.25,0.06),M("#3d6fa8"),lx,2.1,lz+0.18,false,false);})();
+bflush();
+ISLANDS.find(t=>t.id==="forest").p=[10,0,-100];
+// 告示牌與路燈
+lamp(-17.5,-22.5);lamp(17.5,-22.5);
+// 林蔭區步道
+dirtPath([[0,-71],[-6,-78],[-4,-88],[6,-96],[18,-100]],3.2);
+dirtPath([[0,-71],[8,-78],[20,-84],[30,-94]],2.6);
+dirtPath([[-6,-78],[-22,-80],[-32,-90],[-28,-100]],2.4);
+// 高架道路：花園北方斜向通過
+const HW=[[-150,-92],[150,-142]];
+const hz=x=>-130;
+function distSeg(x,z,g){const vx=g.x2-g.x1,vz=g.z2-g.z1,L2=vx*vx+vz*vz||1;let t=((x-g.x1)*vx+(z-g.z1)*vz)/L2;t=Math.max(0,Math.min(1,t));return Math.hypot(x-(g.x1+vx*t),z-(g.z1+vz*t));}
+function free(x,z,pad=0){if(z<hz(x)+10)return false;if(SEGS.some(g=>distSeg(x,z,g)<g.r+pad))return false;if(BEDS.some(([bx,bz,r])=>Math.hypot(x-bx,z-bz)<r+1.5))return false;
+  if(z>-52&&z<45&&Math.abs(x)<20)return false;if(z>44&&z<90&&Math.abs(x)<30)return false;if(Math.abs(x)<25&&z<-19&&z>-72)return false;return true;}
+let placed=0;for(let k=0;k<1500&&placed<90;k++){const x=-75+Math.random()*150,z=-125+Math.random()*130;if(!free(x,z,2))continue;
+  tree(x,z,8+Math.random()*7,3+Math.random()*2,Math.random()<0.15?1:0);placed++;}
+for(let k=0;k<45;k++){const x=-40+Math.random()*60,z=-105+Math.random()*30;if(free(x,z)){const m=add(new THREE.DodecahedronGeometry(0.35+Math.random()*0.45,0),M(["#9a958a","#8a8478","#a9a294"][k%3]),x,0.15,z);m.scale.y=0.55;}}
+// 草坪上的草叢與小野花
+for(let k=0;k<700;k++){const x=-70+Math.random()*140,z=-120+Math.random()*120;if(!free(x,z))continue;if(Math.random()<.85){const c=Math.random()<.5?"#6fa04a":"#88b85a",hh=R(.15,.35);for(let i=0;i<5;i++)bput(GEO.blade,c,x+R(-.05,.05),0,z+R(-.05,.05),{yaw:R(0,6.28),tilt:R(.15,.7),sx:.04,sy:hh*R(.6,1.1)});}else dots(x,z,["#ffffff","#f3d21a","#c8c4f0"][k%3],2,.1,0.1,.04);}
+// 高架橋已依需求移除
+// 南側馬路
+(function(){const r=add(new THREE.PlaneGeometry(400,22),M("#6f7275"),0,0.02,98,false,true);r.rotation.x=-Math.PI/2;const c=add(new THREE.PlaneGeometry(400,0.5),M("#f3f1e7"),0,0.03,98,false,false);c.rotation.x=-Math.PI/2;})();
+
+buildTrees();
+/* ===== 路燈夜景：燈暈、光錐、地面光池、真實點光源、繞燈飛舞的小蛾 ===== */
+const LAMPFX=(function(){
+  const radial=(inner,outer,size=128)=>{const c=document.createElement("canvas");c.width=c.height=size;const g=c.getContext("2d");const gr=g.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2);
+    gr.addColorStop(0,inner);gr.addColorStop(0.35,outer);gr.addColorStop(1,"rgba(255,220,150,0)");g.fillStyle=gr;g.fillRect(0,0,size,size);return new THREE.CanvasTexture(c);};
+  const haloTex=radial("rgba(255,245,215,1)","rgba(255,205,120,0.45)"),poolTex=radial("rgba(255,215,140,0.9)","rgba(255,190,110,0.35)");
+  const haloMat=new THREE.SpriteMaterial({map:haloTex,color:"#ffffff",transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0});
+  const poolMat=new THREE.MeshBasicMaterial({map:poolTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0});
+  const coneMat=new THREE.MeshBasicMaterial({color:"#ffd894",transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0,side:THREE.DoubleSide});
+  const coneGeo=new THREE.ConeGeometry(2.6,6.0,24,1,true);coneGeo.translate(0,-3.0,0);
+  const poolGeo=new THREE.PlaneGeometry(9,9);poolGeo.rotateX(-Math.PI/2);
+  const items=[],lights=[];
+  // 只給最靠近藥園與廣場的幾盞燈真實光源（手機效能考量），其他用光暈與光池表現
+  const sorted=LAMPS.slice().sort((a,b)=>Math.hypot(a[0],a[1]+35)-Math.hypot(b[0],b[1]+35));
+  LAMPS.forEach(([x,z])=>{const halo=new THREE.Sprite(haloMat);halo.position.set(x,6.45,z);halo.scale.set(2.4,2.4,1);scene.add(halo);
+    const cone=new THREE.Mesh(coneGeo,coneMat);cone.position.set(x,6.3,z);scene.add(cone);
+    const pool=new THREE.Mesh(poolGeo,poolMat);pool.position.set(x,0.05,z);scene.add(pool);
+    // 小蛾：每盞燈三隻，繞著燈頭飛
+    const n=3,pos=new Float32Array(n*3);const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(pos,3));
+    const moth=new THREE.Points(g,new THREE.PointsMaterial({color:"#fff6d8",size:0.07,transparent:true,opacity:0,depthWrite:false}));scene.add(moth);
+    items.push({x,z,halo,moth,ph:Math.random()*6.28,sp:[0,1,2].map(()=>[0.6+Math.random()*0.6,0.4+Math.random()*0.5,Math.random()*6.28])});});
+  sorted.slice(0,8).forEach(([x,z])=>{const L=new THREE.PointLight("#ffd28a",0,16,2);L.position.set(x,5.8,z);scene.add(L);lights.push(L);});
+  function update(T){const k=LAMPON;haloMat.opacity=k*0.95;poolMat.opacity=k*0.55;coneMat.opacity=k*0.07;
+    lights.forEach((L,i)=>L.intensity=k*(1.6+Math.sin(T*2.3+i*1.7)*0.05));
+    items.forEach(it=>{const f=1+Math.sin(T*3.1+it.ph)*0.04+Math.sin(T*7.3+it.ph*2)*0.02;it.halo.scale.set(2.4*f,2.4*f,1);
+      it.moth.material.opacity=k*0.9;if(k>0.05){const a=it.moth.geometry.attributes.position.array;
+        it.sp.forEach(([r,h,o],j)=>{const t=T*(1.6+j*0.5)+o;a[j*3]=it.x+Math.cos(t)*r+Math.sin(t*3.1)*0.15;a[j*3+1]=6.3+Math.sin(t*1.7)*h;a[j*3+2]=it.z+Math.sin(t)*r;});
+        it.moth.geometry.attributes.position.needsUpdate=true;}});}
+  return {update};
+})();
+/* ===== 中庭與花園步道上的人：5 組推輪椅、8 位散步、3 個奔跑的小孩 ===== */
+const AGENTS=[];
+const SKIN=["#f3d2b5","#e8bf9c","#d9a882"];
+const SHIRTS=["#e0786a","#5a9bc4","#f3c64f","#9a7ac4","#4aa59a","#f2a07b","#7bb36a","#c4567e","#ffffff","#8a8f4a"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function limb(w,h,col,y){const g=new THREE.Group();g.position.y=y;const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),M(col));m.position.y=-h/2;m.castShadow=true;g.add(m);return g;}
+function person({shirt=pick(SHIRTS),pants="#4a5a7a",hair="#3a2e26",skin=pick(SKIN),h=1,elder=false,coat=false}={}){
+  const g=new THREE.Group();
+  const legL=limb(0.16,0.75,pants,0.78),legR=limb(0.16,0.75,pants,0.78);legL.position.x=-0.11;legR.position.x=0.11;g.add(legL,legR);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.2,coat?0.3:0.25,coat?0.9:0.62,10),M(shirt));body.position.y=coat?0.95:1.08;body.castShadow=true;g.add(body);
+  const armL=limb(0.11,0.6,shirt,1.35),armR=limb(0.11,0.6,shirt,1.35);armL.position.x=-0.3;armR.position.x=0.3;g.add(armL,armR);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.26,14,10),M(skin));head.position.y=1.65;head.castShadow=true;g.add(head);
+  const hr=new THREE.Mesh(new THREE.SphereGeometry(0.27,14,10,0,Math.PI*2,0,Math.PI*0.55),M(elder?"#e8e6e0":hair));hr.position.y=1.68;hr.rotation.x=-0.25;g.add(hr);
+  g.scale.setScalar(h);return {g,legL,legR,armL,armR};
+}
+function wheelchair(){
+  const g=new THREE.Group();const metal=M("#9aa3ab"),dark=M("#3b4148"),seat=M(pick(["#3d6fa8","#2f7a5a","#8a3a3a"]));
+  [-0.33,0.33].forEach(x=>{const w=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.04,8,20),dark);w.rotation.y=Math.PI/2;w.position.set(x,0.32,-0.1);g.add(w);
+    const s=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.04,10),dark);s.rotation.z=Math.PI/2;s.position.set(x*0.85,0.08,0.38);g.add(s);
+    const h=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.75,0.04),metal);h.position.set(x*0.9,0.82,-0.32);g.add(h);
+    const grip=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.18),dark);grip.position.set(x*0.9,1.18,-0.4);g.add(grip);});
+  const st=new THREE.Mesh(new THREE.BoxGeometry(0.56,0.08,0.5),seat);st.position.set(0,0.5,0.05);g.add(st);
+  const bk=new THREE.Mesh(new THREE.BoxGeometry(0.56,0.55,0.06),seat);bk.position.set(0,0.8,-0.25);g.add(bk);
+  const el=new THREE.Group();g.add(el);const top=pick(["#8f7bb5","#c96b5a","#6a8fb5","#b59a6a"]),blanket=pick(["#f3c64f","#e0786a","#7bb36a","#f2a07b"]);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.24,0.55,10),M(top));body.position.set(0,0.85,-0.08);el.add(body);
+  const lap=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.14,0.45),M(blanket));lap.position.set(0,0.62,0.18);el.add(lap);
+  const shin=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.42,0.14),M(blanket));shin.position.set(0,0.36,0.38);el.add(shin);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.24,14,10),M(pick(SKIN)));head.position.set(0,1.33,-0.06);el.add(head);
+  const hr=new THREE.Mesh(new THREE.SphereGeometry(0.25,14,10,0,Math.PI*2,0,Math.PI*0.55),M("#eeeeea"));hr.position.set(0,1.36,-0.08);hr.rotation.x=-0.3;el.add(hr);
+  const arm=new THREE.Mesh(new THREE.BoxGeometry(0.62,0.1,0.1),M(top));arm.position.set(0,0.75,0.12);el.add(arm);
+  const pu=person({pants:pick(["#3a3f4a","#5a4a3a","#4a5a7a"])});pu.g.position.z=-0.9;g.add(pu.g);pu.armL.rotation.x=-1.1;pu.armR.rotation.x=-1.1;
+  g.traverse(o=>{if(o.isMesh)o.castShadow=true;});
+  return {g,legL:pu.legL,legR:pu.legR,armL:null,armR:null};
+}
+function route(pts){return new THREE.CatmullRomCurve3(pts.map(([x,z])=>new THREE.Vector3(x,0.05,z)),true,"centripetal");}
+function addAgent(fig,pts,speed,{offset=Math.random(),stride=7,reverse=false,run=false}={}){scene.add(fig.g);const c=route(reverse?pts.slice().reverse():pts);AGENTS.push({fig,curve:c,len:c.getLength(),speed,u:offset,stride,run,ph:Math.random()*6});}
+// 步道網：中庭廣場、園區前緣、上下排之間的弧形主通道、後緣、兩側與各區之間的小徑、花園林間步道
+const arcPts=(R,x0,x1,n=9)=>Array.from({length:n},(_,k)=>{const x=x0+(x1-x0)*k/(n-1);return [x,arcZ(x,R)];});
+const sideTop=(sg)=>[[sg*16.8,arcZ(16.8,R_TOP)-0.5],[sg*20.2,arcZ(20.2,R_MID)]];
+const sideBot=(sg)=>[[sg*20.4,arcZ(20.4,R_MID)],[sg*22.4,arcZ(22.4,R_BOT)]];
+const divTop=k=>[[TOPB[k][0],arcZ(TOPB[k][0],R_TOP)],[TOPB[k][1],arcZ(TOPB[k][1],R_MID)]];
+const divBot=k=>[[BOTB[k][0],arcZ(BOTB[k][0],R_MID)],[BOTB[k][1],arcZ(BOTB[k][1],R_BOT)]];
+const FRONT=arcPts(R_TOP-1.7,-15,15),MID=arcPts(R_MID,-20,20,11),BACK=arcPts(R_BOT+1.8,-22,22,11);
+const LOOPS={
+  plaza:[[-7,-3],[7,-3],[8.5,-13],[0,-19],[-8.5,-13]],
+  plaza2:[[-4,-6],[5,-8],[4,-15],[-5,-14]],
+  frontRow:[...FRONT,sideTop(1)[1],...MID.slice().reverse(),sideTop(-1)[1]],
+  backRow:[...MID,sideBot(1)[1],...BACK.slice().reverse(),sideBot(-1)[0]],
+  big:[[0,-8],[9,-14],...FRONT.slice(5),sideTop(1)[1],sideBot(1)[1],...BACK.slice().reverse(),sideBot(-1)[1],sideTop(-1)[1],...FRONT.slice(0,4),[-9,-14]],
+  aroundB:[divTop(1)[0],...FRONT.slice(3,6),divTop(2)[0],divTop(2)[1],...MID.slice(4,7).reverse(),divTop(1)[1]],
+  aroundF:[divBot(2)[0],...MID.slice(5,6),divBot(3)[0],divBot(3)[1],...BACK.slice(5,6),divBot(2)[1]],
+  aroundE:[divBot(1)[0],...MID.slice(4,5),divBot(2)[0],divBot(2)[1],...BACK.slice(4,5),divBot(1)[1]],
+  aroundG:[divBot(3)[0],...MID.slice(6,7),divBot(4)[0],divBot(4)[1],...BACK.slice(6,7),divBot(3)[1]],
+  forest:[[0,-71],[-6,-78],[-4,-88],[6,-96],[18,-100],[30,-94],[20,-84],[8,-78]]
+};
+// 5 組家屬推輪椅
+[["plaza",0.0],["frontRow",0.2],["big",0.45],["backRow",0.6],["plaza",0.55]].forEach(([l,o],i)=>addAgent(wheelchair(),LOOPS[l],0.5+i*0.03,{offset:o,stride:5,reverse:i%2===1}));
+// 8 位自由散步（含一位醫師、兩位長輩）
+[["frontRow",{coat:true,shirt:"#ffffff",pants:"#6c7a89"},1.1,true],["backRow",{},1.0,false],["aroundB",{},0.9,false],["aroundF",{elder:true,h:0.95},0.7,false],
+ ["big",{},1.05,true],["forest",{},0.95,false],["aroundE",{elder:true,h:0.95},0.65,true],["plaza2",{},0.85,false],["aroundG",{},0.9,true]].slice(0,8)
+ .forEach(([l,o,sp,rev],i)=>addAgent(person(o),LOOPS[l],sp,{offset:i*0.13,reverse:rev}));
+// 3 個奔跑的小孩
+[["plaza",0.3],["frontRow",0.7],["big",0.1]].forEach(([l,o],i)=>addAgent(person({h:0.58,pants:pick(["#f2a07b","#5a9bc4","#e0786a"])}),LOOPS[l],2.3+i*0.2,{offset:o,stride:13,run:true,reverse:i===1}));
+const clock=new THREE.Clock();
+function updateAgents(){const dt=Math.min(0.05,clock.getDelta());const T=clock.elapsedTime;
+  AGENTS.forEach(a=>{a.u=(a.u+a.speed*dt/a.len)%1;const p=a.curve.getPointAt(a.u),tg=a.curve.getTangentAt(a.u);
+    const bob=a.run?Math.abs(Math.sin(T*a.stride+a.ph))*0.12:0;
+    a.fig.g.position.set(p.x,0.05+bob,p.z);a.fig.g.rotation.y=Math.atan2(tg.x,tg.z);
+    const amp=a.run?0.9:0.55;const sw=Math.sin(T*a.stride+a.ph)*amp;a.fig.legL.rotation.x=sw;a.fig.legR.rotation.x=-sw;if(a.fig.armL){a.fig.armL.rotation.x=-sw*0.9;a.fig.armR.rotation.x=sw*0.9;}});}
+
+/* ===== 標籤與互動 ===== */
+const tagsEl=document.getElementById("tags");
+const TAGS=ISLANDS.map(is=>{const b=document.createElement("button");b.className="tag";b.innerHTML=`<i style="background:${is.c}"></i>${is.n}`;b.onclick=()=>openIsland(is);tagsEl.appendChild(b);return {is,el:b,v:new THREE.Vector3(is.p[0],3.2,is.p[2])};});
+/* ===== 藥草名牌：走近才出現，點名字看照片與敘述 ===== */
+const HERBS=[
+ ["A",0.5,0.42,"薄荷","img/zoneA2.jpg","唇形科・Mentha canadensis",["性味：辛，涼","功效：疏散風熱、清利頭目、利咽透疹、疏肝行氣","用法：風熱感冒、頭痛目赤、咽痛；入煎劑宜後下","注意：體虛多汗者慎用"]],
+ ["A",0.86,0.12,"甜菊","img/zoneA2.jpg","菊科・Stevia rebaudiana",["特色：葉含甜菊糖苷，甜度約為蔗糖的兩、三百倍，幾乎不含熱量","用法：作為天然代糖，泡茶或入菜調味；民間用於生津止渴","注意：屬甜味劑用途，非傳統中藥典籍藥材"]],
+ ["A",0.63,0.76,"蝶豆","img/a_diedou.jpg","豆科・Clitoria ternatea（官方名錄；別名藍花豆、蝴蝶花豆）",["特色：多年生纏繞藤本，羽狀複葉、小葉 5–7 片、圓卵形；花單生，深藍色蝶形，旗瓣中央有白黃色斑（如照片），也有白花、重瓣品種；莢果扁長","藥用部位：根、種子、花","性味：官方名錄記：辛，溫；有毒（主要指根與種子）","功效：消腫止痛；根可瀉下、催吐","生活：花常泡「蝶豆花茶」，遇酸（檸檬）由藍轉紫，可作天然色素","⚠ 注意：根、種子有毒不可內服；花茶孕婦、經期及凝血功能異常者宜避免或先詢問醫師"]],
+ ["A",0.5,0.8,"咖哩樹","img/a_curry.jpg","芸香科・Murraya koenigii（可因氏月橘）",["特色：常綠小喬木，奇數羽狀複葉、小葉十數對整齊排列，揉碎有濃郁咖哩香氣；與七里香（月橘）同屬","性味：葉辛、微苦，溫","功效：行氣健胃、祛風止痛、消食","用法：南亞料理常用鮮葉入菜；民間用於消化不良、腹脹","辨識：樹下立著大石頭，後方是「藥草園區」路燈牌"]],
+ ["A",0.42,0.93,"香茅草","img/a_xiangmao.jpg","禾本科・Cymbopogon citratus（解說牌 12）",["性味：辛，溫","功效：祛風除濕、消腫止痛、溫中","用法：風寒頭痛、胃寒腹脹、風濕痹痛；煮水內服或外洗","注意：陰虛火旺者慎用"]],
+ ["B",0.035,0.5,"蔥蘭（玉簾）","img/b_conglan.jpg","石蒜科・Zephyranthes candida",["特色：葉細圓柱狀似韭菜，開白色六瓣花","民間：全草用於平肝熄風（小兒驚風等）","⚠ 有毒：全株含石蒜科生物鹼，鱗莖最毒，誤當韭菜食用會嘔吐腹瀉"]],
+ ["C",0.8,0.52,"澳洲茶樹","img/zoneC2.jpg","桃金孃科・Melaleuca alternifolia（互葉白千層）",["特色：樹皮層層剝落，葉細如針，揉之有藥味","用途：茶樹精油外用抗菌、抗黴菌，用於痤瘡、足癬","⚠ 注意：精油不可內服，誤服有毒；避免兒童與寵物接觸"]],
+ ["C",0.42,0.55,"薏苡","img/c_yiyi.jpg","禾本科・Coix lacryma-jobi L.（名牌；別名苡米）",["特色：一年生高大禾草，高可過人；葉寬線形、中脈白色明顯，莖節粗、基部葉鞘乾枯呈褐黃","名牌：果仁味甘淡、性涼；健脾補肺、清熱利濕；根有鎮痛、鎮靜、解熱作用","藥用：種仁即「薏苡仁」，用於水腫、腳氣、小便不利、濕痺拘攣、脾虛泄瀉、肺癰、腸癰","用法：常用 9–30 公克；健脾宜炒用，清熱利濕宜生用；亦可煮粥食療","⚠ 注意：孕婦慎用；野生「川穀」的珠狀總苞堅硬不可食，勿與食用薏仁混淆"]],
+ ["C",0.25,0.22,"吊蘭","img/c_diaolan2.jpg","天門冬科・Chlorophytum comosum",["性味：甘、微苦，平","功效：清熱潤肺、化痰止咳、散瘀消腫","用法：民間用於咳嗽、跌打腫痛；常見室內觀葉植物"]],
+ ["C",0.36,0.2,"斑葉左手香？","img/c_diaolan2.jpg","唇形科・Coleus amboinicus 斑葉品種（待確認）",["外觀：葉肥厚有絨毛、邊緣圓齒，葉緣帶乳白色斑，位於吊蘭右前方","若確認為斑葉左手香：功效與左手香相同，清熱解毒、消腫止痛，以外用為主","待拍名牌確認"]],
+ ["C",0.15,0.3,"左手香","img/c_zuoshouxiang.jpg","唇形科・Coleus amboinicus",["性味：辛，涼（文獻記載不一）","功效：清熱解毒、消腫止痛","用法：鮮葉搗汁含漱咽喉腫痛；外敷蚊蟲咬傷、癰瘡","注意：以外用為主，不宜大量內服"]],
+ ["D",0.33,0.3,"台灣木賊","img/d_muzei.jpg","木賊科・Equisetum（節節草類）",["特色：莖中空分節、幾乎無葉，表面含矽質摸起來粗糙","性味：甘、微苦，平","功效：疏風散熱、明目退翳、清熱利尿","用法：目赤翳障、尿路感染"]],
+ ["D",0.4,0.82,"春不老","img/d_chunbulao.jpg","紫金牛科・Ardisia squamulosa（解說牌 C005）",["特色：常綠小喬木，葉厚有光澤，新芽帶紅；果實熟時紫黑可食","藥用：民間記載較少，詳細功效依解說牌 QR code 補充"]],
+ ["D",0.45,0.55,"小駁骨丹","img/d_xiaobogudan.jpg","爵床科・Gendarussa vulgaris",["性味：辛、苦，平","功效：續筋接骨、祛瘀生新、消腫止痛","用法：跌打骨折、風濕痹痛，多鮮品搗敷","注意：孕婦慎用"]],
+ ["D",0.68,0.5,"五葉木通","img/d_mutong.jpg","木通科・Akebia quinata",["性味：藤莖（木通）苦，寒","功效：利尿通淋、清心除煩、通經下乳","⚠ 同名異物：「關木通」為馬兜鈴科，含馬兜鈴酸傷腎，已禁用","注意：孕婦慎用"]],
+ ["D",0.16,0.2,"貓鬚草（化石草）","img/d_maoxucao.jpg","唇形科・Orthosiphon aristatus",["性味：甘、淡、微苦，涼","功效：清熱利濕、通淋排石","用法：泌尿道結石、腎炎水腫","注意：含鉀高，腎功能不全者慎用"]],
+ ["D",0.3,0.55,"益智","img/d_yizhiren.jpg","薑科・Alpinia oxyphylla（解說牌 E005）",["性味：果實（益智仁）辛，溫","功效：溫脾止瀉攝唾、暖腎固精縮尿","用法：縮泉丸主藥，用於遺尿、頻尿、多涎","注意：陰虛火旺者忌用"]],
+ ["E",0.5,0.76,"南五味（紅骨蛇）","img/e_nanwuwei.jpg","五味子科・Kadsura japonica（日本南五味子）",["特色：常綠木質藤本，莖紅褐色（故稱紅骨蛇），葉互生、長橢圓、厚而有光澤；秋冬結紅色球狀聚合果","性味：根、藤莖辛、苦，溫","功效：行氣止痛、活血散瘀、祛風除濕","用法：胃痛腹脹、風濕痹痛、跌打損傷","辨識：藥典的「南五味子」是華中五味子的果實，與此同科不同種，可作同名對照教學"]],
+ ["E",0.86,0.56,"大葉千斤拔","img/e_qianjinba.jpg","豆科・Flemingia macrophylla",["特色：直立灌木，三出複葉、小葉大而長橢圓，葉脈明顯；葉腋長出密集的總狀花序，結成一串串小莢果","性味：根甘、微澀，平","功效：祛風除濕、強筋壯骨、活血解毒","用法：風濕痹痛、腰肌勞損、跌打損傷；台灣民間常說的「一條根」之一","注意：市售「一條根」來源不只一種，購買時須辨明品種"]],
+ ["E",0.78,0.46,"金銀花","img/e_jinyinhua.jpg","忍冬科・Lonicera japonica",["性味：甘，寒","功效：清熱解毒、疏散風熱","用法：風熱感冒、癰腫疔瘡；銀翹散主藥","注意：脾胃虛寒者慎用"]],
+ ["E",0.36,0.52,"含笑","img/e_hanxiao.jpg","木蘭科・Michelia figo",["特色：常綠小喬木，花有濃郁香蕉般香氣","用途：以觀賞為主，民間偶以花泡茶；藥用記載少"]],
+ ["E",0.2,0.3,"黑面馬（烏面馬）","img/e_heimianma.jpg","白花丹科・Plumbago zeylanica（白花丹，依外觀推定）",["性味：辛、苦，溫；有毒","功效：祛風除濕、行氣活血、解毒消腫","用法：多外用於跌打、瘡癬","⚠ 注意：汁液刺激皮膚起泡；孕婦禁用；勿內服"]],
+ ["E",0.64,0.26,"山柰","img/e_shannai.jpg","薑科・Kaempferia galanga（名牌寫山奈）",["性味：辛，溫","功效：溫中化濕、行氣止痛、消食","用法：胃寒脘腹冷痛、食積；也是滷包常用香料","注意：陰虛血虧、胃有鬱火者忌用"]],
+ ["E",0.12,0.12,"馬蘭","img/e_malan.jpg","菊科・Aster indicus",["性味：辛，涼","功效：涼血止血、清熱利濕、解毒消腫","用法：鼻出血、咽喉腫痛、黃疸；嫩葉可當野菜"]],
+ ["E",0.55,0.36,"⚠ 名牌：紫花地丁","img/e_tongbancao.jpg","植株疑為同瓣草（長星花）Hippobroma longiflora",["⚠ 名牌與植株不符：紫花地丁是堇菜科、開紫花；此株葉細長鋸齒、開白色長管星形花","⚠ 同瓣草全株有毒，乳汁刺激眼睛與皮膚，切勿內服","待現場確認後更正名牌"]],
+ ["F",0.6,0.4,"南嶺蕘花","img/f_raohua.jpg","瑞香科・Wikstroemia indica（正式解說牌；別名了哥王、九信藥）",["特色：小灌木，枝條細長、紅褐色，葉對生、倒卵形、灰綠色；開黃綠色小花，果實熟時紅色","性味：苦，寒；有毒","功效：清熱、利尿、解毒、殺蟲、破積","用法：民間多外用於癰瘡腫毒、跌打","⚠ 注意：全株有毒，內服須經炮製並嚴格控制劑量；孕婦禁用"]],
+ ["F",0.28,0.36,"枸骨","img/f_gougu.jpg","冬青科・Ilex cornuta（貓兒刺、鳥不宿）",["特色：常綠灌木，葉片厚革質、深綠有光澤，邊緣有 3～5 枚硬刺，像小星星；冬季結紅色果實","性味：葉（枸骨葉）苦，涼","功效：清虛熱、益肝腎、祛風濕","用法：陰虛勞熱、咳嗽咯血、腰膝痠軟、風濕痹痛","注意：葉刺堅硬，觀察時小心扎手；脾胃虛寒者慎用"]],
+ ["F",0.5,0.7,"過山香","img/f_guoshanxiang.jpg","芸香科・Clausena excavata",["性味：辛、微苦，溫","功效：疏風解表、行氣止痛、活血散瘀","用法：感冒、風濕痛、跌打；煎水外洗疥瘡","辨識：揉葉有特殊香氣"]],
+ ["F",0.72,0.62,"月桃","img/f_yuetao.jpg","薑科・Alpinia speciosa（正式解說牌）",["性味：辛，溫","功效：種子燥濕祛寒、健脾暖胃、行氣止嘔","生活：葉片包粽子；假莖纖維可編織"]],
+ ["F",0.32,0.55,"茵陳蒿","img/f_yinchen.jpg","菊科・Artemisia capillaris（正式解說牌）",["性味：苦、辛，微寒","功效：清利濕熱、利膽退黃","用法：濕熱黃疸；茵陳蒿湯主藥","注意：血虛萎黃者慎用"]],
+ ["F",0.5,0.55,"蒿類（黃花蒿？）","img/f_yinchen.jpg","菊科・待確認",["外觀：葉片細裂成羽狀，比茵陳蒿寬","若為黃花蒿（青蒿）：苦辛寒，清虛熱、除骨蒸、截瘧","待拍名牌確認"]],
+ ["F",0.42,0.2,"仙鶴草（龍芽草）","img/f_xianhecao.jpg","薔薇科・Agrimonia pilosa（手寫名牌：龍芽草）",["特色：多年生草本，奇數羽狀複葉，大小葉片相間排列，小葉邊緣粗鋸齒、有毛；夏秋抽細長總狀花序開小黃花，果實有鉤刺易沾衣","藥用部位：地上部分（仙鶴草）；冬芽（鶴草芽）","性味：苦、澀，平","功效：收斂止血、截瘧、止痢、解毒、補虛","用法：各種出血（咯血、吐血、崩漏）；脫力勞傷可配紅棗煎服，民間稱「脫力草」；鶴草芽可驅絛蟲","注意：止血力強，外感初起、瀉痢初起不宜單用"]],
+ ["F",0.28,0.74,"萬點金（燈稱花）","img/f_wandianjin.jpg","冬青科・Ilex asprella（梅葉冬青、崗梅；手寫名牌）",["特色：落葉灌木，高 1–3 公尺；枝細長、有白色皮孔，葉小、卵形、邊緣細鋸齒，散生於短枝上；春季開白色小花，果熟時黑色——枝上皮孔與果實點點分布，民間稱「萬點金」","藥用部位：根（崗梅根）、葉","性味：苦、甘，寒","功效：清熱解毒、生津止渴、散瘀止痛","用法：感冒發熱、咽喉腫痛、扁桃腺炎；臺灣青草茶常用原料之一","⚠ 辨識：照片前方那株披針形葉、葉腋開白色小花的是草本，不是萬點金；萬點金應是木質細枝、小卵形葉的灌木（照片左側那幾枝細木枝較像），待現場確認"]],
+ ["F",0.1,0.55,"鯽魚膽","img/f_jiyudan.jpg","菊科・Pluchea indica（闊苞菊；正式解說牌 C017，別名欒樨）",["特色：多分枝常綠灌木，可高 2 公尺以上；葉互生、倒卵形、灰綠色、邊緣疏鋸齒，揉之有香氣；枝端繖房狀頭花淡紫粉紅，花後轉褐色、帶白色冠毛（如照片）；原生於海岸紅樹林外緣","藥用部位：根、葉","性味：甘、微苦，溫（官方名錄：甘，溫）","功效：暖胃、軟堅、祛風濕；民間葉搗敷跌打、癰腫；根煎服治風濕痛","生活：臺灣民間常用青草藥之一","注意：名稱雖叫鯽魚膽，與魚膽無關（魚膽有毒不可服）"]],
+ ["F",0.25,0.1,"麥門冬","img/f_maimendong.jpg","官方名錄 D016 記為 Liriope spicata（土麥冬）",["性味：塊根甘、微苦，微寒","功效：養陰生津、潤肺清心","用法：麥門冬湯、生脈散","辨識：官方名錄所種為山麥冬屬（土麥冬），與藥典麥冬 Ophiopogon japonicus 同科不同屬，可作教學對照","注意：脾胃虛寒泄瀉者忌用"]],
+ ["G",0.67,0.27,"麥門冬","img/g_maimendong.jpg","百合科（天門冬科）・山麥冬屬 Liriope（手寫名牌；葉較寬，推測同官方 D016 土麥冬）",["特色：常綠叢生草本，葉寬線形、深綠有光澤，叢生如韭；老葉葉尖轉黃；地下有紡錘形小塊根","性味：塊根甘、微苦，微寒","功效：養陰生津、潤肺清心","用法：麥門冬湯、生脈散、沙參麥冬湯","辨識：此叢葉寬約 1 公分，較像山麥冬屬；藥典麥冬 Ophiopogon japonicus 葉較細窄，花梗彎垂、花下垂，可在開花時對照","注意：脾胃虛寒泄瀉、風寒咳嗽者忌用"]],
+ ["G",0.76,0.46,"金針（萱草）","img/g_jinzhen.jpg","阿福花科（原百合科）・Hemerocallis fulva（手寫名牌）",["特色：多年生草本，葉基生、寬帶狀、拱垂成叢；夏季抽高花葶開橘黃色漏斗形花；照片中央那枝枯褐色直立細桿是開過花的花葶","藥用部位：花蕾（金針菜／黃花菜）、根（萱草根）","性味：花甘，涼；根甘，涼，有小毒","功效：花清熱利濕、寬胸解鬱、涼血；根利水消腫、涼血止血","典故：古稱「忘憂草」，又為中國母親花（萱堂）","⚠ 注意：鮮花含秋水仙鹼類成分，須蒸煮或乾製後再吃；萱草根有毒，不可大量或久服"]],
+ ["G",0.38,0.24,"艾草","img/g_aicao.jpg","菊科・Artemisia（艾屬；手寫名牌，台灣民間常種為五月艾 A. indica 或艾 A. argyi）",["特色：多年生草本，葉羽狀深裂、裂片披針形，葉背密生灰白絨毛，揉之有濃烈艾香","藥用部位：葉（艾葉）","性味：辛、苦，溫；有小毒","功效：溫經止血、散寒止痛；外用祛濕止癢","用法：艾附暖宮丸、膠艾湯；曬乾搗絨製成艾絨，用於艾灸；端午懸艾避穢","⚠ 注意：陰虛血熱者慎用；不宜大量或長期內服，過量可致肝損傷","辨識：照片中周圍羽狀小葉、對生細密的是含羞草類／合萌類雜草，不是艾"]],
+ ["G",0.84,0.76,"⚠ 名牌：雷公根（蝴蝶草）","img/g_yexiazhu.jpg","植株疑為葉下珠屬 Phyllanthus（葉下珠／珍珠草類）",["⚠ 名牌與植株可能不符：「雷公根」在臺灣通常指積雪草（繖形科，圓腎形葉、匍匐地面）；照片手托的這株則是直立細莖、小枝如羽狀複葉，紅褐色小圓果成排掛在小枝下方——是葉下珠屬的典型特徵","若為葉下珠（Phyllanthus urinaria）：性味微苦、甘，涼；清熱利濕、明目、消積；民間用於腸炎腹瀉、黃疸、小便不利、小兒疳積","若名牌所指是旁邊地面的積雪草（雷公根）：苦、辛，寒；清熱利濕、解毒消腫","注意：葉下珠性涼，脾胃虛寒者慎用","待現場確認：名牌是否標錯，或名牌下方另有積雪草"]],
+ ["G",0.22,0.8,"月桃","img/g_yuetao.jpg","薑科・Alpinia speciosa K. Schum.（正式解說牌；別名草蔻、玉桃、良薑）",["特色：多年生大型草本，假莖叢生，葉兩列互生、長披針形、具平行脈；部分老葉有褐色病斑（葉斑病），屬常見現象","名牌：味辛性溫；種子芳香健胃","性味：辛、澀，溫","功效：種子燥濕祛寒、溫中止嘔、行氣健脾；根莖可治胃痛","生活：葉片包粽子、蒸粿墊葉；假莖纖維可編繩、編蓆；月桃精油驅蚊","辨識：腳下那片披針形、對生、開小黃花的是地被植物（菊科），不是月桃幼株"]],
+ ["G",0.92,0.88,"土芭樂","img/g_guava.jpg","桃金孃科・Psidium guajava（番石榴原生種，官方名錄）",["特色：常綠小喬木，樹皮光滑、紅褐色，片狀剝落後呈斑駁；葉對生、橢圓形、羽狀側脈明顯下凹；這棵主幹斜生、中段著生一大叢山蘇，秋冬部分葉片轉黃橙","藥用部位：葉、未成熟果、樹皮","性味：葉甘、澀，平（一說微溫）","功效：燥濕健脾、收斂止瀉、止血；民間以嫩葉或芭樂心煎水用於腹瀉、腸炎","現代研究：芭樂葉茶常被研究於血糖調節，但不能取代降血糖藥","注意：收斂性強，大便秘結者不宜；糖尿病患者用芭樂葉茶前宜與醫師討論，避免與藥物疊加造成低血糖"]],
+ ["G",0.52,0.4,"紫蘇","img/g_zisu.jpg","唇形科・Perilla frutescens（官方名錄 F013）",["特色：一年生草本，莖四方形、紫褐色；葉對生、寬卵形、邊緣粗鋸齒，兩面紫色或上綠下紫，揉之有特殊香氣；秋季枝端抽總狀花穗，開淡紫色小唇形花（如照片）","藥用部位：葉（紫蘇葉）、莖（紫蘇梗）、果實（紫蘇子）","性味：辛，溫","功效：葉解表散寒、行氣和胃、解魚蟹毒；梗理氣寬中、安胎；子降氣化痰、止咳平喘、潤腸通便","用法：香蘇散、杏蘇散、蘇子降氣湯、半夏厚朴湯；生活上可煮紫蘇梅、配生魚片","注意：葉、梗不宜久煎；氣虛、表虛自汗者慎用"]],
+ ["G",0.45,0.72,"何首烏","img/g_heshouwu.jpg","蓼科・Polygonum multiflorum",["生首烏：解毒、消癰、潤腸通便","製首烏：補肝腎、益精血、烏鬚髮","⚠ 注意：有肝損傷報告，長期或大量服用須監測肝功能","辨識：莖節有膜質托葉鞘"]],
+ ["H",0.62,0.84,"射干","img/h_shegan.jpg","鳶尾科・Belamcanda chinensis（Iris domestica；手寫名牌，官方名錄 D011）",["特色：多年生草本，劍形葉在莖基部左右交互排列成扇面；夏秋抽細長花莖，開橙黃色帶紅斑的六瓣花；蒴果倒卵形、綠色，成熟裂開露出黑亮種子（如照片左上方）","藥用部位：根莖","性味：苦，寒；有毒","功效：清熱解毒、消痰、利咽","用法：咽喉腫痛、痰涎壅盛、咳嗽氣喘；名方射干麻黃湯、射干兜鈴湯","⚠ 注意：孕婦禁用或慎用；脾虛便溏者不宜；有小毒，劑量宜控制"]],
+ ["H",0.42,0.5,"蘇鐵","img/zoneH2.jpg","蘇鐵科・Cycas revoluta",["性味：甘、淡，平；有小毒","功效：葉收斂止血、解毒止痛","⚠ 注意：種子含蘇鐵苷有毒，不可生食"]],
+ ["H",0.86,0.12,"虎尾蘭","img/h_huweilan.jpg","天門冬科・Sansevieria trifasciata（金邊品種）",["特色：葉片直立、厚而硬，有深淺綠色橫紋，葉緣金黃色","性味：酸，涼","功效：民間用於清熱解毒、活血消腫","用法：鮮葉搗敷跌打腫痛、瘡瘍、蛇蟲咬傷","注意：以外用為主；含皂苷，寵物誤食會嘔吐"]],
+ ["H",0.12,0.1,"虎耳草","img/h_huercao.jpg","虎耳草科・Saxifraga stolonifera",["特色：貼地生長的小圓腎形葉，邊緣淺齒、葉面有灰白脈紋，葉背常帶紫紅；以走莖繁殖","性味：辛、苦，寒；有小毒","功效：清熱解毒、涼血止血","用法：民間鮮葉搗汁滴耳治中耳炎，外敷濕疹、疔瘡","注意：照片中名牌附近還混生積雪草（較大的亮綠圓葉），兩者可對照辨識"]],
+ ["H",0.25,0.18,"鳳尾草","img/h_fengweicao.jpg","鳳尾蕨科・Pteris（葉帶白斑，似白斑鳳尾蕨）",["性味：淡、微苦，寒","功效：清熱利濕、涼血止血、消腫解毒","用法：痢疾、泌尿道感染、各種出血","注意：虛寒者忌用"]]
+];
+const OFFICIAL_URL="https://taichung.tzuchi.com.tw/index.php/zhong-cao-yao-yuan";
+const OFF={"薄荷": "F003", "甜菊": "F007", "香茅草": "F012", "左手香": "F001（到手香）", "益智": "E005", "金銀花": "D004（忍冬）", "麥門冬": "D016", "射干": "D011", "月桃": "官方名錄", "貓鬚草（化石草）": "官方名錄（化石草）"};
+/* ===== 台中慈濟中醫部官方中草藥園名錄（47 種；圖文來源：台中慈濟醫院中醫部網站）===== */
+const OFFLIST=[
+["A003","長穗木","Stachytarpheta jamaicensis","馬鞭草科","玉龍鞭、假馬鞭","甘、微苦，寒","清熱利濕、解毒消腫"],
+["A010","蘆薈","Aloe vera","百合科","奴會、象膽","苦，寒","清熱、通便、解毒"],
+["B004","朱蕉","Cordyline fruticosa","百合科","紅竹、鐵樹","甘、淡，涼","清熱、止血、散瘀"],
+["C007","抹草","Desmodium caudatum","豆科","小槐花、山螞蝗","微苦、辛，平","清熱解毒、祛風利濕"],
+["C012","金蓮花","Tropaeolum majus","金蓮花科","旱金蓮、旱蓮花","辛，涼","清熱解毒"],
+["C014","蛇莓","Duchesnea indica","薔薇科","蛇波、龍吐珠","甘、苦，寒；有毒","清熱、涼血、消腫"],
+["C015","虱母子","Urena lobata","錦葵科","三腳破、野棉花","淡，平","消炎、解毒"],
+["C017","鯽魚膽","Pluchea indica","菊科","欒樨、闊苞菊","甘，溫","暖胃、軟堅、祛風濕"],
+["D004","忍冬","Lonicera japonica","忍冬科","金銀花、雙花","甘，寒","疏散風熱、清熱解毒"],
+["D008","洛神葵","Hibiscus sabdariffa","錦葵科","洛神花","花酸，涼","花清熱、降壓、止咳"],
+["D011","射干","Belamcanda chinensis","鳶尾科（官方誤植鳩尾科）","扁竹根、開喉箭","根苦，寒；有毒","利咽、消痰、消腫止痛"],
+["D012","蚌蘭","Rhoeo spathacea","鴨跖草科","紫萬年青、紅蚌蘭","甘、淡，涼","清熱化痰、涼血止血"],
+["D016","麥門冬","Liriope spicata","百合科","土麥冬、麥冬","塊根甘、微苦，微寒","清心除煩、生津、潤肺止咳"],
+["D018","小葉桑","Morus australis","桑科","雞桑、蠶仔樹","葉苦甘寒；根皮甘寒","利尿、退熱、化痰；果實滋補"],
+["D020","長柄菊","Tridax procumbens","菊科","燈籠草、肺炎草","苦，涼","清熱、消炎、利尿"],
+["E001","枸杞","Lycium chinense","茄科","枸杞子、地仙","果甘平；根皮甘寒","莖葉退熱；果滋補明目；根皮清熱"],
+["E002","車前草","Plantago asiatica","車前科","五斤草、錢貫草","甘，寒","清熱利尿、止瀉；種子止咳明目"],
+["E005","益智仁","Alpinia oxyphylla","薑科","益智子、益智","辛，溫","溫脾暖胃、溫腎縮尿"],
+["E006","墨旱蓮","Eclipta prostrata","菊科","鱧腸、白花蟛蜞菊","甘、酸，涼","涼血止血、清熱、補肝腎"],
+["E008","小本山葡萄","Vitis adstricta","葡萄科","細葉山葡萄","甘，平","根清熱利濕、解毒、活血"],
+["F001","到手香","Plectranthus socotranum","唇形科","左手香、印度薄荷","辛，涼","消暑、助消化、解毒、止癢"],
+["F003","薄荷","Mentha haplocalyx","唇形科","升陽菜、夜息花","辛，涼","疏散風熱、發汗、清利頭目"],
+["F006","芸香","Ruta graveolens","芸香科","臭草、臭芙蓉","辛、微苦，涼","祛風清熱、活血消腫"],
+["F007","甜菊","Stevia rebaudiana","菊科","甜葉菊、糖菊","甘，涼","作甜味劑；民間用於降血糖、降壓"],
+["F008","檸檬桉","Eucalyptus citriodora","桃金孃科","香桉樹","葉苦溫；果辛苦溫","葉消腫；果祛風散寒"],
+["F012","香茅草","Cymbopogon citratus","禾本科","香草、檸檬草","辛，溫","祛風除濕、消腫止痛"],
+["F013","紫蘇","Perilla frutescens","唇形科","紅紫蘇、荏","辛，溫","解表散寒、行氣"],
+["F014","九層塔","Ocimum basilicum","唇形科","羅勒、千層塔","辛，溫","行氣化濕、活血；婦科常用"],
+["F017","七層塔","Ocimum gratissimum","唇形科","印度羅勒、丁香羅勒","辛，溫","祛風、行氣、消食、止痛"],
+["G001","紅葉痲瘋樹","Jatropha gossypifolia","大戟科","紅葉桐子樹","苦、辛，涼；有毒","止血、止痛、消腫"],
+["G003","龍葵","Solanum nigrum","茄科","烏甜菜、苦葵","苦、微甘，寒","清熱利尿、解毒消腫"],
+["G005","半枝蓮","Scutellaria barbata","唇形科","並頭草、向天盞","微苦，涼","清熱解毒、活血止痛"],
+["H002","馬利筋","Asclepias curassavica","夾竹桃科","尖尾鳳、芳草花","苦，寒","消炎、止血、化痰；根可催吐瀉"],
+["I002","美人蕉","Canna indica","美人蕉科","蓮蕉、觀音蕉","苦，寒","止血、調經、利尿、利膽"],
+["I003","龍船花","Clerodendrum paniculatum","馬鞭草科","白龍船","苦，寒","調經止帶；葉外敷腫毒"],
+["I006","蘄艾","Crossostephium chinense","菊科","芙蓉菊、千年艾","辛、苦，微溫","根祛風濕；葉散寒消腫"],
+["","七里香","Murraya paniculata","芸香科","月橘、九里香","辛、苦，微溫","行氣活血、祛風除濕、止痛"],
+["","化石草","Orthosiphon aristatus","唇形科","貓鬚草、腎草","甘、微苦，涼","利尿、清熱利濕、排石"],
+["","毛西番蓮","Passiflora foetida var. hispida","西番蓮科","龍珠果、毛葫蘆","甘、苦，涼","清熱利尿；果潤肺止痛"],
+["","倒地蜈蚣","Torenia concolor var. formosana","玄參科","釘地蜈蚣、過路蜈蚣","苦，涼","消炎、退熱、利濕、止咳"],
+["","土芭樂","Psidium guajava","桃金孃科","番石榴、拔仔","甘、澀，平","收斂止瀉；葉外敷腫毒"],
+["","蝶豆","Clitoria ternatea","豆科","藍花豆、蝴蝶花豆","辛，溫；有毒","消腫止痛；根可瀉下催吐"],
+["","大花咸豐草","Bidens pilosa var. radiata","菊科","咸豐草","—","清熱解毒、活血、祛風"],
+["","白及","Bletilla formosana","蘭科","台灣白及","苦，涼","止血"],
+["","白茅草","Imperata cylindrica var. major","禾本科","茅草、茅仔草","根莖甘寒；花甘溫","根莖清熱利尿、涼血；花止血"],
+["","月桃","Alpinia speciosa","薑科","草蔻、豔山薑","辛，溫","種子芳香健胃、散寒"],
+["","六神草","Acmella oleracea","菊科","金鈕扣、鐵拳頭","苦、辛；果實微毒","花消炎止痛；全草止咳止瀉"]
+];
+const OFFIMG=n=>`img/off/o${String(n).padStart(2,"0")}.jpg`, OFFTH=n=>`img/off/t${String(n).padStart(2,"0")}.jpg`;
+(function(){const re=/img\/[a-h]_[a-z0-9]+\.jpg/g;const all=new Set((JSON.stringify(HERBS)+JSON.stringify(ISLANDS)).match(re)||[]);
+  const sp=new Set(HERBS.filter(h=>/img\/[a-h]_/.test(h[4])).map(h=>h[3].replace(/（.*?）|\?|？/g,"").trim()));
+  document.getElementById("tally").innerHTML=`<div class="st"><b>${all.size}<i>張</i></b><span>本月實拍</span></div><div class="st"><b>${sp.size}<i>種</i></b><span>藥草種類</span></div>`;})();
+const OFFMAP={"薄荷":22,"甜菊":24,"香茅草":26,"左手香":21,"益智":18,"金銀花":9,"麥門冬":13,"射干":11,"月桃":46,"土芭樂":41,"紫蘇":27,"鯽魚膽":8,"蝶豆":42,"貓鬚草（化石草）":38};
+function openOfficial(n){const o=OFFLIST[n-1];const here=HERBS.find(h=>OFFMAP[h[3]]===n);
+  sheetin.innerHTML=`<button class="close" aria-label="關閉">✕</button><h2>${o[1]}</h2><div class="sub">${o[0]?o[0]+"・":""}${o[3]}・<i>${o[2]}</i></div><img src="${OFFIMG(n)}" alt="${o[1]}"><ul class="hlist"><li>別名：${o[4]}</li><li>性味：${o[5]}</li><li>功效：${o[6]}</li></ul><div class="hint">${here?`園區位置：${ZN[here[0]]}區（已標名牌）`:"園區位置：尚未對照，拍名牌後補上"}・圖文來源：<a href="${OFFICIAL_URL}" target="_blank" rel="noopener">台中慈濟醫院中醫部</a></div><button class="back" id="offback">‹ 回官方名錄</button>`;
+  sheet.classList.add("open");sheetin.querySelector(".close").onclick=()=>sheet.classList.remove("open");document.getElementById("offback").onclick=openOffList;}
+function openOffList(){sheetin.innerHTML=`<button class="close" aria-label="關閉">✕</button><h2>官方中草藥名錄</h2><div class="sub">台中慈濟醫院中醫部・共 ${OFFLIST.length} 種・官方編號為舊分區，僅作植物編號；位置以現場為準</div><div class="chips"><span class="chip">綠框：已在園區找到</span><span class="chip q">灰框：尚未找到</span></div>${(()=>{const found=new Set(Object.values(OFFMAP));const card=n=>{const o=OFFLIST[n-1],on=found.has(n);const h=on?HERBS.find(x=>OFFMAP[x[3]]===n):null;return `<button class="offc${on?" on":""}" data-n="${n}"><img src="${OFFTH(n)}" alt="" loading="lazy"><b>${o[1]}</b><span>${on?ZN[h[0]]+"區":(o[0]||"　")}</span></button>`};const all=OFFLIST.map((o,i)=>i+1);const A=all.filter(n=>found.has(n)),B=all.filter(n=>!found.has(n));return `<h3 class="offh">已找到位置（${A.length}）・點一下直接前往</h3><div class="offgrid">${A.map(card).join("")}</div><h3 class="offh">尚未找到（${B.length}）</h3><div class="offgrid">${B.map(card).join("")}</div>`})()}`;
+  sheet.classList.add("open");sheetin.querySelector(".close").onclick=()=>sheet.classList.remove("open");sheetin.querySelectorAll(".offc").forEach(b=>b.onclick=()=>{const n=+b.dataset.n;const hi=HERBS.findIndex(h=>OFFMAP[h[3]]===n);if(hi>=0)goToHerb(hi);else openOfficial(n);});}
+function goToHerb(i){const t=PTAGS[i];if(!t)return;sheet.classList.remove("open");spin=false;document.querySelectorAll("#views button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  const v=t.v;flyTo([v.x+(v.x>0?-2:2),3.2,v.z+6],[v.x,0.8,v.z]);PTAGS.forEach(x=>x.el.classList.remove("hl"));t.el.classList.add("hl");clearTimeout(goToHerb._t);goToHerb._t=setTimeout(()=>t.el.classList.remove("hl"),6000);
+  const ts=document.getElementById("toast");ts.textContent=`已帶你到${ZN[HERBS[i][0]]}區的「${HERBS[i][3]}」，點名字看說明`;ts.hidden=false;clearTimeout(ts._t);ts._t=setTimeout(()=>ts.hidden=true,4000);}
+const PTAGS=HERBS.map(([zn,u,v,name,img,sci,lines])=>{const P=SECT["ABCDEFGH".indexOf(zn)];const [x,z]=frameOf(P)(u,v);
+  const b=document.createElement("button");b.className="tag ptag hide";{const m=name.replace("⚠ 名牌：","⚠").match(/^(.*?)（(.*)）$/);if(m){b.textContent=m[1];const sm=document.createElement("small");sm.textContent=m[2];b.appendChild(sm);}else b.textContent=name.replace("⚠ 名牌：","⚠");}b.setAttribute("aria-label",name);
+  b.onclick=()=>{sheetin.innerHTML=`<button class="close" aria-label="關閉">✕</button><h2>${name}</h2><div class="sub">${ZN[zn]}區・${sci}</div><img src="${img}" alt="${name}">${OFFMAP[name]?`<figure style="margin:10px 0 0"><img src="${OFFIMG(OFFMAP[name])}" alt="${name}官方照片" style="margin-top:0"><figcaption class="sub">中醫部官方照片</figcaption></figure>`:""}<ul class="hlist">${lines.map(l=>`<li>${l}</li>`).join("")}</ul>${OFF[name]?`<div class="hint">台中慈濟中醫部官方中草藥園名錄：編號 ${OFF[name]}・<a href="${OFFICIAL_URL}" target="_blank" rel="noopener">看官方圖文</a></div>`:`<div class="hint"><a href="${OFFICIAL_URL}" target="_blank" rel="noopener">台中慈濟中醫部官方中草藥園頁面</a></div>`}<div class="hint">資料供教學參考，臨床使用請依辨證。</div>`;
+    sheet.classList.add("open");sheetin.querySelector(".close").onclick=()=>sheet.classList.remove("open");};
+  tagsEl.appendChild(b);return {el:b,v:new THREE.Vector3(x,1.9,z)};});
+/* ===== 蛇杖守護者：約 30 公分的無毒大眼小蛇（依參考照片花紋：橄欖灰綠底、背上兩排黑色棋盤斑、兩側淡黃縱紋、白腹側緣黑斑、唇部黑色直紋、大圓眼）===== */
+const SNAKE=(function(){
+  const N=34,SP=0.0092,R0=0.0115,segs=[],grp=new THREE.Group();scene.add(grp);
+  const base=[M("#6c725e"),M("#757b66"),M("#656b57")],dark=M("#1c1d18"),pale=M("#c4c4ac"),belly=M("#d6d9d2");
+  for(let k=0;k<N;k++){const t=k/(N-1);const r=R0*(k<2?0.95:1-Math.pow(t,1.8)*0.8)+0.0012;const g=new THREE.Group();
+    const b=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),base[k%3]);b.scale.set(1,0.78,1.3);b.castShadow=true;g.add(b);
+    const be=new THREE.Mesh(new THREE.SphereGeometry(r*0.92,8,6),belly);be.position.y=-r*0.28;be.scale.set(1.02,0.5,1.25);g.add(be);
+    if(k>2){[-1,1].forEach(sd=>{const st=new THREE.Mesh(new THREE.SphereGeometry(r*0.3,6,4),pale);st.position.set(sd*r*0.72,r*0.32,0);st.scale.set(.8,.5,1.8);g.add(st);
+        if((k+(sd>0?1:0))%2===0){const sp=new THREE.Mesh(new THREE.SphereGeometry(r*0.28,6,4),dark);sp.position.set(sd*r*0.32,r*0.66,0);sp.scale.set(1,.45,1.2);g.add(sp);}
+        if(k>4){const bb=new THREE.Mesh(new THREE.SphereGeometry(r*0.26,6,4),dark);bb.position.set(sd*r*0.8,-r*0.22,(k%2?0.3:-0.3)*r);bb.scale.set(.55,.75,.9);g.add(bb);}});}
+    grp.add(g);segs.push(g);}
+  // 頭：橄欖色、白色唇、唇部黑色直紋、眼後黑紋、大圓眼（金色眼圈＋黑瞳）
+  const head=segs[0],hr=R0*1.0;head.children[0].scale.set(1.15,0.75,1.55);const hy=M("#9c9a56");head.children[0].material=hy;segs[1].children[0].material=hy;segs[2].children[0].material=M("#86875a");
+  const lip=new THREE.Mesh(new THREE.SphereGeometry(hr*1.02,10,8),M("#d8d6b4"));lip.position.set(0,-hr*0.25,hr*0.1);lip.scale.set(1.12,0.45,1.5);head.add(lip);
+  [-1,1].forEach(sd=>{const ring=new THREE.Mesh(new THREE.SphereGeometry(hr*0.44,12,10),M("#c9c49a"));ring.position.set(sd*hr*0.82,hr*0.22,hr*0.55);head.add(ring);
+    const pu=new THREE.Mesh(new THREE.SphereGeometry(hr*0.4,12,10),M("#0b0b0b"));pu.position.set(sd*hr*0.95,hr*0.24,hr*0.6);head.add(pu);
+    const gl=new THREE.Mesh(new THREE.SphereGeometry(hr*0.08,6,4),M("#ffffff"));gl.position.set(sd*hr*1.13,hr*0.36,hr*0.72);head.add(gl);
+    [0.95,0.45,-0.1,-0.65].forEach(zz=>{const bar=new THREE.Mesh(new THREE.BoxGeometry(hr*0.06,hr*0.45,hr*0.1),dark);bar.position.set(sd*hr*1.08,-hr*0.12,hr*zz);head.add(bar);});
+    const post=new THREE.Mesh(new THREE.BoxGeometry(hr*0.07,hr*0.5,hr*0.14),dark);post.position.set(sd*hr*1.0,0,-hr*1.05);post.rotation.x=0.4;head.add(post);});
+  const tongue=new THREE.Group();head.add(tongue);tongue.position.set(0,-hr*0.2,hr*1.6);
+  const tm=M("#c8323a");const t0=new THREE.Mesh(new THREE.BoxGeometry(hr*0.1,hr*0.06,hr*0.9),tm);t0.position.z=hr*0.45;tongue.add(t0);
+  [-1,1].forEach(sd=>{const f=new THREE.Mesh(new THREE.BoxGeometry(hr*0.08,hr*0.06,hr*0.45),tm);f.position.set(sd*hr*0.1,0,hr*1.05);f.rotation.y=sd*0.4;tongue.add(f);});
+  // 巡邏路線：藥園前緣、中間走道、後緣
+  const fz=x=>arcZ(x,R_TOP)-1.2,mz=x=>arcZ(x,R_MID),bz=x=>arcZ(x,R_BOT)+1.2;
+  const P=[[-14,fz(-14)],[0,fz(0)],[14,fz(14)],[19,fz(19)-2],[20,mz(20)],[8,mz(8)],[-8,mz(-8)],[-20.5,mz(-20.5)],[-21.5,bz(-21.5)],[0,bz(0)],[21.5,bz(21.5)],[21,mz(21)-1],[19.8,mz(19.8)+.2],[0,mz(0)+.2],[-19.8,mz(-19.8)+.2],[-18.5,fz(-18)-2]];
+  const path=new THREE.CatmullRomCurve3(P.map(([x,z])=>new THREE.Vector3(x,0,z)),true,"centripetal");const L=path.getLength();
+  const st={mode:"patrol",u:Math.random(),coil:null};
+  const lab=document.createElement("button");lab.className="tag snaketag hide";lab.textContent="🐍 蛇杖守護者";tagsEl.appendChild(lab);
+  lab.onclick=()=>{sheetin.innerHTML=`<button class="close" aria-label="關閉">✕</button><h2>蛇杖守護者</h2><div class="sub">花浪蛇・Amphiesma stolatum（無毒）・身長約 30 公分（配色參考實拍）</div><ul class="hlist"><li>藥園的小巡邏員，沿著步道巡視，守護藥草不被盜採。</li><li>認牠：一雙黑亮的大眼、黃橄欖色的頭與唇上黑色直紋；身體灰橄欖色，背上兩排黑斑、兩側淡色縱紋；灰白色腹部邊緣密布一排黑色斑紋。</li><li>花浪蛇是台灣低海拔常見的無毒小蛇，性情溫和，以青蛙、蝌蚪為食。</li><li>蛇杖是醫學的象徵：希臘醫神阿斯克勒庇俄斯手持一根盤著蛇的手杖，代表療癒與守護。</li><li>在野外遇到蛇，保持距離、慢慢退開，不要捕捉或驚擾。</li></ul>`;
+    sheet.classList.add("open");sheetin.querySelector(".close").onclick=()=>sheet.classList.remove("open");};
+  const _v=new THREE.Vector3(),_p=new THREE.Vector3(),_n=new THREE.Vector3();
+  function update(dt,T){
+    if(st.mode==="patrol"){st.u=(st.u+dt*0.14/L)%1;
+      for(let k=0;k<N;k++){const uk=((st.u-k*SP/L)%1+1)%1;path.getPointAt(uk,_p);path.getTangentAt(uk,_v);
+        _n.set(-_v.z,0,_v.x);const w=Math.sin(T*5-k*0.5)*0.018*Math.min(1,k/5+.25);
+        segs[k].position.set(_p.x+_n.x*w,R0*0.85,_p.z+_n.z*w);segs[k].rotation.set(0,Math.atan2(_v.x,_v.z)+Math.cos(T*5-k*0.5)*0.45,0);}
+    }else{const c=st.coil;const fx=Math.sin(c.face),fzz=Math.cos(c.face),sx=fzz,sz=-fx; // 面向鏡頭；身體往後拉長成 S 形，尾段半盤
+      let px=c.x,pz=c.z,dir=c.face+Math.PI;const pts=[];
+      for(let k=0;k<N;k++){
+        if(k<5){const h=(5-k)/5;pts.push([c.x-fx*SP*k*0.6,c.y+R0+h*0.045+Math.sin(T*1.6)*0.002,c.z-fzz*SP*k*0.6,c.face,-0.12*h]);px=pts[k][0];pz=pts[k][2];continue;}
+        if(k<22){dir=c.face+Math.PI+Math.sin((k-5)*0.38+T*0.6)*0.55;}else{dir+=0.27;}
+        px+=Math.sin(dir)*SP*1.05;pz+=Math.cos(dir)*SP*1.05;pts.push([px,c.y+R0*0.85,pz,dir+Math.PI,0]);}
+      for(let k=0;k<N;k++){const q=pts[k];segs[k].position.set(q[0],q[1],q[2]);segs[k].rotation.set(q[4],q[3],0);}}
+    tongue.visible=(Math.sin(T*6)>0.3);tongue.scale.z=0.6+0.4*Math.abs(Math.sin(T*12));}
+  function coilAt(zoneIdx){const P=SECT[zoneIdx];const U=frameOf(P);const [x,z]=U(R(.3,.7),R(.25,.5));st.mode="coil";st.coil={x,z,y:0.36,a0:R(0,6.28),face:0};return [x,z];}
+  function patrol(){st.mode="patrol";}
+  return {update,coilAt,patrol,head:()=>segs[0].position,lab,state:st};
+})();
+function showSnake(){const zi=Math.floor(Math.random()*8);const [x,z]=SNAKE.coilAt(zi);spin=false;sheet.classList.remove("open");
+  document.querySelectorAll("#views button").forEach(b=>b.setAttribute("aria-pressed","false"));
+  const cx=x+0.25,cz=z+0.5;SNAKE.state.coil.face=Math.atan2(cx-x,cz-z);flyTo([cx,0.75,cz],[x-Math.sin(Math.atan2(cx-x,cz-z))*0.1,0.38,z-Math.cos(Math.atan2(cx-x,cz-z))*0.1]);
+  const ts=document.getElementById("toast");ts.textContent=`蛇杖守護者正盤據在${ZN["ABCDEFGH"[zi]]}區，守護藥草中`;ts.hidden=false;clearTimeout(ts._t);ts._t=setTimeout(()=>ts.hidden=true,4500);
+  clearTimeout(showSnake._t);showSnake._t=setTimeout(()=>SNAKE.patrol(),25000);}
+
+const sheet=document.getElementById("sheet"),sheetin=document.getElementById("sheetin");
+function openIsland(is){
+  sheetin.innerHTML=`<button class="close" aria-label="關閉">✕</button><h2>${is.n}</h2><div class="sub">暫定名稱・${is.pos}</div>
+  ${is.img?`<img src="${is.img}" alt="${is.n}現場照片">`:""}${is.img2?`<img src="${is.img2}" alt="${is.n}近景照片">`:""}${(is.more||[]).map(m=>`<figure style="margin:12px 0 0"><img src="${m.src}" alt="${m.cap}" style="margin-top:0"><figcaption class="sub">${m.cap}</figcaption></figure>`).join("")}
+  <p>${is.d}</p>
+  <div class="sub">照片初步辨認（? 表示待確認）</div>
+  <div class="chips">${is.plants.map(p=>`<span class="chip ${/[?？]|待/.test(p)?"q":""}">${p}</span>`).join("")}</div>
+  <div class="hint">${is.img?"":"這一區還沒有現場照片。"}名稱、範圍、植物都還是暫定的，確認後再補上每種植物的照片與說明。</div>`;
+  sheet.classList.add("open");sheetin.querySelector(".close").onclick=()=>sheet.classList.remove("open");
+  flyTo([is.p[0]+14,18,is.p[2]+20],[is.p[0],0,is.p[2]]);
+}
+function openOverview(){sheetin.innerHTML=`<button class="close" aria-label="關閉">✕</button><h2>${OVERVIEW.n}</h2><img src="${OVERVIEW.img}" alt="廣場全景"><img src="${OVERVIEW.img2}" alt="花圃全景"><img src="${OVERVIEW.img3}" alt="花圃近景"><p>${OVERVIEW.d}</p>`;sheet.classList.add("open");sheetin.querySelector(".close").onclick=()=>sheet.classList.remove("open");}
+
+/* 視角 */
+const VIEWS={bird:[[0,80,-125],[0,0,-25]],gate:[[-8,3,92],[0,12,34]],plaza:[[0,7.5,-8],[0,0.4,-46]],garden:[[0,1.7,-75],[0,2,0]],herb:[[0,1.7,-19],[0,1.2,-50]]};
+let fly=null,spin=true,walkU=0,walkT=0;
+let WALK=null;
+function flyTo(pos,target){fly={t:0,p0:camera.position.clone(),q0:controls.target.clone(),p1:new THREE.Vector3(...pos),q1:new THREE.Vector3(...target)};}
+document.getElementById("views").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const v=b.dataset.v;
+  document.querySelectorAll("#views button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  if(v==="snake"){b.setAttribute("aria-pressed","false");showSnake();return;}
+  if(v==="list"){b.setAttribute("aria-pressed","false");openOffList();return;}
+  if(v==="quiz"){b.setAttribute("aria-pressed","false");QUIZ.open();return;}
+  if(v==="spin"){spin=!spin;walkU=0;walkT=0;if(!spin)b.setAttribute("aria-pressed","false");else{sheet.classList.remove("open");fly=null;}return;}
+  spin=false;controls.autoRotate=false;
+  sheet.classList.remove("open"); // 站在廣場：不開圖卡，直接看藥園
+  const ts=document.getElementById("toast");if(v==="herb"){ts.hidden=false;clearTimeout(ts._t);ts._t=setTimeout(()=>ts.hidden=true,5000);}else ts.hidden=true;
+  if(v==="plaza"&&camera.aspect<0.9){flyTo([0,15,-4],[0,0,-44]);return;} // 手機直拿：退高一點，八區一次入鏡
+  flyTo(...VIEWS[v]);});
+camera.position.set(...VIEWS.plaza[0]);controls.target.set(...VIEWS.plaza[1]);
+/* ===== 認得我嗎：用實拍照片看圖猜藥草（只出名牌確認過的植物）===== */
+const QFOCUS={"img/a_diedou.jpg":[50,47],"img/a_curry.jpg":[50,30],"img/a_xiangmao.jpg":[50,55],"img/b_conglan.jpg":[60,40],"img/c_yiyi.jpg":[50,40],"img/c_diaolan2.jpg":[30,50],"img/c_zuoshouxiang.jpg":[75,55],"img/d_muzei.jpg":[50,40],"img/d_chunbulao.jpg":[50,25],"img/d_xiaobogudan.jpg":[50,35],"img/d_mutong.jpg":[50,30],"img/d_maoxucao.jpg":[50,35],"img/d_yizhiren.jpg":[50,35],"img/e_nanwuwei.jpg":[30,40],"img/e_qianjinba.jpg":[50,40],"img/e_jinyinhua.jpg":[50,40],"img/e_hanxiao.jpg":[40,30],"img/e_heimianma.jpg":[50,35],"img/e_shannai.jpg":[30,60],"img/e_malan.jpg":[40,25],"img/f_raohua.jpg":[60,40],"img/f_gougu.jpg":[60,35],"img/f_guoshanxiang.jpg":[50,30],"img/f_yuetao.jpg":[50,35],"img/f_yinchen.jpg":[30,35],"img/f_xianhecao.jpg":[50,30],"img/f_jiyudan.jpg":[50,35],"img/f_maimendong.jpg":[30,60],"img/g_jinzhen.jpg":[50,35],"img/g_aicao.jpg":[55,60],"img/g_guava.jpg":[55,30],"img/g_zisu.jpg":[55,40],"img/g_heshouwu.jpg":[50,30],"img/h_shegan.jpg":[25,15],"img/h_huweilan.jpg":[40,30],"img/h_huercao.jpg":[75,65],"img/h_fengweicao.jpg":[60,60]}; // 局部特寫的焦點（照片中藥草特徵位置，%）
+const QUIZ=(function(){
+  const el=document.getElementById("quiz"),box=document.getElementById("qbox");
+  const main=n=>n.replace(/（.*?）/g,"").trim();
+  /* 題庫：官方名錄中「已在園區找到位置」的植物，用官方照片出題；揭曉後才公布現場實拍與位置 */
+  const OFFQ={24:"img/quiz/off24.jpg"};const OFFFC={41:[45,40],46:[35,50],42:[60,40],38:[60,50]};
+  const POOL=[];const used=new Set();
+  Object.entries(OFFMAP).forEach(([hname,n])=>{if(used.has(n))return;const i=HERBS.findIndex(h=>h[3]===hname);if(i<0)return;used.add(n);
+    const [zn,u,v,name,img,sci,lines]=HERBS[i];const o=OFFLIST[n-1];const m=main(name).replace(/[?？]/g,""),om=main(o[1]);
+    const alias=o[4]||"";const masks=[m,om,...alias.split(/[、，,]/).filter(x=>x.length>1)];[m,om].forEach(w=>{for(let L=w.length-1;L>=2;L--)for(let a=0;a+L<=w.length;a++)masks.push(w.slice(a,a+L));});
+    const mask=t=>masks.reduce((a,w)=>w?a.split(w).join("○".repeat(w.length)):a,t);
+    const pick=k=>{const L=lines.find(x=>x.startsWith(k));return L?mask(L.replace(/^[^：]*：/,"")):null;};
+    const hints=[];const feat=pick("特色")||pick("外觀");if(feat)hints.push(["長相",feat.split(/[；;]/)[0]]);
+    hints.push(["科別",o[3].replace(/（.*?）/,"")]);
+    const life=pick("生活")||pick("用法");if(life)hints.push(["用途",life.split(/[；;]/)[0]]);
+    if(o[5])hints.push(["性味",o[5]]);if(o[6])hints.push(["功效",o[6]]);
+    hints.push(["名字",`${m.length} 個字`]);
+    const warn=lines.find(x=>/⚠/.test(x));
+    POOL.push({i,n,zn,name:m,offname:om,full:name,img,qimg:OFFQ[n]||OFFIMG(n),fc:OFFFC[n]||[50,50],sci:`${o[3]}・${o[2]}`,alias,hints,warn});});
+  const ALLNAMES=[...new Set(OFFLIST.map(o=>main(o[1])))];
+  let mode="photo",list=[],k=0,shown=0,revealed=false,opts=null,picked=null,showReal=true;
+  const PZ={s:1,cx:.5,cy:.5,user:false};
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  function build(){list=shuffle(POOL.slice());k=0;fresh();}
+  function fresh(){shown=0;revealed=false;showReal=true;opts=null;picked=null;PZ.user=false;autoView();}
+  function autoView(){const q=list[k];if(!q||PZ.user&&!revealed)return;const f=revealed?1:shown/q.hints.length;
+    if(mode==="zoom"&&!revealed){PZ.s=3.4-2.4*f;PZ.cx=q.fc[0]/100;PZ.cy=q.fc[1]/100;}else{PZ.s=1;PZ.cx=.5;PZ.cy=.5;}}
+  /* 照片可拖曳、雙指或滾輪縮放、雙擊放大 */
+  function place(anim){const pic=box.querySelector(".qpic"),im=pic&&pic.querySelector("img");if(!im||!im.naturalWidth)return;
+    const BW=pic.clientWidth,BH=pic.clientHeight,base=Math.max(BW/im.naturalWidth,BH/im.naturalHeight);PZ.s=Math.max(1,Math.min(6,PZ.s));
+    const w=im.naturalWidth*base*PZ.s,h=im.naturalHeight*base*PZ.s;
+    PZ.cx=Math.max(BW/2/w,Math.min(1-BW/2/w,PZ.cx));PZ.cy=Math.max(BH/2/h,Math.min(1-BH/2/h,PZ.cy));
+    im.style.transition=anim?"left .5s,top .5s,width .5s,height .5s,filter .6s":"filter .6s";
+    im.style.width=w+"px";im.style.height=h+"px";im.style.left=(BW/2-PZ.cx*w)+"px";im.style.top=(BH/2-PZ.cy*h)+"px";}
+  function blurPx(q){const f=revealed?1:shown/q.hints.length;return mode==="blur"&&!revealed?(14*(1-f)+1).toFixed(1):0;}
+  function wirePan(){const pic=box.querySelector(".qpic");if(!pic)return;const im=pic.querySelector("img");
+    im.onload=()=>place(false);if(im.complete)place(false);
+    const pts=new Map();let last=null,d0=0,s0=1,tap=0;
+    const size=()=>{const b=Math.max(pic.clientWidth/im.naturalWidth,pic.clientHeight/im.naturalHeight)*PZ.s;return [im.naturalWidth*b,im.naturalHeight*b];};
+    pic.onpointerdown=e=>{pic.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);last=[e.clientX,e.clientY];
+      if(pts.size===2){const [a,b]=[...pts.values()];d0=Math.hypot(a[0]-b[0],a[1]-b[1]);s0=PZ.s;}
+      const now=Date.now();if(now-tap<300&&pts.size===1){const r=pic.getBoundingClientRect(),[w,h]=size();const ix=PZ.cx+(e.clientX-r.left-r.width/2)/w,iy=PZ.cy+(e.clientY-r.top-r.height/2)/h;PZ.s=PZ.s>1.4?1:2.6;PZ.cx=ix;PZ.cy=iy;PZ.user=true;place(true);}tap=now;};
+    pic.onpointermove=e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,[e.clientX,e.clientY]);
+      if(pts.size>=2){const [a,b]=[...pts.values()];const d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(d0){PZ.s=s0*d/d0;PZ.user=true;place(false);}return;}
+      const [w,h]=size();PZ.cx-=(e.clientX-last[0])/w;PZ.cy-=(e.clientY-last[1])/h;last=[e.clientX,e.clientY];PZ.user=true;place(false);};
+    pic.onpointerup=pic.onpointercancel=e=>{pts.delete(e.pointerId);if(pts.size===1)last=[...pts.values()][0];if(pts.size<2)d0=0;};
+    pic.onwheel=e=>{e.preventDefault();PZ.s*=e.deltaY<0?1.15:1/1.15;PZ.user=true;place(false);};}
+  function render(){const q=list[k];
+    let h=`<div class="qtop"><h2>🌿 認得我嗎？</h2><span class="qcount">${list.length?k+1:0} / ${list.length}</span><button class="close" id="qx" aria-label="關閉">✕</button></div>
+      <div class="qrow">${[["photo","看照片"],["blur","模糊漸清"],["zoom","局部特寫"]].map(([m,t])=>`<button class="qchip" data-mode="${m}" aria-pressed="${mode===m}">${t}</button>`).join("")}</div>`;
+    h+=`<div class="qpic"><img src="${revealed&&showReal?q.img:q.qimg}" alt="猜猜這是哪一種藥草" draggable="false" style="filter:blur(${blurPx(q)}px)"><span class="qtip">${revealed?(showReal?"📷 現場實拍":"官方照片"):"可拖曳・雙指或雙擊放大"}</span></div>`;
+    if(shown)h+=`<ul class="qhints">${q.hints.slice(0,shown).map(([a,b])=>`<li><b>${a}</b>${b}</li>`).join("")}</ul>`;
+    if(opts)h+=`<div class="qopts">${opts.map(o=>`<button data-opt="${o}" class="${picked?(o===q.name?"ok":(o===picked?"no":"")):""}">${o}</button>`).join("")}</div>`;
+    if(revealed){
+      h+=`<div class="qans"><h3>${q.name}${q.offname!==q.name?`<small style="font-size:15px;color:#5f7a58">（官方名錄：${q.offname}）</small>`:""}</h3><div class="sci">${q.sci}${q.alias?"・別名 "+q.alias:""}・官方名錄第 ${q.n} 號</div><p class="where">📍 實際位置：${q.zn} 區・${ZN[q.zn]}區</p><button class="qchip" id="qswap" style="margin-top:6px">${showReal?"看官方照片":"看現場實拍 📷"}</button>${q.warn?`<p class="warn">${q.warn}</p>`:""}</div>
+        <div class="qbtns"><button class="warm" id="qgo">帶我去看 🌱</button><button class="main" id="qnext">下一題 →</button></div>`;}
+    else h+=`<div class="qbtns"><button id="qhint" ${shown>=q.hints.length?"disabled":""}>給提示（${shown}/${q.hints.length}）</button><button id="qopt" ${opts?"disabled":""}>給三個選項</button><button class="main" id="qshow">揭曉答案</button></div>
+        <div class="qbtns"><button id="qprev" ${k?"":"disabled"}>← 上一題</button><button id="qskip">跳過 →</button></div>`;
+    box.innerHTML=h;bind();wirePan();}
+  function upd(){autoView();render();}
+  function bind(){const $=id=>document.getElementById(id);
+    $("qx").onclick=close;
+    box.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;PZ.user=false;upd();});
+    const q=list[k];if(!q)return;
+    if($("qhint"))$("qhint").onclick=()=>{shown=Math.min(q.hints.length,shown+1);upd();};
+    if($("qopt"))$("qopt").onclick=()=>{const others=shuffle(ALLNAMES.filter(x=>x!==q.name&&x!==q.offname)).slice(0,2);opts=shuffle([q.name,...others]);render();};
+    box.querySelectorAll("[data-opt]").forEach(b=>b.onclick=()=>{if(picked)return;picked=b.dataset.opt;if(picked===q.name){revealed=true;PZ.user=false;autoView();}render();});
+    if($("qshow"))$("qshow").onclick=()=>{revealed=true;PZ.user=false;upd();};
+    const next=()=>{k=(k+1)%list.length;if(k===0)shuffle(list);fresh();render();box.scrollTop=0;};
+    if($("qnext"))$("qnext").onclick=next;if($("qskip"))$("qskip").onclick=next;
+    if($("qprev"))$("qprev").onclick=()=>{k=Math.max(0,k-1);fresh();render();};
+    if($("qgo"))$("qgo").onclick=()=>{close();goToHerb(q.i);};
+    if($("qswap"))$("qswap").onclick=()=>{showReal=!showReal;PZ.user=false;autoView();render();};}
+  function open(){if(!list.length)build();sheet.classList.remove("open");spin=false;el.hidden=false;render();}
+  function close(){el.hidden=true;}
+  el.addEventListener("click",e=>{if(e.target===el)close();});
+  window.addEventListener("resize",()=>{if(!el.hidden)place(false);});
+  document.addEventListener("keydown",e=>{if(el.hidden)return;if(e.key==="Escape")close();
+    else if(e.key===" "){e.preventDefault();const b=document.getElementById("qhint");if(b&&!b.disabled)b.click();}
+    else if(e.key==="Enter"){const b=document.getElementById("qshow")||document.getElementById("qnext");if(b)b.click();}
+    else if(e.key==="ArrowRight"){const b=document.getElementById("qnext")||document.getElementById("qskip");if(b)b.click();}});
+  return {open,close,size:()=>POOL.length,pool:POOL};
+})();
+ // 打開就站在廣場，看人們與花草
+
+function resize(){const w=stage.clientWidth||window.innerWidth,h=stage.clientHeight||window.innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.fov=w<600?58:45;camera.updateProjectionMatrix();}
+window.addEventListener("resize",resize);
+renderer.domElement.addEventListener("pointerdown",()=>{if(spin){spin=false;const b=document.querySelector('[data-v="spin"]');if(b)b.setAttribute("aria-pressed","false");}});resize();
+const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+const tmp=new THREE.Vector3();
+/* ===== 當地時間、日照與天氣（台中潭子 24.18N 120.66E；北方＝花園方向 -z，東方＝+x）===== */
+const WX={fetched:"2026-11-18 17:16",now:{t:22.9,cond:"晴時多雲"},daily:{
+ "2026-11-18":[27.1,18.4,15],"2026-11-19":[22.0,16.7,10],"2026-11-20":[17.6,14.4,60],"2026-11-21":[21.9,11.8,10],
+ "2026-11-22":[23.9,12.4,5],"2026-11-23":[24.6,17.1,10],"2026-11-24":[22.8,16.6,15],"2026-11-25":[21.4,17.0,25]}};
+const LAT=24.18,LON=120.66;let previewH=null;const PREV=[null,6.2,9,12,16.5,17.8,20];
+function taipeiNow(){const d=new Date();const u=d.getTime()+d.getTimezoneOffset()*60000;return new Date(u+8*3600000);}
+function solar(t){const N=Math.floor((Date.UTC(t.getFullYear(),t.getMonth(),t.getDate())-Date.UTC(t.getFullYear(),0,0))/864e5);
+  const h=t.getHours()+t.getMinutes()/60;const B=2*Math.PI*(N-81)/364;const eot=9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);
+  const st=h+(4*(LON-120)+eot)/60;const H=(st-12)*15*Math.PI/180;const dec=23.44*Math.PI/180*Math.sin(2*Math.PI*(284+N)/365);const la=LAT*Math.PI/180;
+  const el=Math.asin(Math.sin(la)*Math.sin(dec)+Math.cos(la)*Math.cos(dec)*Math.cos(H));
+  let az=Math.acos(Math.max(-1,Math.min(1,(Math.sin(dec)-Math.sin(el)*Math.sin(la))/(Math.cos(el)*Math.cos(la)))));if(H>0)az=2*Math.PI-az;return {el,az};}
+const mix=(a,b,k)=>{k=Math.max(0,Math.min(1,k));const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const A=p(a),B=p(b);return "#"+A.map((v,i)=>Math.round(v+(B[i]-v)*k).toString(16).padStart(2,"0")).join("");};
+/* ===== 夜空：真實月相的月亮 + 閃爍星星（跟著鏡頭，永遠在無限遠） ===== */
+const NIGHTSKY=(function(){
+  const grp=new THREE.Group();scene.add(grp);
+  // 星星：亮星與暗星兩層，各自以不同節奏閃爍
+  const mk=(n,size,seed)=>{const a=new Float32Array(n*3);let r=seed;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
+    for(let i=0;i<n;i++){const th=rnd()*Math.PI*2,y=0.08+rnd()*0.92,q=Math.sqrt(1-y*y);a[i*3]=Math.cos(th)*q*480;a[i*3+1]=y*480;a[i*3+2]=Math.sin(th)*q*480;}
+    const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(a,3));
+    const m=new THREE.PointsMaterial({color:"#ffffff",size,sizeAttenuation:false,transparent:true,opacity:0,depthWrite:false,fog:false});
+    const p=new THREE.Points(g,m);grp.add(p);return m;};
+  const starA=mk(420,1.6,7),starB=mk(140,2.6,91),starC=mk(30,3.4,333);starC.color.set("#fff0d0");
+  // 月亮：畫出當天月相（亮面＋淡淡的地照）與月暈
+  const mc=document.createElement("canvas");mc.width=mc.height=256;const mtex=new THREE.CanvasTexture(mc);
+  const moonMat=new THREE.SpriteMaterial({map:mtex,transparent:true,depthWrite:false,fog:false,opacity:0});
+  const moon=new THREE.Sprite(moonMat);moon.scale.set(30,30,1);grp.add(moon);
+  const gc=document.createElement("canvas");gc.width=gc.height=128;{const g=gc.getContext("2d");const gr=g.createRadialGradient(64,64,0,64,64,64);
+    gr.addColorStop(0,"rgba(220,230,255,0.55)");gr.addColorStop(0.3,"rgba(190,205,255,0.18)");gr.addColorStop(1,"rgba(190,205,255,0)");g.fillStyle=gr;g.fillRect(0,0,128,128);}
+  const glowMat=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(gc),transparent:true,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,opacity:0});
+  const glow=new THREE.Sprite(glowMat);glow.scale.set(120,120,1);grp.add(glow);
+  let lastPh=-1;
+  function drawMoon(ph){ // ph: 0新月 → 0.5滿月 → 1
+    const g=mc.getContext("2d"),R=100,c=128;g.clearRect(0,0,256,256);
+    g.fillStyle="rgba(120,135,170,0.28)";g.beginPath();g.arc(c,c,R,0,Math.PI*2);g.fill(); // 地照
+    const waxing=ph<0.5,k=Math.cos(ph*2*Math.PI); // k=1新月, -1滿月
+    const L=document.createElement("canvas");L.width=L.height=256;const l=L.getContext("2d");
+    const lg=l.createRadialGradient(c-25,c-25,10,c,c,R);lg.addColorStop(0,"#fffdf2");lg.addColorStop(1,"#e9e4cf");l.fillStyle=lg;
+    l.beginPath();l.arc(c,c,R,-Math.PI/2,Math.PI/2,!waxing);l.closePath();l.fill(); // 亮的半圓（盈：右亮）
+    l.globalCompositeOperation=k>0?"destination-out":"source-over";l.beginPath();l.ellipse(c,c,Math.abs(k)*R+0.5,R,0,0,Math.PI*2);l.fill();
+    l.globalCompositeOperation="source-atop";l.fillStyle="rgba(150,145,125,0.22)";[[-30,-20,22],[25,10,16],[-5,35,13],[35,-35,10],[-40,25,9]].forEach(([x,y,r])=>{l.beginPath();l.arc(c+x,c+y,r,0,Math.PI*2);l.fill();});
+    g.drawImage(L,0,0);mtex.needsUpdate=true;}
+  const SYN=29.530588853,NEW0=Date.UTC(2000,0,6,18,14);
+  function set(t,e,cloud){ // t：台北時間；e：太陽高度角(度)
+    const utc=t.getTime()-8*3600000;const ph=(((utc-NEW0)/864e5)%SYN+SYN)%SYN/SYN;
+    if(Math.abs(ph-lastPh)>0.004){drawMoon(ph);lastPh=ph;}
+    // 月亮約比太陽晚 ph×24.84 小時過中天：用太陽公式回推位置
+    const mt=new Date(t.getTime()-ph*24.84*3600000);const m=solar(mt);
+    const dir=new THREE.Vector3(Math.cos(m.el)*Math.sin(m.az),Math.sin(m.el),-Math.cos(m.el)*Math.cos(m.az));
+    moon.position.copy(dir).multiplyScalar(440);glow.position.copy(dir).multiplyScalar(445);
+    const dark=Math.max(0,Math.min(1,(-e-2)/10)),up=m.el>0.02?1:0,clr=1-cloud*1.2;
+    const illum=(1-Math.cos(ph*2*Math.PI))/2;
+    moonMat.opacity=up*Math.max(0.35,dark)*Math.max(0.25,clr)*(e>8?0.6:1)*(illum<0.03?0:1);
+    glowMat.opacity=up*dark*Math.max(0.2,clr)*(0.25+illum*0.75);
+    const sv=dark*Math.max(0,clr)*(1-illum*0.35); // 滿月時星星少一點
+    starA.userData.b=sv*0.55;starB.userData.b=sv*0.8;starC.userData.b=sv;
+    grp.visible=dark>0||(up&&e<8);
+    return {ph,illum,up:!!up};}
+  function update(T){grp.position.copy(camera.position);
+    starA.opacity=(starA.userData.b||0)*(0.85+Math.sin(T*1.3)*0.15);
+    starB.opacity=(starB.userData.b||0)*(0.75+Math.sin(T*2.1+1)*0.25);
+    starC.opacity=(starC.userData.b||0)*(0.7+Math.sin(T*3.7+2)*0.3);}
+  return {set,update};
+})();
+const PHNAME=ph=>ph<0.03||ph>0.97?"新月":ph<0.22?"眉月":ph<0.28?"上弦月":ph<0.47?"盈凸月":ph<0.53?"滿月":ph<0.72?"虧凸月":ph<0.78?"下弦月":"殘月";
+function applyTime(){let t=taipeiNow();if(previewH!=null){t=new Date(t);t.setHours(Math.floor(previewH),Math.round((previewH%1)*60),0);}
+  const {el,az}=solar(t);const e=el*180/Math.PI;const key=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+  const day=WX.daily[key];const rain=day?day[2]:0;const cloud=rain>=50?0.55:rain>=30?0.25:0;
+  const dayK=Math.max(0,Math.min(1,(e+4)/18)),golden=Math.max(0,1-Math.abs(e-3)/9);
+  sun.position.set(Math.cos(el)*Math.sin(az)*150,Math.max(8,Math.sin(el)*150),-Math.cos(el)*Math.cos(az)*150);
+  if(e>0){sun.intensity=Math.min(1,Math.sin(el)*2.2)*0.95*(1-cloud*0.7);sun.color.set(mix("#fff1d6","#ffb36a",golden));}
+  else{sun.position.set(-60,120,-40);sun.intensity=0.32*(1-cloud*0.4);sun.color.set("#b8c8ff");} // 夜間月光
+  hemi.intensity=0.5+0.25*dayK*(1-cloud*0.3);hemi.color.set(mix("#8a9cd0","#dff0ff",dayK));hemi.groundColor.set(mix("#4a5a48","#8fa86a",dayK));
+  const night=["#1a2a4e","#2e4272","#4a5f8e"],noon=cloud?["#9fb0bf","#c9d3da","#e3e8ea"]:["#7fb8e6","#bfe0f5","#eef7fb"],dusk=["#3d5a8a","#e9a07a","#f6d3a6"];
+  const c=[0,1,2].map(i=>golden>0.15&&e>-6?mix(dayK<0.5?night[i]:noon[i],dusk[i],golden*0.85):mix(night[i],noon[i],dayK));paintSky(...c);
+  scene.fog.color.set(c[2]);LAMPON=Math.max(0,Math.min(1,(3-e)/7));LAMPMAT.emissive.set(mix("#000000","#ffe7a8",LAMPON));
+  const MO=NIGHTSKY.set(t,e,cloud);
+  const wk="日一二三四五六"[t.getDay()];const hh=String(t.getHours()).padStart(2,"0"),mm=String(t.getMinutes()).padStart(2,"0");
+  document.getElementById("wxTime").textContent=`${t.getMonth()+1}/${t.getDate()}（${wk}）${hh}:${mm}${previewH!=null?"・預覽":""}`;
+  const isToday=key===WX.fetched.slice(0,10);const phase=e<-6?"夜晚":e<6?(t.getHours()<12?"清晨":"黃昏"):"白天";
+  document.getElementById("wxSky").innerHTML=day?`${isToday&&previewH==null?WX.now.cond+" "+WX.now.t+"°C・":""}${phase}${e<-2&&MO.up?"・"+PHNAME(MO.ph):""}<br>${Math.round(day[1])}–${Math.round(day[0])}°C・降雨 ${day[2]}%`:`${phase}<br>天氣資料待更新`;
+  document.getElementById("wx").classList.toggle("night",e<-2);}
+document.getElementById("wx").onclick=()=>{const i=(PREV.indexOf(previewH)+1)%PREV.length;previewH=PREV[i];applyTime();};
+applyTime();setInterval(applyTime,30000);
+
+function loop(){
+  requestAnimationFrame(loop);
+  document.body.classList.toggle("sheet-open",sheet.classList.contains("open"));
+  if(!reduce)updateAgents();
+  LAMPFX.update(clock.elapsedTime);NIGHTSKY.update(clock.elapsedTime);
+  {const T=clock.elapsedTime;SNAKE.update(1/60,T);}
+  if(fly){fly.t=Math.min(1,fly.t+(reduce?1:0.035));const k=fly.t<.5?2*fly.t*fly.t:1-Math.pow(-2*fly.t+2,2)/2;camera.position.lerpVectors(fly.p0,fly.p1,k);controls.target.lerpVectors(fly.q0,fly.q1,k);if(fly.t>=1)fly=null;}
+  if(spin&&!reduce){
+    if(!WALK){ // 依使用者手繪動線：正思惟前→左轉走正見與正思惟之間小徑→中間走道往左→蛇行穿過正業～正定→沿正定、正語外側→正語前緣回正思惟前（循環）
+      const fz=x=>arcZ(x,R_TOP)-1.6, mz=x=>arcZ(x,R_MID), bz=x=>arcZ(x,R_BOT)+1.7;
+      const pts=[[0,fz(0)],[-4.5,fz(-4.5)],[-8.8,fz(-8.8)],[-8.2,(fz(-8)+mz(-7))/2],[-7.6,mz(-7.6)],[-11.4,mz(-11.4)],[-16,mz(-16)],[-20.6,mz(-20.6)],
+        [-22.2,(mz(-21)+bz(-22))/2],[-21.5,bz(-21.5)],[-16,bz(-16)],[-12.6,bz(-12.6)],[-12,(mz(-12)+bz(-12))/2],[-11.2,mz(-11.2)+.2],[-7.6,mz(-7.6)+.2],[-3.8,mz(-3.8)],[-4,(mz(-4)+bz(-4))/2],[-4.2,bz(-4.2)],
+        [0,bz(0)],[4.2,bz(4.2)],[4,(mz(4)+bz(4))/2],[3.8,mz(3.8)],[7.6,mz(7.6)],[11.4,mz(11.4)],[12,(mz(12)+bz(12))/2],[12.6,bz(12.6)],[16,bz(16)],[21.5,bz(21.5)],
+        [22.2,(mz(21)+bz(22))/2],[20.6,mz(20.6)],[19.6,(fz(19)+mz(20))/2],[17.2,fz(17.2)],[12,fz(12)],[6,fz(6)]];
+      WALK=new THREE.CatmullRomCurve3(pts.map(([x,z])=>new THREE.Vector3(x,1.6,z)),true,"centripetal");}
+    const dt=1/60;walkT=Math.min(1,walkT+dt/3);walkU=(walkU+dt*(1.6/WALK.getLength()))%1;
+    const p=WALK.getPointAt(walkU),q=WALK.getPointAt((walkU+0.02)%1);
+    const lx=q.x,lz=q.z;
+    if(walkT<1){const k=walkT*walkT*(3-2*walkT);camera.position.lerp(new THREE.Vector3(p.x,1.6,p.z),k*0.08);controls.target.lerp(new THREE.Vector3(lx,1.0,lz),k*0.08);}
+    else{camera.position.set(p.x,1.6,p.z);controls.target.set(lx,1.0,lz);}}
+  // 防止鏡頭鑽到地面下或建築物裡（避免畫面出現一大片空白）
+  if(camera.position.y<0.5)camera.position.y=0.5;if(controls.target.y<0.2)controls.target.y=0.2;
+  if(camera.position.y<24)SEGS.forEach(g=>{const vx=g.x2-g.x1,vz=g.z2-g.z1,L2=vx*vx+vz*vz||1;let t=((camera.position.x-g.x1)*vx+(camera.position.z-g.z1)*vz)/L2;t=Math.max(0,Math.min(1,t));
+    const px=g.x1+vx*t,pz=g.z1+vz*t,dx=camera.position.x-px,dz=camera.position.z-pz,d=Math.hypot(dx,dz),lim=Math.min(g.r-1,9);if(d<lim){const k=lim/(d||1);camera.position.x=px+dx*k;camera.position.z=pz+dz*k;}});
+  controls.update();renderer.render(scene,camera);
+  const w=renderer.domElement.clientWidth,h=renderer.domElement.clientHeight;
+  TAGS.forEach(t=>{tmp.copy(t.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05&&camera.position.distanceTo(t.v)<180&&!(t.is.id.startsWith("bed")&&camera.position.distanceTo(t.v)<16)&&camera.position.y>8;t.el.classList.toggle("hide",!vis);if(vis){t.el.style.left=((tmp.x+1)/2*w)+"px";t.el.style.top=((1-tmp.y)/2*h)+"px";}});
+  {const hp=SNAKE.head();tmp.set(hp.x,hp.y+0.12,hp.z);const d=camera.position.distanceTo(tmp);tmp.project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.02&&Math.abs(tmp.y)<1.02&&d<12;SNAKE.lab.classList.toggle("hide",!vis);if(vis){SNAKE.lab.style.left=((tmp.x+1)/2*w)+"px";SNAKE.lab.style.top=((1-tmp.y)/2*h)+"px";}}
+  PTAGS.forEach(t=>{tmp.copy(t.v).project(camera);const d=camera.position.distanceTo(t.v);const vis=tmp.z<1&&Math.abs(tmp.x)<1.02&&Math.abs(tmp.y)<1.02&&d<40;t.el.classList.toggle("hide",!vis);if(vis){t.el.style.left=((tmp.x+1)/2*w)+"px";t.el.style.top=((1-tmp.y)/2*h)+"px";t.el.style.zIndex=String(1000-Math.round(d*10));t.el.style.opacity=d<30?1:Math.max(.35,(40-d)/10);}});
+}
+document.getElementById("load").remove();
+loop();
+
+
+/* ===== 參訪人次（GitHub 版）：GoatCounter 計數，顯示 = 起始值 878 + 累計訪客 ===== */
+const GC_CODE="tzuchi-herbgarden", VISIT_BASE=878;
+(function(){
+  const out=document.getElementById("vnum"),show=n=>out.textContent=String(VISIT_BASE+n).padStart(5,"0");
+  const sc=document.createElement("script");sc.async=true;sc.src="https://gc.zgo.at/count.js";
+  sc.dataset.goatcounter=`https://${GC_CODE}.goatcounter.com/count`;document.head.appendChild(sc);
+  const load=()=>fetch(`https://${GC_CODE}.goatcounter.com/counter/TOTAL.json`).then(r=>r.ok?r.json():null)
+    .then(d=>{if(d&&d.count!=null)show(parseInt(String(d.count).replace(/\D/g,""),10)||0);}).catch(()=>{});
+  setTimeout(load,1500);
+})();
+</script>
+</body>
+</html>
