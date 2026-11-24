@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7efe2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="景點收集器">
+<meta name="description" content="下次去哪裡玩・景點收集器。依台灣縣市由北到南慢慢收集想去的地方。">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png" type="image/png">
+<title>下次去哪裡玩・景點收集器</title>
+<style>
+:root{--bg:#f7efe2;--card:#fffaf2;--brown:#8b5a2b;--brown-d:#5e3a1a;--caramel:#c98a4b;--line:#ead9c0;--muted:#9a7b5c;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--brown-d);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;padding:env(safe-area-inset-top) 0 40px;overflow-x:hidden}
+button{font-family:inherit}
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+header{text-align:center;margin:6px 0 14px}
+header h1{margin:0;font-size:28px;letter-spacing:2px}
+header .sub{margin:4px 0 0;color:var(--muted);font-size:15px;letter-spacing:1px}
+.tally{display:inline-block;margin-top:10px;background:#fde3c2;color:var(--brown-d);border-radius:999px;padding:5px 14px;font-size:14px;font-weight:700}
+.card{background:var(--card);border-radius:22px;box-shadow:0 4px 14px rgba(139,90,43,.12);padding:16px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;color:var(--brown);cursor:pointer;user-select:none}
+.chip.on{background:var(--brown);color:#fff;border-color:var(--brown)}
+.lab{display:block;text-align:center;color:var(--muted);font-size:12px;margin:0 0 8px}
+h2{font-size:18px;margin:0 0 10px}
+.region{margin:16px 0 6px;font-size:15px;letter-spacing:1px;color:var(--muted);text-align:center}
+.county-empty{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 2px;color:var(--muted);font-size:13px}
+.county-empty .name{opacity:.75}
+.county-empty .st{font-size:12px;opacity:.7}
+.county-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:10px 0 4px}
+.county-head h3{margin:0;font-size:16px;color:var(--brown)}
+.county-count{font-size:12px;color:var(--muted)}
+.place{padding:12px 0;border-bottom:1px dashed var(--line)}
+.place:last-child{border-bottom:0}
+.place .name{font-weight:700;font-size:16px;word-break:break-word}
+.place .cluster{font-size:12px;color:var(--muted);font-weight:600;margin-right:4px}
+.place .desc{font-size:14px;color:var(--brown-d);line-height:1.55;margin-top:6px}
+.place .addr{font-size:13px;color:var(--muted);margin-top:4px;word-break:break-word}
+.place .note{font-size:13px;color:var(--brown);margin-top:4px}
+.place .meta{font-size:12px;color:var(--muted);margin-top:4px}
+.tag{display:inline-block;font-size:11px;border-radius:6px;padding:1px 6px;margin:0 4px 0 0;background:#e4f1df;color:#3d6b39;vertical-align:middle;font-weight:600}
+.tag.t-觀光工廠{background:#fde3c2;color:var(--brown-d)}
+.tag.t-親子{background:#e8f0fb;color:#3a5a8a}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.links a{background:var(--brown);color:#fff;text-decoration:none;border-radius:12px;padding:8px 12px;font-size:13px;font-weight:700}
+.links a.ghost{background:none;color:var(--brown);border:1.5px solid var(--line)}
+.small{font-size:12px;color:var(--muted);line-height:1.55}
+.newest .row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px dashed var(--line);text-decoration:none;color:inherit}
+.newest .row:last-child{border-bottom:0}
+.newest .n{font-weight:700}
+.newest .d{font-size:13px;color:var(--muted);margin-top:2px}
+.newest .when{font-size:12px;color:var(--muted);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🗺️ 下次去哪裡玩</h1>
+    <p class="sub">景點收集器</p>
+    <div class="tally" id="tally">已收集 0 處</div>
+  </header>
+
+  <div class="card" id="newestCard" hidden>
+    <h2>✨ 最近加入</h2>
+    <div class="newest" id="newest"></div>
+  </div>
+
+  <div class="card">
+    <span class="lab">地區</span>
+    <div class="chips" id="regionChips"></div>
+  </div>
+
+  <div class="card">
+    <h2>依縣市收集 <span class="small" id="count"></span></h2>
+    <p class="small" style="margin:0 0 10px">想加新景點，在 places.js 的 PLACES 最後補一筆即可。營業與開放請以現場或官方公告為準。</p>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script src="./places.js"></script>
+<script>
+const DATA=window.PLACE_DATA;
+let region='all';
+
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function visibleCounties(){
+  return DATA.counties.filter(c=>region==='all'||c.region===region);
+}
+
+function placesIn(county){
+  return DATA.places.filter(p=>p.county===county);
+}
+
+function tagHtml(tags){
+  return (tags||[]).map(t=>'<span class="tag t-'+esc(t)+'">'+esc(t)+'</span>').join('');
+}
+
+function newestPlaces(limit){
+  const order=new Map(DATA.places.map((p,i)=>[p.id,i]));
+  return DATA.places.slice().sort(function(a,b){
+    if(a.added!==b.added) return String(b.added||'').localeCompare(String(a.added||''));
+    return (order.get(b.id)||0)-(order.get(a.id)||0);
+  }).slice(0, limit||3);
+}
+
+function renderChips(){
+  const box=document.getElementById('regionChips');
+  box.innerHTML='';
+  [['all','全部'],...DATA.regions.map(r=>[r,r])].forEach(([id,label])=>{
+    const el=document.createElement('div');
+    el.className='chip'+(region===id?' on':'');
+    const n=id==='all'?DATA.places.length:DATA.places.filter(p=>p.region===id).length;
+    el.textContent=label+(n?' '+n:'');
+    el.onclick=()=>{region=id;refresh();};
+    box.appendChild(el);
+  });
+}
+
+function placeItem(p){
+  const id='place-'+encodeURIComponent(p.id);
+  let h='<article class="place" id="'+id+'">';
+  h+='<div class="name">';
+  if(p.cluster) h+='<span class="cluster">'+esc(p.cluster)+'</span>';
+  h+=esc(p.name)+' '+tagHtml(p.tags)+'</div>';
+  if(p.desc) h+='<div class="desc">'+esc(p.desc)+'</div>';
+  if(p.address) h+='<div class="addr">'+esc(p.address)+'</div>';
+  if(p.note) h+='<div class="note">'+esc(p.note)+'</div>';
+  const bits=[];
+  if(p.source) bits.push(p.source);
+  if(p.added) bits.push(p.added);
+  if(bits.length) h+='<div class="meta">'+esc(bits.join('・'))+'</div>';
+  h+='<div class="links">';
+  if(p.maps) h+='<a href="'+esc(p.maps)+'" target="_blank" rel="noopener">📍 Google 地圖</a>';
+  if(p.official) h+='<a class="ghost" href="'+esc(p.official)+'" target="_blank" rel="noopener">官方網站</a>';
+  h+='</div></article>';
+  return h;
+}
+
+function renderNewest(){
+  const card=document.getElementById('newestCard');
+  const box=document.getElementById('newest');
+  const items=newestPlaces(3);
+  if(!items.length){card.hidden=true;box.innerHTML='';return;}
+  card.hidden=false;
+  box.innerHTML=items.map(p=>{
+    const bits=[p.county,p.cluster,p.source].filter(Boolean).join('・');
+    return '<a class="row" href="#place-'+encodeURIComponent(p.id)+'"><div><div class="n">'+esc(p.name)+'</div><div class="d">'+esc(bits)+'</div></div><div class="when">'+esc(p.added||'')+'</div></a>';
+  }).join('');
+}
+
+function renderList(){
+  const list=document.getElementById('list');
+  let html='', lastRegion='';
+  visibleCounties().forEach(c=>{
+    if(c.region!==lastRegion){
+      html+='<div class="region">'+esc(c.region)+'</div>';
+      lastRegion=c.region;
+    }
+    const items=placesIn(c.name);
+    if(!items.length){
+      html+='<div class="county-empty"><span class="name">'+esc(c.name)+'</span><span class="st">還沒收集</span></div>';
+      return;
+    }
+    html+='<div class="county-head"><h3>'+esc(c.name)+'</h3><span class="county-count">'+items.length+'</span></div>';
+    items.forEach(p=>{html+=placeItem(p);});
+  });
+  list.innerHTML=html;
+  document.getElementById('count').textContent='（此區 '+visibleCounties().reduce((n,c)=>n+placesIn(c.name).length,0)+'）';
+}
+
+function refresh(){
+  const n=DATA.places.length;
+  document.getElementById('tally').textContent='已收集 '+n+' 處';
+  renderNewest();
+  renderChips();
+  renderList();
+}
+
+if(!DATA||!DATA.places||!DATA.counties){document.body.innerHTML='<p style="padding:24px">景點資料載入失敗。</p>';}
+else refresh();
+</script>
+</body>
+</html>
