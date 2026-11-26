@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>小小中醫師：傷科診所大冒險</title>
+<link rel="icon" href="data:,">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#bfe6ff;font-family:"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei",sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none;overscroll-behavior:none;color:#3a2a10}
+input{user-select:text;-webkit-user-select:text}
+:root{--tbh:52px}
+#game canvas{display:block;touch-action:none}
+#toolbar{position:fixed;top:0;left:0;right:0;display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px;padding-top:max(6px,env(safe-area-inset-top));padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right));background:linear-gradient(#2b3a55f2,#34496ee6);z-index:20;justify-content:center}
+.tb{flex:0 0 auto;border:0;border-radius:10px;padding:7px 11px;min-height:44px;min-width:44px;font-size:15px;font-weight:800;color:#24324a;background:#fff;box-shadow:0 3px 0 #0004;cursor:pointer;font-family:inherit}
+.tb.on{background:#ffd54a;color:#5a3300}
+.tb:active{transform:translateY(2px);box-shadow:0 1px 0 #0004}
+#quest{position:fixed;top:calc(var(--tbh) + 6px);left:max(8px,env(safe-area-inset-left));cursor:pointer;max-width:min(340px,56vw);background:#fffdf3f0;border:3px solid #f2b84b;border-radius:14px;padding:7px 10px;z-index:15;font-size:14px;line-height:1.4;box-shadow:0 3px 0 #0002}
+#quest b{color:#b35400}
+#stamps{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.stamp{width:30px;height:30px;border-radius:50%;border:2px dashed #c9a46a;display:flex;align-items:center;justify-content:center;font-size:15px;filter:grayscale(1);opacity:.45;background:#fff}
+.stamp.got{border:2px solid #d0312d;background:#ffe3e0;filter:none;opacity:1;transform:rotate(-8deg)}
+#mapWrap{position:fixed;top:calc(var(--tbh) + 6px);right:max(8px,env(safe-area-inset-right));z-index:15;background:#fff;border-radius:12px;padding:4px;border:3px solid #2b3a55;text-align:center;box-shadow:0 3px 0 #0003}
+#minimap{width:150px;height:150px;display:block;cursor:pointer;border-radius:8px}
+#mapWrap small{display:block;font-size:12px;color:#2b3a55;font-weight:800;line-height:1.2}
+#labels{position:fixed;inset:0;pointer-events:none;z-index:10;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;padding:3px 10px;border-radius:10px;color:#fff;font-weight:900;font-size:16px;white-space:nowrap;text-shadow:0 1px 2px #0009;border:2px solid #fff;box-shadow:0 2px 5px #0005;pointer-events:auto;cursor:pointer;will-change:transform}
+.lbl.npc{font-size:13px;padding:2px 8px;background:#2b3a55dd;border-width:2px}
+.lbl .mark{display:inline-block;margin-left:4px;color:#ffeb3b;font-size:18px;animation:bob .7s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+#crosshair{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;z-index:12;pointer-events:none;display:none}
+#crosshair:before,#crosshair:after{content:"";position:absolute;background:#fff;box-shadow:0 0 0 1px #000a}
+#crosshair:before{left:12px;top:2px;width:3px;height:22px}
+#crosshair:after{top:12px;left:2px;height:3px;width:22px}
+#footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:11px;color:#fff;background:#0008;padding:2px 4px calc(2px + env(safe-area-inset-bottom));z-index:20;pointer-events:none}
+#actBtn{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:19;display:none;border:3px solid #fff;background:#ff7a45;color:#fff;font-weight:900;font-size:17px;border-radius:14px;padding:9px 16px;box-shadow:0 4px 0 #b84a1c;font-family:inherit;cursor:pointer;max-width:60vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#toast{position:fixed;left:50%;top:calc(var(--tbh) + 10px);transform:translateX(-50%);z-index:30;background:#2b3a55ee;color:#fff;padding:8px 14px;border-radius:12px;font-size:15px;font-weight:700;max-width:min(92vw,520px);text-align:center;pointer-events:none;opacity:0;transition:opacity .3s}
+#toast.show{opacity:1}
+#palette{position:fixed;right:8px;top:calc(var(--tbh) + 200px);z-index:16;display:none;flex-direction:column;gap:5px;background:#2b3a55dd;padding:6px;border-radius:12px}
+#palette.show{display:flex}
+.sw{width:38px;height:38px;border-radius:8px;border:3px solid #fff8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000;cursor:pointer;image-rendering:pixelated;background-size:cover}
+.sw.sel{border-color:#ffd54a;box-shadow:0 0 0 2px #ffd54a}
+#touch{position:fixed;inset:0;pointer-events:none;z-index:18;display:none}
+body.touch #touch{display:block}
+#dpad{position:absolute;left:max(8px,env(safe-area-inset-left));bottom:calc(28px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:5px;pointer-events:auto}
+.tbtn{background:#ffffffd0;border:2px solid #2b3a55;border-radius:13px;font-size:12px;font-weight:900;color:#2b3a55;display:flex;align-items:center;justify-content:center;flex-direction:column;line-height:1.05;touch-action:none;user-select:none;font-family:inherit;padding:0}
+.tbtn i{font-style:normal;font-size:18px}
+.tbtn.act{background:#ffd54a}
+.tbtn.ghost{visibility:hidden}
+#rbtns{position:absolute;right:max(8px,env(safe-area-inset-right));bottom:calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:7px;pointer-events:auto;align-items:flex-end}
+#rbtns .tbtn{width:66px;height:54px}
+#rbtns .big{height:66px;border-radius:50%;width:66px;background:#c8f7c5d0}
+.flyonly{display:none!important}
+body.flying .flyonly{display:flex!important}
+body.touch #actBtn{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;bottom:calc(108px + env(safe-area-inset-bottom));max-width:min(62vw,300px);font-size:17px;padding:10px 14px;min-height:52px}
+body.touch.flying #actBtn{bottom:calc(230px + env(safe-area-inset-bottom))}
+#modal{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:40;padding:12px}
+#modal.show{display:flex}
+.card{background:#fffaf0;border-radius:18px;border:4px solid #f2b84b;max-width:540px;width:100%;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:14px 16px;box-shadow:0 8px 0 #0003;font-size:17px;line-height:1.6;color:#3a2a10;animation:pop .2s ease-out}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.card h2{margin:0 0 6px;font-size:21px;display:flex;gap:8px;align-items:center}
+.card h2 .av{font-size:30px}
+.card p{margin:6px 0}
+.rhyme{background:#fff0c2;border-left:6px solid #f2994a;padding:6px 10px;border-radius:8px;margin:8px 0;font-weight:900;color:#8a3b00}
+.warn{background:#ffe6e6;border-left:6px solid #e74c3c;padding:6px 10px;border-radius:8px;margin:8px 0;font-weight:700;color:#a01818;font-size:15px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btns.col{flex-direction:column}
+.btn{flex:1 1 auto;min-width:120px;min-height:48px;font-size:17px;padding:10px 12px;border-radius:12px;border:0;background:#4caf50;color:#fff;font-weight:900;box-shadow:0 4px 0 #2e7d32;cursor:pointer;font-family:inherit}
+.btn.alt{background:#42a5f5;box-shadow:0 4px 0 #1e6fb8}
+.btn.gray{background:#9e9e9e;box-shadow:0 4px 0 #666}
+.btn.opt{background:#fff;color:#333;border:3px solid #90caf9;box-shadow:0 3px 0 #64b5f6;text-align:left}
+.btn.wrong{background:#eee;color:#999;border-color:#ccc;box-shadow:none;text-decoration:line-through}
+.hint{color:#c0392b;font-weight:800;margin-top:8px;min-height:1em}
+.q{font-weight:900;font-size:18px}
+.herbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.herb{border:3px solid #ddd;border-radius:12px;padding:8px 4px;text-align:center;background:#fff;cursor:pointer;font-weight:900;font-size:15px}
+.herb .e{font-size:30px;display:block}
+.herb.sel{border-color:#4caf50;background:#e8f8e5}
+.herb.bad{border-color:#e57373;background:#fdecec;opacity:.6}
+#stampPop{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%) scale(0);z-index:60;background:#fff;border:6px solid #d0312d;color:#d0312d;border-radius:50%;width:190px;height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:22px;text-align:center;pointer-events:none;transition:transform .35s cubic-bezier(.3,1.6,.5,1);box-shadow:0 6px 20px #0005}
+#stampPop.show{transform:translate(-50%,-50%) scale(1) rotate(-10deg)}
+#stampPop .e{font-size:54px}
+#start,#cert{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:14px;background:linear-gradient(160deg,#9fdcff,#ffe9a8)}
+#cert{display:none;background:#0008}
+.startCard{background:#fffaf0;border:5px solid #f2b84b;border-radius:22px;max-width:560px;width:100%;padding:18px;text-align:center;box-shadow:0 10px 0 #0002;max-height:94vh;max-height:calc(100dvh - 20px);overflow:auto;touch-action:pan-y;overscroll-behavior:contain}
+.startCard h1{margin:4px 0 6px;font-size:28px;color:#b35400}
+.startCard p{font-size:16px;line-height:1.6;margin:6px 0}
+.certCard{background:#fff8e1;border:10px double #c8961e;border-radius:16px;max-width:560px;width:100%;padding:18px;text-align:center;max-height:94vh;max-height:calc(100dvh - 20px);overflow:auto;touch-action:pan-y;overscroll-behavior:contain}
+.certCard h1{font-size:34px;color:#c0392b;margin:4px 0}
+.certCard input{font-size:20px;padding:6px 10px;border:2px solid #c8961e;border-radius:8px;text-align:center;width:200px;font-family:inherit}
+#err{position:fixed;left:8px;right:8px;bottom:30px;background:#c0392b;color:#fff;padding:8px;border-radius:8px;z-index:99;display:none;font-size:14px}
+@media (max-width:640px){
+ .tb{font-size:12.5px;padding:5px 7px;border-radius:8px}
+ #toolbar{gap:4px;padding:4px}
+ #minimap{width:104px;height:104px}
+ #quest{font-size:12.5px;padding:5px 8px;max-width:calc(100vw - 140px)}
+ .stamp{width:25px;height:25px;font-size:13px}
+ .lbl{font-size:13px;padding:2px 7px}
+ .lbl.npc{font-size:11.5px}
+ #palette{top:calc(var(--tbh) + 150px)}
+ .sw{width:34px;height:34px}
+ .card{font-size:16px;padding:12px}
+ #toast{top:34%;font-size:14px}
+}
+
+/* ===== v2：手機/平板操作 ===== */
+#toolbar.collapsed .tb:not(.keep){display:none}
+#bMenu{display:none}
+#toolbar.narrow #bMenu{display:block}
+#quest .qmini{display:none;float:right;font-size:12px;color:#b35400;margin-left:6px}
+#quest.mini .qmini{display:inline}
+#quest.mini #stamps,#quest.mini #badges{display:none}
+#quest.mini #qText{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#badges{display:flex;gap:4px;margin-top:4px;align-items:center;font-size:12px;color:#8a6a2a;font-weight:800}
+.badge{width:28px;height:28px;border-radius:7px;border:2px dashed #d8b860;display:flex;align-items:center;justify-content:center;font-size:15px;filter:grayscale(1);opacity:.45;background:#fff}
+.badge.got{border:2px solid #c8961e;background:#fff3c4;filter:none;opacity:1}
+.stamp.just,.badge.just{animation:slotPulse .9s ease-out}
+@keyframes slotPulse{0%{transform:scale(1.9) rotate(-8deg);box-shadow:0 0 0 0 #ffd54a}60%{transform:scale(1) rotate(-8deg);box-shadow:0 0 0 10px #ffd54a00}100%{transform:rotate(-8deg)}}
+#joy{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(30px + env(safe-area-inset-bottom));width:136px;height:136px;border-radius:50%;background:radial-gradient(#ffffff55,#ffffff25);border:3px solid #ffffffc0;box-shadow:0 2px 8px #0003;pointer-events:auto;touch-action:none}
+#joy:before{content:"走路";position:absolute;left:0;right:0;top:-22px;text-align:center;font-size:12px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000}
+#joyKnob{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;background:#fff;border:3px solid #2b3a55;box-shadow:0 3px 0 #0004;pointer-events:none;display:flex;align-items:center;justify-content:center;font-size:22px}
+#joy.act #joyKnob{background:#ffd54a}
+body.ctrl-pad #joy{display:none}
+body:not(.ctrl-pad) #dpad{display:none}
+#guide{position:fixed;left:0;top:0;z-index:13;display:none;pointer-events:none;will-change:transform}
+#guide .gArrow{width:54px;height:54px;border-radius:50%;background:#ff7a45;border:3px solid #fff;box-shadow:0 3px 8px #0006;display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;font-weight:900}
+#guide .gTxt{position:absolute;left:50%;top:58px;transform:translateX(-50%);white-space:nowrap;background:#2b3a55e6;color:#fff;border-radius:8px;padding:2px 7px;font-size:12px;font-weight:800}
+#guide.edge{pointer-events:auto;cursor:pointer}
+#guide.on .gArrow{width:40px;height:40px;font-size:20px;background:#ffd54a;color:#5a3300;animation:bob .6s ease-in-out infinite alternate}
+#guide.on .gTxt{top:44px}
+#fx{position:fixed;inset:0;z-index:66;pointer-events:none;display:none}
+#stampPop.gold{border-color:#c8961e;color:#9a6a00;background:#fff8dc}
+#stampPop .ring{position:absolute;inset:-6px;border-radius:50%;border:6px solid currentColor;opacity:0}
+#stampPop.boom .ring{animation:ring .6s ease-out}
+@keyframes ring{from{transform:scale(1);opacity:.8}to{transform:scale(1.8);opacity:0}}
+.shake{animation:shake .25s linear}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(4px,-3px)}50%{transform:translate(-4px,3px)}75%{transform:translate(3px,2px)}}
+.stars{font-size:40px;text-align:center;letter-spacing:4px;margin:6px 0}
+.stars span{display:inline-block;transform:scale(0);animation:starIn .4s cubic-bezier(.3,1.6,.5,1) forwards}
+.stars span.off{filter:grayscale(1);opacity:.35}
+@keyframes starIn{to{transform:scale(1)}}
+.scn{background:#fff;border:3px solid #90caf9;border-radius:14px;padding:10px 12px;font-size:18px;font-weight:800;margin:8px 0;min-height:70px}
+.scn .e{font-size:34px;float:left;margin-right:8px;line-height:1}
+.prog{height:10px;background:#eee;border-radius:6px;overflow:hidden;margin:4px 0 8px}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,#4caf50,#8bc34a);transition:width .3s}
+.choice3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.choice3 .btn{min-width:0;padding:10px 4px;font-size:16px;line-height:1.25}
+.btn.ice{background:#29b6f6;box-shadow:0 4px 0 #0277bd}.btn.hot{background:#ff7043;box-shadow:0 4px 0 #c63f17}.btn.doc{background:#ab47bc;box-shadow:0 4px 0 #6a1b9a}
+.fb{border-radius:10px;padding:8px 10px;margin:8px 0;font-size:16px;font-weight:700}
+.fb.ok{background:#e8f8e5;border-left:6px solid #4caf50;color:#1e6b22}.fb.no{background:#ffe6e6;border-left:6px solid #e74c3c;color:#a01818}
+.steps{display:flex;flex-direction:column;gap:6px;margin:6px 0}
+.steps .done{background:#e8f8e5;border:2px solid #4caf50;border-radius:10px;padding:6px 10px;font-weight:800;color:#1e6b22}
+.btn.shk{animation:shake .25s linear;background:#ffd6d6!important}
+.chalRow{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #f2d38b;border-radius:12px;padding:8px;margin:6px 0}
+.chalRow .e{font-size:30px}.chalRow .t{flex:1;font-weight:800;line-height:1.35}.chalRow .t small{display:block;font-weight:600;color:#7a6a4a;font-size:13px}
+.chalRow .btn{flex:0 0 auto;min-width:84px}
+#acuBar{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:25;background:#fffaf0;border:3px solid #3dbb6a;border-radius:14px;padding:8px 12px;text-align:center;font-weight:800;width:max-content;max-width:94vw;font-size:15px;display:none}
+#acuBar .row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+#acuBar .btn{min-width:96px;flex:0 1 auto;font-size:15px;padding:8px 10px}
+#acuMsg .tgt{font-size:22px;color:#c0392b}
+.certScore{background:#fffdf3;border:2px solid #e0c070;border-radius:10px;padding:6px 10px;margin:8px 0;text-align:left;font-size:15px}
+.certScore div{display:flex;justify-content:space-between;gap:8px}
+.ribbon{display:inline-block;background:linear-gradient(#ffd54a,#f2a93b);color:#7a3d00;font-weight:900;border-radius:20px;padding:4px 14px;margin:4px 0;box-shadow:0 2px 0 #0003}
+@media (max-width:700px),(max-height:520px){body.acu #quest,body.acu #mapWrap{display:none}}
+@media (pointer:coarse) and (min-width:900px){#joy{width:160px;height:160px}#joyKnob{width:72px;height:72px;margin:-36px 0 0 -36px}}
+@media (max-height:520px){
+ #minimap{width:92px;height:92px}
+ #mapWrap small{display:none}
+ #quest{font-size:12.5px;padding:4px 8px}
+ .stamp{width:24px;height:24px;font-size:12px}.badge{width:22px;height:22px;font-size:12px}
+ #joy{width:116px;height:116px;bottom:calc(22px + env(safe-area-inset-bottom))}
+ #joy:before{display:none}
+ #palette{top:auto;bottom:calc(26px + env(safe-area-inset-bottom));right:auto;left:50%;transform:translateX(-50%);flex-direction:row}
+ #palette.show{display:flex}
+ .sw{width:36px;height:36px}
+ body.touch #actBtn{bottom:calc(96px + env(safe-area-inset-bottom))}
+ #toast{top:calc(var(--tbh) + 46px)}
+ .card{font-size:15px;line-height:1.5;padding:10px 12px}
+ .stars{font-size:32px}
+}
+</style>
+<script type="importmap">
+{"imports":{"three":"./assets/three.module.js","three/addons/utils/BufferGeometryUtils.js":"./assets/BufferGeometryUtils.js"}}
+</script>
+</head>
+<body>
+<div id="game"></div>
+<div id="labels"></div>
+<div id="crosshair"></div>
+<div id="toolbar">
+ <button class="tb keep" id="bMenu" aria-label="更多工具">☰ 工具</button>
+ <button class="tb" id="bInfo">🔍 查看設施</button>
+ <button class="tb on" id="bWalk">🚶 自由走動</button>
+ <button class="tb" id="bBuild">🧱 麥塊建造</button>
+ <button class="tb" id="bFly">🕊️ 飛行：關</button>
+ <button class="tb" id="bView">🎥 第三人稱</button>
+ <button class="tb" id="bCross">➕ 準星</button>
+ <button class="tb" id="bUndo">↩️ 復原</button>
+ <button class="tb" id="bCtrl">🎮 搖桿</button>
+ <button class="tb keep" id="bChal">🏆 挑戰</button>
+ <button class="tb keep" id="bSound" aria-label="音效開關">🔊 音效</button>
+ <button class="tb keep" id="bHelp">❓ 說明</button>
+</div>
+<div id="quest" title="點一下可以縮小/展開"><span class="qmini">▾ 展開</span><div id="qText">載入中…</div><div id="stamps"></div><div id="badges"></div></div>
+<div id="mapWrap"><canvas id="minimap" width="300" height="300"></canvas><small>📍 點擊傳送</small></div>
+<div id="palette"></div>
+<button id="actBtn">💬 互動</button>
+<div id="toast"></div>
+<div id="touch">
+ <div id="joy"><div id="joyKnob">🚶</div></div>
+ <div id="dpad">
+  <button class="tbtn" data-k="turnL"><i>↺</i>左轉</button>
+  <button class="tbtn" data-k="fwd"><i>▲</i>前進</button>
+  <button class="tbtn" data-k="turnR"><i>↻</i>右轉</button>
+  <button class="tbtn" data-k="left"><i>◀</i>左移</button>
+  <button class="tbtn ghost"></button>
+  <button class="tbtn" data-k="right"><i>▶</i>右移</button>
+  <button class="tbtn ghost"></button>
+  <button class="tbtn" data-k="back"><i>▼</i>後退</button>
+  <button class="tbtn ghost"></button>
+ </div>
+ <div id="rbtns">
+  <button class="tbtn flyonly" data-k="up"><i>⏫</i>上升</button>
+  <button class="tbtn flyonly" data-k="down"><i>⏬</i>下降</button>
+  <button class="tbtn big" data-k="jump"><i>⤴</i>跳躍</button>
+ </div>
+</div>
+<div id="guide"><div class="gArrow">➤</div><div class="gTxt"></div></div>
+<canvas id="fx"></canvas>
+<div id="acuBar"><div id="acuMsg"></div><div class="row" id="acuBtns"></div></div>
+<div id="modal"></div>
+<div id="stampPop"><span class="ring"></span><span class="e">🏮</span><span id="stampTxt">印章</span></div>
+<div id="start"><div class="startCard">
+ <div style="font-size:54px">🩺🐶🦉🐻</div>
+ <h1>小小中醫師：傷科診所大冒險</h1>
+ <p>你是穿白袍的<b>小小中醫師</b>！<br>今天中醫傷科診所來了三位受傷的動物朋友。</p>
+ <p>先去走廊找會說話的 <b>「銅人爺爺」</b>，<br>完成任務、集滿 <b>6 個印章</b>，成為「小神醫」吧！</p>
+ <p>還有 <b>3 個進階挑戰</b>：冰敷還是熱敷？找穴位、護腰搬重物，拿星星⭐！</p>
+ <p style="font-size:14px;color:#666">電腦：WASD / 方向鍵走路、拖曳滑鼠轉視角、空白鍵跳躍、E 互動<br>手機/平板：左下搖桿走路、拖曳畫面轉視角、點一下物品互動</p>
+ <p id="saveInfo" style="font-size:14px;color:#2e7d32;font-weight:800;display:none"></p>
+ <div class="btns" style="justify-content:center"><button class="btn" id="startBtn" style="font-size:22px;max-width:280px" disabled>載入中…</button><button class="btn gray" id="resetBtn" style="max-width:200px;display:none">🔄 從頭開始</button></div>
+</div></div>
+<div id="cert"></div>
+<div id="footer">⚠️ 本遊戲為衛教用途，身體不舒服請找醫師。</div>
+<div id="err"></div>
+<script>
+window.addEventListener('error',e=>{const d=document.getElementById('err');d.style.display='block';d.textContent='發生錯誤：'+(e.message||e);});
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const $ = id => document.getElementById(id);
+const isTouch = matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+if (isTouch) document.body.classList.add('touch');
+
+/* ================= 基本設定 ================= */
+const renderer = new THREE.WebGLRenderer({ antialias: !isTouch, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, isTouch ? 1.5 : 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+$('game').appendChild(renderer.domElement);
+const canvas = renderer.domElement;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbfe6ff);
+scene.fog = new THREE.Fog(0xbfe6ff, 45, 95);
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 200);
+camera.rotation.order = 'YXZ';
+scene.add(new THREE.HemisphereLight(0xffffff, 0xd8c8a8, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(12, 30, 18); scene.add(sun);
+
+/* ================= 小工具 ================= */
+let seed = 20261023;
+const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const shade = (h, f) => { const [r, g, b] = hexRgb(h); const c = v => Math.max(0, Math.min(255, Math.round(v * f))); return `rgb(${c(r)},${c(g)},${c(b)})`; };
+function canvasTex(w, h, draw, pixel = true) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); draw(g, w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  if (pixel) { t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; }
+  else { t.anisotropy = 4; }
+  t.userData = { canvas: c }; return t;
+}
+function noiseTex(base, amt = 0.08, extra) {
+  return canvasTex(16, 16, (g, s) => { for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) { g.fillStyle = shade(base, 1 + (rnd() - .5) * 2 * amt); g.fillRect(x, y, 1, 1); } extra && extra(g, s); });
+}
+const matCache = new Map();
+function lam(color, opts = {}) {
+  const key = color + JSON.stringify(opts);
+  if (!matCache.has(key)) matCache.set(key, new THREE.MeshLambertMaterial({ color, ...opts }));
+  return matCache.get(key);
+}
+
+/* ================= 方塊材質 ================= */
+const TEX = {
+  granite: noiseTex('#b4b8bd', .05, (g) => { for (let i = 0; i < 26; i++) { g.fillStyle = rnd() < .5 ? '#8d9196' : '#e3e5e8'; g.fillRect(rnd() * 16 | 0, rnd() * 16 | 0, 1, 1); } g.fillStyle = '#a2a6ab'; g.fillRect(0, 15, 16, 1); g.fillRect(15, 0, 1, 16); }),
+  wood: canvasTex(16, 16, (g) => { for (let b = 0; b < 4; b++) { const t = 1 + (rnd() - .5) * .18; for (let y = 0; y < 4; y++) for (let x = 0; x < 16; x++) { g.fillStyle = shade('#d6a46a', t * (1 + (rnd() - .5) * .08) * (x % 7 == 0 ? .96 : 1)); g.fillRect(x, b * 4 + y, 1, 1); } g.fillStyle = shade('#d6a46a', .78); g.fillRect(0, b * 4 + 3, 16, 1); const s = rnd() * 16 | 0; g.fillRect(s, b * 4, 1, 3); } }),
+  carpet: noiseTex('#4a4643', .12),
+  panel: canvasTex(16, 16, (g) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { g.fillStyle = shade('#dcb48a', 1 + (rnd() - .5) * .06 + (x % 5 == 0 ? -.03 : 0)); g.fillRect(x, y, 1, 1); } g.fillStyle = shade('#dcb48a', .8); g.fillRect(0, 0, 1, 16); }),
+  white: noiseTex('#f3f0e8', .015),
+  grey: noiseTex('#d9dadb', .02),
+};
+const BUILD_TYPES = [
+  { id: 'grass', name: '草地', tex: noiseTex('#5dbb4a', .12, g => { g.fillStyle = '#4a9a3a'; for (let i = 0; i < 12; i++) g.fillRect(rnd() * 16 | 0, rnd() * 16 | 0, 1, 2); }) },
+  { id: 'stone', name: '石頭', tex: noiseTex('#8f9396', .14) },
+  { id: 'brick', name: '磚塊', tex: canvasTex(16, 16, g => { g.fillStyle = '#ccc'; g.fillRect(0, 0, 16, 16); for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) { g.fillStyle = shade('#b4483a', 1 + (rnd() - .5) * .2); g.fillRect(((c * 6 + (r % 2) * 3) % 18) - 1, r * 4, 5, 3); } }) },
+  { id: 'plank', name: '木板', tex: noiseTex('#b8864b', .1, g => { g.fillStyle = '#8a6030'; g.fillRect(0, 7, 16, 1); g.fillRect(0, 15, 16, 1); }) },
+  { id: 'gold', name: '金塊', tex: noiseTex('#f2c94c', .08, g => { g.fillStyle = '#fff6c0'; g.fillRect(2, 2, 3, 1); g.fillRect(2, 3, 1, 2); }) },
+  { id: 'glass', name: '玻璃', tex: canvasTex(16, 16, g => { g.fillStyle = '#bfe9ff'; g.fillRect(0, 0, 16, 16); g.fillStyle = '#ffffff'; g.fillRect(0, 0, 16, 1); g.fillRect(0, 0, 1, 16); g.fillRect(15, 0, 1, 16); g.fillRect(0, 15, 16, 1); g.fillRect(4, 4, 2, 1); g.fillRect(4, 5, 1, 2); }), opacity: .55 },
+  { id: 'leaf', name: '樹葉', tex: noiseTex('#2e8b3a', .2) },
+  { id: 'snow', name: '白雪', tex: noiseTex('#f7f9fb', .03) },
+];
+
+/* ================= 體素世界 ================= */
+const W = { x0: -2, y0: -1, z0: -9, sx: 40, sy: 10, sz: 40 };
+const grid = new Uint8Array(W.sx * W.sy * W.sz); // 0 空 1 牆/地板 2 建造方塊 3 家具
+function cidx(x, y, z) { x -= W.x0; y -= W.y0; z -= W.z0; if (x < 0 || y < 0 || z < 0 || x >= W.sx || y >= W.sy || z >= W.sz) return -1; return x + W.sx * (y + W.sy * z); }
+const getCell = (x, y, z) => { const i = cidx(x, y, z); return i < 0 ? 0 : grid[i]; };
+const setCell = (x, y, z, v) => { const i = cidx(x, y, z); if (i >= 0) grid[i] = v; };
+const staticMap = new Map();
+function putStatic(x, y, z, type) { staticMap.set(`${x},${y},${z}`, type); setCell(x, y, z, 1); }
+function delStatic(x, y, z) { staticMap.delete(`${x},${y},${z}`); setCell(x, y, z, 0); }
+
+const ROOMS = [
+  { id: 'hallway', name: '走廊（163 門口）', short: '走廊', x0: 1, x1: 34, z0: 21, z1: 27, floor: 'granite', wains: false, color: '#2f80ed', spawn: [5.6, 24.4, 0.2], label: [6, 22.5],
+    text: '走廊是等候看診的地方。銅人爺爺就站在 163 診間門口！看看門邊的叫號螢幕，輪到你再進去。', rhyme: '安靜等叫號，輪到再進門', emoji: '🚪' },
+  { id: 'clinic', name: '163 診間', short: '163', x0: 1, x1: 10, z0: 10, z1: 19, floor: 'wood', wains: false, color: '#27ae60', spawn: [7, 18, 0.6], label: [5.5, 14.5],
+    text: '醫師在診間用「望、聞、問、切」四種方法了解病情：看一看、聽一聽聞一聞、問一問、摸摸脈。', rhyme: '望聞問切四步驟，看病先問哪裡痛', emoji: '🩺' },
+  { id: 'hall', name: '傷科治療大廳', short: '治療大廳', x0: 12, x1: 34, z0: 6, z1: 19, floor: 'wood', wains: true, color: '#f2994a', spawn: [17.5, 14, 0], label: [23, 12.5],
+    text: '這裡有一排治療床和紅外線烤燈。醫師或治療師會在這裡幫病人推拿、熱療，讓緊緊的肌肉放鬆。', rhyme: '推拿鬆筋骨，烤燈保持距離', emoji: '🛏️' },
+  { id: 'herb', name: '藥敷處理區', short: '藥敷', x0: 12, x1: 19, z0: -6, z1: 4, floor: 'wood', wains: true, color: '#9b51e0', spawn: [16, 2.5, 0], label: [16, -1],
+    text: '醫師會在這裡準備藥膏、藥材，敷在受傷的地方。旁邊的冰箱有冰敷袋，剛受傷時用得到！', rhyme: '藥敷貼患處，癢紅要說出', emoji: '🌿' },
+  { id: 'steam', name: '薰灸室', short: '薰灸室', x0: 21, x1: 34, z0: -6, z1: 4, floor: 'wood', wains: true, color: '#eb5757', spawn: [26.5, 2.5, 0], label: [27.5, -1],
+    text: '中藥薰洗機會把中藥材加水加熱，變成溫熱的藥氣，薰在痠痛的地方。', rhyme: '藥氣溫溫薰，活血又舒筋', emoji: '♨️' },
+];
+const roomAt = (x, z) => ROOMS.find(r => x >= r.x0 && x < r.x1 + 1 && z >= r.z0 && z < r.z1 + 1);
+
+for (const r of ROOMS) {
+  for (let x = r.x0 - 1; x <= r.x1 + 1; x++) for (let z = r.z0 - 1; z <= r.z1 + 1; z++) {
+    putStatic(x, -1, z, r.floor);
+    const edge = x < r.x0 || x > r.x1 || z < r.z0 || z > r.z1;
+    if (edge) for (let y = 0; y < 4; y++) putStatic(x, y, z, 'panel');
+  }
+}
+for (let x = 0; x <= 35; x++) for (let y = 0; y < 4; y++) putStatic(x, y, 28, 'grey');
+for (let x = 21; x <= 31; x++) for (let z = -6; z <= -3; z++) putStatic(x, -1, z, 'carpet');
+
+/* 合併幾何（家具） */
+const bins = new Map();
+function bin(color, opacity = 1) { const k = color + '|' + opacity; if (!bins.has(k)) bins.set(k, []); return bins.get(k); }
+function B(color, x0, y0, z0, x1, y1, z1, opacity = 1) {
+  const g = new THREE.BoxGeometry(Math.abs(x1 - x0), Math.abs(y1 - y0), Math.abs(z1 - z0));
+  g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); bin(color, opacity).push(g);
+}
+function CY(color, r, x, y0, z, h, seg = 14, rb = r) {
+  const g = new THREE.CylinderGeometry(r, rb, h, seg); g.translate(x, y0 + h / 2, z); bin(color).push(g);
+}
+function solid(x0, z0, x1, z1, h = 1) { for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) for (let y = 0; y < h; y++) if (!getCell(x, y, z)) setCell(x, y, z, 3); }
+
+/* 可點擊物件 */
+const hits = [];
+function addHit(key, x0, y0, z0, x1, y1, z1, extra = {}) {
+  const h = { key, box: new THREE.Box3(new THREE.Vector3(Math.min(x0, x1), y0, Math.min(z0, z1)), new THREE.Vector3(Math.max(x0, x1), y1, Math.max(z0, z1))), ...extra };
+  hits.push(h); return h;
+}
+
+/* 文字招牌 */
+function signMesh(lines, w, h, opt = {}) {
+  const res = opt.res || 256, cw = res, ch = Math.max(16, Math.round(res * h / w));
+  const tex = canvasTex(cw, ch, (g) => {
+    g.fillStyle = opt.bg || '#fff6d5'; g.fillRect(0, 0, cw, ch);
+    if (opt.border) { g.strokeStyle = opt.border; g.lineWidth = Math.max(3, cw / 40); g.strokeRect(2, 2, cw - 4, ch - 4); }
+    if (opt.draw) opt.draw(g, cw, ch);
+    const n = lines.length; const fs = opt.fs ? opt.fs * ch : Math.min(ch / (n + .6), cw / (Math.max(...lines.map(l => l.length)) + .8));
+    g.fillStyle = opt.fg || '#3a2a10'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `900 ${fs}px "Noto Sans CJK TC","PingFang TC","Microsoft JhengHei",sans-serif`;
+    lines.forEach((l, i) => g.fillText(l, cw / 2, ch / 2 + (i - (n - 1) / 2) * fs * 1.15));
+  }, false);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: !!opt.transparent }));
+  return m;
+}
+const FACE = { s: 0, n: Math.PI, e: Math.PI / 2, w: -Math.PI / 2 };
+function wallSign(lines, w, h, x, y, z, face, opt) { const m = signMesh(lines, w, h, opt); m.position.set(x, y, z); m.rotation.y = FACE[face]; scene.add(m); return m; }
+
+/* 門 */
+function door(x, z, axis, w, opt = {}) {
+  for (let i = 0; i < w; i++) for (let y = 0; y < 3; y++) { const cx = axis === 'x' ? x + i : x, cz = axis === 'x' ? z : z + i; delStatic(cx, y, cz); }
+  const fc = '#e8c597';
+  if (axis === 'x') {
+    B(fc, x - .12, 0, z - .06, x, 3.08, z + 1.06); B(fc, x + w, 0, z - .06, x + w + .12, 3.08, z + 1.06); B(fc, x - .12, 2.96, z - .06, x + w + .12, 3.1, z + 1.06);
+    if (!opt.noLeaf) { const s = opt.side || 1, zf = s > 0 ? z + 1.04 : z - .04, d = opt.slide || 1; const lx0 = d > 0 ? x + w + .1 : x - w - .1, lx1 = d > 0 ? x + 2 * w + .1 : x - .1;
+      B(opt.leaf || '#d29a5c', lx0, .02, zf - .03, lx1, 2.94, zf + .03);
+      B('#c9cdd1', d > 0 ? lx0 + .12 : lx1 - .2, 1.15, zf - .07 * s * -1, d > 0 ? lx0 + .2 : lx1 - .12, 1.45, zf + .07 * s);
+      if (opt.win) B('#eef6fb', (lx0 + lx1) / 2 - .4, 1.6, zf - .035, (lx0 + lx1) / 2 + .4, 2.5, zf + .035); }
+  } else {
+    B(fc, x - .06, 0, z - .12, x + 1.06, 3.08, z); B(fc, x - .06, 0, z + w, x + 1.06, 3.08, z + w + .12); B(fc, x - .06, 2.96, z - .12, x + 1.06, 3.1, z + w + .12);
+    if (!opt.noLeaf) { const s = opt.side || 1, xf = s > 0 ? x + 1.04 : x - .04, d = opt.slide || 1; const lz0 = d > 0 ? z + w + .1 : z - w - .1, lz1 = d > 0 ? z + 2 * w + .1 : z - .1;
+      B(opt.leaf || '#d29a5c', xf - .03, .02, lz0, xf + .03, 2.94, lz1); }
+  }
+}
+door(8, 20, 'x', 2, { side: -1, slide: -1, leaf: '#d9a066' });      // 走廊 ↔ 163
+door(11, 11, 'z', 2, { side: 1, slide: 1 });                          // 163 ↔ 治療大廳
+door(30, 20, 'x', 2, { side: -1, slide: -1, win: true });             // 走廊 ↔ 治療大廳
+door(15, 5, 'x', 2, { side: 1, slide: -1, win: true });               // 治療大廳 ↔ 藥敷
+door(26, 5, 'x', 2, { side: 1, slide: 1, win: true, leaf: '#c98c50' }); // 治療大廳 ↔ 薰灸室（拉門）
+door(20, 0, 'z', 2, { noLeaf: true });                                // 藥敷 ↔ 薰灸室
+
+/* 腰牆（下木上白） */
+for (const r of ROOMS) if (r.wains) {
+  for (let y = 2; y < 4; y++) {
+    for (let x = r.x0; x <= r.x1; x++) {
+      if (getCell(x, y, r.z0 - 1) === 1) B('#f4f1ea', x, y, r.z0, x + 1, y + 1, r.z0 + .015);
+      if (getCell(x, y, r.z1 + 1) === 1) B('#f4f1ea', x, y, r.z1 + .985, x + 1, y + 1, r.z1 + 1);
+    }
+    for (let z = r.z0; z <= r.z1; z++) {
+      if (getCell(r.x0 - 1, y, z) === 1) B('#f4f1ea', r.x0, y, z, r.x0 + .015, y + 1, z + 1);
+      if (getCell(r.x1 + 1, y, z) === 1) B('#f4f1ea', r.x1 + .985, y, z, r.x1 + 1, y + 1, z + 1);
+    }
+  }
+  // 木頭飾條（門口不畫）
+  for (let x = r.x0; x <= r.x1; x++) {
+    if (getCell(x, 1, r.z0 - 1) === 1) B('#e2b98a', x, 1.95, r.z0, x + 1, 2.05, r.z0 + .04);
+    if (getCell(x, 1, r.z1 + 1) === 1) B('#e2b98a', x, 1.95, r.z1 + .96, x + 1, 2.05, r.z1 + 1);
+  }
+  for (let z = r.z0; z <= r.z1; z++) {
+    if (getCell(r.x0 - 1, 1, z) === 1) B('#e2b98a', r.x0, 1.95, z, r.x0 + .04, 2.05, z + 1);
+    if (getCell(r.x1 + 1, 1, z) === 1) B('#e2b98a', r.x1 + .96, 1.95, z, r.x1 + 1, 2.05, z + 1);
+  }
+}
+
+/* ================= 家具 ================= */
+function bed(x0, z0, alongZ = true, headPos = true, top = '#26262a') {
+  const L = 2.1, Wd = .9;
+  const x1 = alongZ ? x0 + Wd : x0 + L, z1 = alongZ ? z0 + L : z0 + Wd;
+  const legs = [[x0 + .08, z0 + .08], [x1 - .13, z0 + .08], [x0 + .08, z1 - .13], [x1 - .13, z1 - .13]];
+  for (const [lx, lz] of legs) B('#c3c7cb', lx, 0, lz, lx + .05, .58, lz + .05);
+  if (alongZ) B('#c3c7cb', x0 + .1, .22, z0 + 1.02, x1 - .1, .26, z0 + 1.06); else B('#c3c7cb', x0 + 1.02, .22, z0 + .1, x0 + 1.06, .26, z1 - .1);
+  B('#3c3c40', x0 + .03, .55, z0 + .03, x1 - .03, .62, z1 - .03);
+  B(top, x0, .62, z0, x1, .78, z1);
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  if (alongZ) { const hz = headPos ? z1 - .33 : z0 + .33; B('#050505', cx - .12, .781, hz - .11, cx + .12, .79, hz + .11); }
+  else { const hx = headPos ? x1 - .33 : x0 + .33; B('#050505', hx - .11, .781, cz - .12, hx + .11, .79, cz + .12); }
+  solid(Math.floor(x0), Math.floor(z0), Math.floor(x1 - .01), Math.floor(z1 - .01), 1);
+  addHit('bed', x0, 0, z0, x1, .8, z1, { info: 'bed' });
+  return { x0, z0, x1, z1 };
+}
+function cabinet(x0, z0, x1, z1, frontFace) {
+  B('#d8a25e', x0, 0, z0, x1, .9, z1); B('#d2c8b0', x0 - .02, .9, z0 - .02, x1 + .02, .97, z1 + .02);
+  for (const y of [.3, .6]) {
+    if (frontFace === 'n') B('#a8763e', x0 + .03, y, z0 - .01, x1 - .03, y + .025, z0);
+    else if (frontFace === 's') B('#a8763e', x0 + .03, y, z1, x1 - .03, y + .025, z1 + .01);
+  }
+  solid(Math.floor(x0), Math.floor(z0), Math.floor(x1 - .01), Math.floor(z1 - .01), 1);
+  addHit('cabinet', x0, 0, z0, x1, 1, z1, { info: 'cabinet' });
+}
+function curtainZ(x, z0, z1, color = '#f3e2a9') { // 沿 z 方向的布簾
+  let i = 0; for (let z = z0; z < z1 - .01; z += .2, i++) B(i % 2 ? color : shade(color, .93), x - .06 + (i % 2) * .07, .35, z, x + .02 + (i % 2) * .07, 3.55, Math.min(z + .2, z1));
+  B('#b8bcc0', x - .03, 3.55, z0 - .2, x + .05, 3.62, z1 + .1);
+}
+function curtainX(z, x0, x1, color = '#f3e2a9') {
+  let i = 0; for (let x = x0; x < x1 - .01; x += .2, i++) B(i % 2 ? color : shade(color, .93), x, .35, z - .06 + (i % 2) * .07, Math.min(x + .2, x1), 3.55, z + .02 + (i % 2) * .07);
+  B('#b8bcc0', x0 - .2, 3.55, z - .03, x1 + .1, 3.62, z + .05);
+}
+function clock(x, y, z, face) {
+  const tex = canvasTex(128, 128, (g) => {
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 10; g.strokeStyle = '#4a2e1c'; g.stroke();
+    g.fillStyle = '#222'; g.font = '900 16px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let i = 1; i <= 12; i++) { const a = i / 12 * Math.PI * 2; g.fillText(i, 64 + Math.sin(a) * 44, 64 - Math.cos(a) * 44); }
+    g.lineCap = 'round'; g.lineWidth = 5; g.beginPath(); g.moveTo(64, 64); g.lineTo(64 + 22, 64 - 14); g.stroke();
+    g.lineWidth = 3; g.beginPath(); g.moveTo(64, 64); g.lineTo(64 - 6, 64 - 40); g.stroke();
+  }, false);
+  const m = new THREE.Mesh(new THREE.CircleGeometry(.32, 24), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+  m.position.set(x, y, z); m.rotation.y = FACE[face]; scene.add(m);
+  const nx = face === 'e' ? .01 : face === 'w' ? -.01 : 0, nz = face === 's' ? .01 : face === 'n' ? -.01 : 0;
+  addHit('clock', x - .32 - Math.abs(nz) * 0, y - .32, z - .32, x + .32, y + .32, z + .32, { info: 'clock' });
+}
+
+/* ---------- 走廊 ---------- */
+B('#c3c8cd', 4.4, 0, 21.05, 5.2, 1.4, 21.7); B('#2a2a2a', 4.45, 1.12, 21.7, 5.15, 1.38, 21.72); B('#a7adb3', 4.5, .1, 21.7, 5.1, 1.0, 21.71);
+B('#f3f3f3', 4.55, .62, 21.6, 5.05, .7, 21.78); B('#3a3f45', 4.6, .7, 21.62, 5.0, 1.05, 21.66);
+solid(4, 21, 5, 21, 2); addHit('dispenser', 4.4, 0, 21.05, 5.2, 1.4, 21.75, { info: 'dispenser' });
+CY('#5b7089', .17, 5.55, 0, 21.3, .42); CY('#e6e6e6', .18, 5.55, .42, 21.3, .05);
+CY('#5b7089', .14, 6.05, 0, 21.32, .34); CY('#e6e6e6', .15, 6.05, .34, 21.32, .05);
+CY('#d0202a', .08, 4.12, 0, 21.15, .48); B('#222', 4.08, .48, 21.12, 4.16, .55, 21.18);
+wallSign(['滅火器'], .3, .14, 4.12, .78, 21.02, 's', { bg: '#d0202a', fg: '#fff' });
+B('#151515', 4.5, 2.5, 21.0, 6.3, 3.5, 21.08); B('#2b3240', 4.56, 2.56, 21.08, 6.24, 3.44, 21.085);
+addHit('tv', 4.5, 2.5, 21.0, 6.3, 3.5, 21.2, { info: 'tv' });
+B('#1a1a1a', 6.72, 1.42, 21.0, 7.38, 2.58, 21.07);
+wallSign(['中醫科', '163 診間', '看診中', '請依序叫號'], .58, 1.06, 7.05, 2.0, 21.075, 's', { bg: '#2f7fd8', fg: '#fff', border: '#9fd0ff' });
+wallSign(['163'], .62, .3, 7.05, 2.82, 21.02, 's', { bg: '#dcb48a', fg: '#ffffff' });
+addHit('doorSign', 6.7, 1.4, 21.0, 7.4, 3.0, 21.2, { info: 'doorSign' });
+wallSign(['門診看診須知', '・保持安靜', '・依號碼看診', '・說清楚哪裡痛'], .72, 1.0, 1.95, 2.25, 21.02, 's', { bg: '#f5efdc', border: '#b9a77a' });
+addHit('notice', 1.55, 1.7, 21.0, 2.35, 2.8, 21.2, { info: 'notice' });
+wallSign(['163 中醫科'], 1.5, .36, 9, 3.45, 21.02, 's', { bg: '#2e8b57', fg: '#fff' });
+wallSign(['傷科治療室'], 1.6, .38, 31, 3.45, 21.02, 's', { bg: '#d9772b', fg: '#fff' });
+for (const [a, b] of [[10, 17], [20, 27]]) {
+  for (let x = a; x <= b; x++) {
+    B('#3d7cc9', x + .08, .42, 26.35, x + .92, .5, 26.95); B('#3d7cc9', x + .08, .5, 26.85, x + .92, 1.02, 26.95);
+  }
+  B('#8a9096', a + .05, 0, 26.55, b + .95, .42, 26.62); B('#8a9096', a + .05, 0, 26.75, b + .95, .42, 26.82);
+  solid(a, 26, b, 26, 1); addHit('chairs', a, 0, 26.3, b + 1, 1.05, 27, { info: 'chairs' });
+}
+B('#8a5a32', 33.2, 0, 26.2, 33.8, .5, 26.8); B('#3f9a3a', 33.05, .5, 26.05, 33.95, 1.3, 26.95); B('#5dbb4a', 33.25, 1.3, 26.25, 33.75, 1.7, 26.75); solid(33, 26, 33, 26, 1);
+wallSign(['出口 EXIT'], .9, .32, 34.98, 3.2, 24, 'w', { bg: '#1f9d55', fg: '#fff' });
+
+/* ---------- 163 診間 ---------- */
+B('#d7a86e', 1.0, .72, 13.0, 3.4, .78, 14.6); CY('#d7a86e', .8, 3.4, .72, 13.8, .06, 20);
+B('#b98a52', 1.0, .7, 12.98, 3.4, .72, 14.62);
+B('#e9dfc6', 1.0, 0, 13.1, 1.7, .7, 14.5); B('#e9dfc6', 3.0, 0, 13.55, 3.55, .7, 14.05);
+B('#d7a86e', 1.0, .72, 10.15, 1.8, .78, 13.0); B('#e9dfc6', 1.0, 0, 10.2, 1.75, .7, 10.4);
+B('#151515', 1.05, .78, 10.35, 1.6, 1.25, 11.0); B('#f2f2f2', 1.15, .78, 11.4, 1.6, 1.05, 11.5);
+B('#111', 1.5, .95, 13.85, 2.85, 1.6, 13.93); B('#3a4a60', 1.56, 1.0, 13.84, 2.79, 1.55, 13.845); B('#222', 2.12, .78, 13.9, 2.24, .95, 14.1); B('#222', 1.95, .78, 13.95, 2.4, .8, 14.25);
+B('#222', 1.6, .78, 13.12, 2.7, .81, 13.38); B('#2a7bd8', 2.9, .78, 13.15, 3.25, .9, 13.5); B('#6b4426', 3.3, .78, 13.4, 3.75, .9, 13.75);
+CY('#f5f5f5', .05, 1.3, .78, 13.3, .22);
+solid(1, 13, 3, 14, 1); solid(1, 10, 1, 12, 1);
+addHit('desk', 1.0, 0, 13.0, 4.2, 1.6, 14.6, { info: 'desk' }); addHit('desk', 1.0, 0, 10.15, 1.8, 1.3, 13.0, { info: 'desk' });
+B('#1e1e1e', 1.85, .45, 11.95, 2.45, .56, 12.55); B('#1e1e1e', 1.85, .56, 11.8, 2.45, 1.3, 11.93);
+CY('#333', .04, 2.15, .1, 12.25, .36); B('#333', 1.8, .04, 12.2, 2.5, .1, 12.3); B('#333', 2.1, .04, 11.9, 2.2, .1, 12.6);
+addHit('docChair', 1.8, 0, 11.75, 2.5, 1.3, 12.6, { info: 'docChair' });
+for (const [lx, lz] of [[2.45, 15.45], [2.95, 15.45], [2.45, 15.95], [2.95, 15.95]]) B('#3a2a1e', lx - .03, 0, lz - .03, lx + .03, .46, lz + .03);
+B('#1f1f22', 2.38, .45, 15.38, 3.02, .56, 16.02); B('#1f1f22', 2.4, .56, 15.9, 3.0, 1.35, 16.0);
+addHit('patientChair', 2.35, 0, 15.35, 3.05, 1.35, 16.05, { info: 'patientChair' });
+B('#c49660', 1.0, 0, 16.6, 2.0, .16, 17.6); B('#e9ebee', 1.06, .16, 16.68, 1.94, .74, 17.52); B('#cfd3d8', 1.12, .74, 16.74, 1.88, .79, 17.46); B('#333', 1.95, .55, 16.9, 1.96, .66, 17.3);
+solid(1, 16, 1, 17, 1); addHit('printer', 1.0, 0, 16.6, 2.0, .8, 17.6, { info: 'printer' });
+B('#c9925a', 4.6, 0, 10.0, 7.6, .86, 10.65); B('#ddb07a', 4.55, .86, 10.0, 7.65, .9, 10.7); B('#a87745', 6.08, .05, 10.65, 6.12, .84, 10.67);
+CY('#d0d4d8', .2, 5.9, .88, 10.33, .04); B('#c8c8c8', 5.88, .9, 10.05, 5.92, 1.12, 10.1); B('#f4f4f4', 6.3, 1.25, 10.0, 6.68, 1.55, 10.13);
+solid(4, 10, 7, 10, 1); addHit('sink', 5.5, 0, 10.0, 6.8, 1.6, 10.7, { info: 'sink' });
+B('#888', 4.78, .9, 10.18, 5.12, .92, 10.48); CY('#cccccc', .02, 5.07, .92, 10.3, 1.0); B('#efe6d0', 4.82, .94, 10.24, 5.04, 1.04, 10.44);
+for (let i = 0; i < 11; i++) B(i % 2 ? '#f2ead8' : '#e4d8bf', 4.88, 1.06 + i * .068, 10.28, 5.0, 1.115 + i * .068, 10.4);
+addHit('spine', 4.75, .9, 10.15, 5.2, 1.9, 10.5, { info: 'spine' });
+{ const G = '#d4a640'; B('#a8812f', 7.0, .9, 10.12, 7.48, .98, 10.56); B(G, 7.12, .98, 10.3, 7.2, 1.3, 10.38); B(G, 7.27, .98, 10.3, 7.35, 1.3, 10.38);
+  B(G, 7.1, 1.3, 10.27, 7.37, 1.6, 10.41); B(G, 7.16, 1.6, 10.27, 7.31, 1.76, 10.41); B(G, 7.37, 1.45, 10.3, 7.43, 1.88, 10.37); B(G, 7.04, 1.3, 10.3, 7.1, 1.56, 10.37);
+  B('#c8102e', 7.09, 1.27, 10.26, 7.38, 1.33, 10.42); addHit('miniStatue', 6.95, .9, 10.1, 7.5, 1.9, 10.6, { info: 'miniStatue' }); }
+wallSign(['人體穴位圖'], .55, .4, 6.05, 1.95, 10.02, 's', { bg: '#e8f4ff', border: '#5a8fd0', fg: '#1b4f8a' });
+B('#b8bcc0', 8.57, 3.58, 13.9, 8.64, 3.64, 18.0); curtainZ(8.6, 13.9, 15.9, '#f1d77a');
+bed(9.05, 14.4, true, false, '#e8dfc8');
+addHit('curtainY', 8.4, 0, 13.9, 8.8, 3.6, 15.9, { info: 'curtainY' });
+
+/* ---------- 傷科治療大廳 ---------- */
+const lampSpecs = [];
+const bedNums = ['C01', 'C02', 'C03', 'C04', 'C05', 'C06'];
+[13, 16, 19, 22, 25, 28].forEach((bx, i) => {
+  bed(bx, 17.4, true, true);
+  cabinet(bx + 1.12, 19.0, bx + 1.88, 19.62, 'n');
+  lampSpecs.push({ x: bx + 1.5, z: 18.55, dir: -1, axis: 'x', bed: bx });
+  if (i < 5) curtainZ(bx + 2.08, 18.7, 19.98);
+  wallSign([bedNums[i]], .28, .16, bx + .45, 1.62, 19.98, 'n', { bg: '#ffffff', fg: '#2a5aa0', border: '#2a5aa0' });
+});
+[13, 19, 25].forEach(bx => {
+  wallSign(['預防病人跌倒'], .95, .6, bx + 1.5, 1.45, 19.985, 'n', { bg: '#e6f2ff', fg: '#1b4f8a', border: '#3d7cc9', fs: .2,
+    draw: (g, w, h) => { g.fillStyle = '#ffd84a'; for (let k = 0; k < 4; k++) { g.fillRect(20 + k * 58, h * .6, 40, h * .3); g.fillStyle = k % 2 ? '#ffd84a' : '#ff9a6a'; } } });
+  addHit('poster', bx + 1.0, 1.1, 19.9, bx + 2.0, 1.8, 20, { info: 'poster' });
+});
+[19, 22].forEach((bx, i) => {
+  bed(bx, 6.1, true, false);
+  cabinet(bx + 1.12, 6.02, bx + 1.88, 6.62, 's');
+  lampSpecs.push({ x: bx + 1.5, z: 7.15, dir: -1, axis: 'x', bed: bx });
+  curtainZ(bx + 2.08, 6.02, 7.2);
+});
+curtainZ(18.6, 6.02, 7.2);
+bed(30.4, 9.0, true, true); bed(32.6, 9.0, true, true);
+lampSpecs.push({ x: 31.85, z: 9.9, dir: -1, axis: 'x', bed: 30.4 });
+B('#7d8288', 33.7, 0, 15.6, 34.3, .45, 16.2); B('#7d8288', 33.75, .45, 15.65, 34.25, .5, 16.15);
+B('#d29a5c', 34.9, .02, 13.1, 34.97, 2.92, 14.9); B('#e8c597', 34.88, 0, 12.98, 34.99, 3.0, 13.1); B('#e8c597', 34.88, 0, 14.9, 34.99, 3.0, 15.02); B('#e8c597', 34.88, 2.92, 12.98, 34.99, 3.04, 15.02);
+B('#c9cdd1', 34.86, 1.2, 13.25, 34.9, 1.45, 13.35);
+wallSign(['← 出口'], .7, .28, 34.97, 2.55, 14, 'w', { bg: '#bfe3ff', fg: '#1b4f8a' });
+addHit('exitDoor', 34.6, 0, 13, 35, 3, 15, { info: 'exitDoor' });
+clock(25.2, 3.15, 6.02, 's');
+wallSign(['薰灸室'], .62, .24, 25.3, 1.72, 6.02, 's', { bg: '#efe2b0', border: '#b8a060' });
+wallSign(['藥敷處理區'], .62, .24, 25.3, 1.42, 6.02, 's', { bg: '#efe2b0', border: '#b8a060' });
+wallSign(['藥敷處理區'], .62, .24, 17.75, 1.6, 6.02, 's', { bg: '#efe2b0', border: '#b8a060' });
+clock(34.97, 3.2, 10.5, 'w');
+
+/* ---------- 藥敷處理區 ---------- */
+B('#e0d6c2', 12.0, 0, -5.5, 12.8, .9, .5); B('#9aa3a8', 11.98, .9, -5.55, 12.86, .95, .55);
+for (let z = -5.4; z < .4; z += 1.0) B('#b9ad94', 12.8, .1, z + .05, 12.81, .8, z + .07);
+B('#c9925a', 12.0, 1.7, -5.5, 12.38, 1.74, .5); B('#c9925a', 12.0, 2.3, -5.5, 12.38, 2.34, .5);
+const HERB_COLORS = ['#6f8f3f', '#d0453a', '#a8c060', '#8a5a3a', '#c9a227', '#6a3d2a'];
+for (let i = 0; i < 10; i++) { const z = -5.3 + i * .57, c = HERB_COLORS[i % 6];
+  B('#e8f1f4', 12.15, .95, z, 12.5, 1.32, z + .32, .55); B(c, 12.19, .95, z + .04, 12.46, 1.2, z + .28); B('#f4f4f4', 12.17, 1.32, z + .02, 12.48, 1.37, z + .3);
+  B(HERB_COLORS[(i + 2) % 6], 12.05, 1.74, z + .03, 12.3, 1.98, z + .27); B(HERB_COLORS[(i + 4) % 6], 12.05, 2.34, z + .03, 12.3, 2.56, z + .27); }
+solid(12, -6, 12, 0, 1);
+wallSign(['藥草櫃'], .9, .32, 12.02, 2.85, -2.5, 'e', { bg: '#6b3fa0', fg: '#fff' });
+B('#f4f6f8', 12.05, 0, 1.55, 12.85, 1.5, 2.65); B('#c9cdd1', 12.86, .7, 1.65, 12.9, 1.3, 1.72); B('#dfe3e6', 12.85, .9, 1.58, 12.86, .92, 2.62);
+wallSign(['❄ 冰敷袋'], .55, .22, 12.87, 1.2, 2.15, 'e', { bg: '#d6f0ff', fg: '#1b6fb0' });
+solid(12, 1, 12, 2, 2); addHit('fridge', 12.0, 0, 1.55, 12.9, 1.5, 2.65, { info: 'fridge', near: true, name: '冰敷還是熱敷？' });
+B('#c5cbd0', 15.0, .85, -3.2, 17.4, .9, -1.8);
+for (const [lx, lz] of [[15.05, -3.15], [17.3, -3.15], [15.05, -1.9], [17.3, -1.9]]) B('#9aa0a6', lx, 0, lz, lx + .05, .85, lz + .05);
+B('#9aa0a6', 15.05, .25, -3.15, 17.35, .29, -1.85);
+CY('#fafafa', .08, 15.5, .9, -2.5, .15, 10); CY('#fafafa', .08, 15.75, .9, -2.6, .15, 10); CY('#6d6d6d', .13, 16.6, .9, -2.55, .12); CY('#3d6b2a', .1, 16.6, 1.0, -2.55, .03);
+B('#f0e6c8', 15.9, .9, -2.15, 16.45, .915, -1.9); B('#8a5a3a', 16.9, .9, -2.4, 17.2, 1.0, -2.1);
+solid(15, -4, 17, -2, 1); addHit('herbTable', 15.0, 0, -3.2, 17.4, 1.1, -1.8, { info: 'herbTable' });
+bed(18.0, -5.8, true, false, '#e8dfc8');
+wallSign(['藥膏請醫師調配', '小朋友不可以自己用'], 1.1, .45, 16.2, 2.6, -5.98, 's', { bg: '#fff3d6', border: '#d9772b', fg: '#8a3b00' });
+
+/* ---------- 薰灸室 ---------- */
+const machineSpecs = [];
+[22.2, 25.2, 28.2].forEach((mx, i) => {
+  B('#f2f3f4', mx, 0, -5.9, mx + .75, .42, -5.3); B('#e2e4e6', mx, .42, -5.9, mx + .75, .44, -5.3);
+  CY('#1a1a1a', .2, mx + .375, .44, -5.6, .04, 18); CY('#bbbbbb', .07, mx + .375, .48, -5.6, .12);
+  B('#2a0d0d', mx + .08, .1, -5.3, mx + .67, .32, -5.285); B('#ff3b3b', mx + .14, .17, -5.285, mx + .32, .25, -5.28); B('#3bff6b', mx + .5, .17, -5.285, mx + .6, .25, -5.28);
+  CY('#bfc4c8', .022, mx + .9, 0, -5.82, 1.95); B('#bfc4c8', mx + .75, 1.9, -5.84, mx + 1.05, 1.93, -5.8); B('#e8f4f8', mx + .82, 1.45, -5.9, mx + .98, 1.72, -5.74, .7);
+  B('#dcdcdc', mx + .88, .4, -5.84, mx + .92, 1.45, -5.8);
+  const sx = mx + .375, sz = -4.45;
+  CY('#151515', .22, sx, .5, sz, .1, 16); CY('#333', .03, sx, .08, sz, .42); B('#333', sx - .26, .03, sz - .03, sx + .26, .08, sz + .03); B('#333', sx - .03, .03, sz - .26, sx + .03, .08, sz + .26);
+  addHit('stool', sx - .25, 0, sz - .25, sx + .25, .62, sz + .25, { info: 'stool' });
+  solid(Math.floor(mx), -6, Math.floor(mx + .74), -6, 1);
+  machineSpecs.push({ x: mx + .375, z: -5.6, top: .5, stool: [sx, sz] });
+  wallSign(['D0' + (i + 1)], .3, .17, mx + .2, 1.62, -5.985, 's', { bg: '#ffffff', fg: '#2a5aa0', border: '#2a5aa0' });
+  curtainZ(mx + 1.6, -5.98, -4.9);
+});
+curtainZ(21.4, -5.98, -4.9);
+B('#dddddd', 32.3, .06, -5.05, 32.9, .1, -4.95); B('#dddddd', 32.55, .06, -5.3, 32.65, .1, -4.7); CY('#c8c8c8', .03, 32.6, .1, -5.0, 1.2);
+B('#e0e0e0', 32.35, 1.0, -5.2, 32.85, 1.2, -4.8); B('#1f6fd1', 32.38, 1.3, -5.15, 32.82, 1.66, -4.95); B('#9fe0ff', 32.43, 1.36, -4.95, 32.77, 1.6, -4.94);
+B('#222', 32.45, 1.22, -4.82, 32.75, 1.3, -4.78);
+addHit('vitals', 32.2, 0, -5.4, 33, 1.7, -4.6, { info: 'vitals' });
+bed(33.0, -.2, true, false);
+wallSign(['中藥薰洗區'], 1.0, .3, 25.5, 2.6, -5.985, 's', { bg: '#eb5757', fg: '#fff' });
+wallSign(['🚭 禁止吸菸'], .6, .22, 31.5, 2.5, -5.985, 's', { bg: '#fff', fg: '#c0392b', border: '#c0392b' });
+
+/* ================= 建立場景網格 ================= */
+const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+const dummy = new THREE.Object3D();
+{
+  const byType = {};
+  for (const [k, t] of staticMap) (byType[t] = byType[t] || []).push(k);
+  for (const t in byType) {
+    const list = byType[t];
+    const m = new THREE.InstancedMesh(boxGeo, new THREE.MeshLambertMaterial({ map: TEX[t] }), list.length);
+    list.forEach((k, i) => { const [x, y, z] = k.split(',').map(Number); dummy.position.set(x + .5, y + .5, z + .5); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); });
+    m.instanceMatrix.needsUpdate = true; scene.add(m);
+  }
+}
+function flushBins() {
+  for (const [k, geos] of bins) {
+    if (!geos.length) continue;
+    const [color, op] = k.split('|'); const opacity = +op;
+    const merged = mergeGeometries(geos, false); geos.forEach(g => g.dispose());
+    const mat = opacity < 1 ? new THREE.MeshLambertMaterial({ color, transparent: true, opacity, depthWrite: false }) : lam(color);
+    scene.add(new THREE.Mesh(merged, mat));
+  }
+  bins.clear();
+}
+flushBins();
+
+/* ================= 角色與臉 ================= */
+function boxMesh(mat, w, h, d, x, y, z, parent) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); parent.add(m); return m; }
+function faceTex(kind, happy) {
+  return canvasTex(16, 16, (g) => {
+    const P = (c, x, y, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+    if (kind === 'kid') {
+      P('#f5c9a0', 0, 0, 16, 16); P('#2b2b2b', 0, 0, 16, 4); P('#2b2b2b', 0, 4, 2, 2); P('#2b2b2b', 14, 4, 2, 2);
+      P('#222', 4, 7, 2, 2); P('#222', 10, 7, 2, 2); P('#fff', 4, 7, 1, 1); P('#fff', 10, 7, 1, 1);
+      P('#c0504d', 5, 11); P('#c0504d', 6, 12, 4, 1); P('#c0504d', 10, 11); P('#f39a9a', 2, 10, 2, 1); P('#f39a9a', 12, 10, 2, 1); return;
+    }
+    if (kind === 'statue') {
+      for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) P(shade('#d9ab45', 1 + (rnd() - .5) * .08), x, y);
+      P('#9a7322', 3, 5, 3, 1); P('#9a7322', 10, 5, 3, 1); P('#7a5a1a', 3, 8, 3, 1); P('#7a5a1a', 10, 8, 3, 1);
+      P('#c4952f', 7, 8, 2, 3); P('#7a5a1a', 5, 12); P('#7a5a1a', 6, 13, 4, 1); P('#7a5a1a', 10, 12); return;
+    }
+    const C = { dog: { bg: '#d9a066', mz: '#f3e1c4' }, bear: { bg: '#7a4a25', mz: '#c9a27a' }, owl: { bg: '#8b5a2b', disc: '#ecd3a8' } }[kind];
+    P(C.bg, 0, 0, 16, 16);
+    for (let i = 0; i < 20; i++) P(shade(C.bg, .9 + rnd() * .15), rnd() * 16 | 0, rnd() * 16 | 0);
+    const ey = 6, ex = [4, 11], k = '#222';
+    if (kind === 'owl') {
+      P(C.disc, 1, 3, 6, 7); P(C.disc, 9, 3, 6, 7);
+      if (happy) ex.forEach(x => { P('#ffd23f', x - 2, ey - 2, 4, 4); P(k, x - 1, ey - 1, 2, 2); P('#fff', x - 1, ey - 1); });
+      else ex.forEach((x, j) => { P(k, x - 2, ey, 4, 1); P(k, j ? x + 1 : x - 2, ey - 1); });
+      P('#f2992e', 7, 8, 2, 3); P('#f2992e', 7, 11, 2, 1);
+    } else {
+      P(C.mz, 4, 9, 8, 6); P('#222', 7, 9, 2, 2);
+      if (happy) ex.forEach(x => { P(k, x - 1, ey + 1); P(k, x, ey); P(k, x + 1, ey + 1); });
+      else { P(k, ex[0] - 1, ey - 1); P(k, ex[0], ey); P(k, ex[0] - 1, ey + 1); P(k, ex[1] + 1, ey - 1); P(k, ex[1], ey); P(k, ex[1] + 1, ey + 1); }
+      if (happy) { P('#5a2a1a', 6, 12); P('#5a2a1a', 7, 13, 2, 1); P('#5a2a1a', 9, 12); P('#e85a6a', 7, 14, 2, 1); }
+      else { P('#5a2a1a', 6, 13); P('#5a2a1a', 7, 12); P('#5a2a1a', 8, 13); P('#5a2a1a', 9, 12); }
+    }
+    if (happy) { P('#f59a9a', 1, 9, 2, 1); P('#f59a9a', 13, 9, 2, 1); }
+    else { P('#5ab4ff', 2, 8, 1, 2); P('#5ab4ff', 2, 10); }
+  });
+}
+function headMesh(size, side, faceMat, x, y, z, parent) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), [side, side, side, side, faceMat, side]); m.position.set(x, y, z); parent.add(m); return m;
+}
+
+/* 玩家：小小中醫師 */
+const player = new THREE.Group(); scene.add(player);
+const P_ = { skin: lam('#f5c9a0'), coat: lam('#ffffff'), pants: lam('#3b4a6b'), hair: lam('#2b2b2b'), shoe: lam('#333333'), steth: lam('#3a3a3a') };
+const legL = new THREE.Group(), legR = new THREE.Group(), armL = new THREE.Group(), armR = new THREE.Group();
+legL.position.set(-.12, .72, 0); legR.position.set(.12, .72, 0); armL.position.set(-.39, 1.42, 0); armR.position.set(.39, 1.42, 0);
+player.add(legL, legR, armL, armR);
+for (const l of [legL, legR]) { boxMesh(P_.pants, .22, .64, .24, 0, -.36, 0, l); boxMesh(P_.shoe, .23, .1, .28, 0, -.67, .02, l); }
+for (const a of [armL, armR]) { boxMesh(P_.coat, .2, .62, .22, 0, -.28, 0, a); boxMesh(P_.skin, .18, .13, .2, 0, -.64, 0, a); }
+boxMesh(P_.coat, .58, .76, .32, 0, 1.08, 0, player);
+boxMesh(P_.coat, .6, .26, .34, 0, .72, 0, player);
+boxMesh(lam('#dfe7ee'), .03, .9, .01, 0, 1.0, .165, player);
+boxMesh(P_.steth, .3, .04, .02, 0, 1.4, .17, player); boxMesh(P_.steth, .04, .3, .02, -.1, 1.25, .17, player); boxMesh(lam('#9aa0a6'), .08, .08, .03, -.1, 1.08, .175, player);
+boxMesh(lam('#2f80ed'), .04, .14, .02, .17, 1.28, .17, player);
+const kidFace = new THREE.MeshLambertMaterial({ map: faceTex('kid', true) });
+headMesh(.46, P_.skin, kidFace, 0, 1.7, 0, player);
+boxMesh(P_.hair, .48, .12, .48, 0, 1.96, 0, player); boxMesh(P_.hair, .48, .36, .08, 0, 1.78, -.21, player);
+
+/* 銅人爺爺 */
+const statue = new THREE.Group(); statue.position.set(3.2, 0, 21.85); scene.add(statue);
+{
+  const gold = lam('#dcae48'), red = lam('#c8102e');
+  boxMesh(lam('#c79a3e'), 1.1, .25, 1.0, 0, .125, 0, statue);
+  for (const s of [-1, 1]) { boxMesh(gold, .22, .1, .34, s * .15, .3, .05, statue); boxMesh(gold, .24, 1.0, .26, s * .15, .8, 0, statue);
+    boxMesh(gold, .2, .86, .24, s * .42, 1.72, 0, statue); boxMesh(gold, .2, .2, .22, s * .42, 1.19, 0, statue); }
+  boxMesh(red, .68, .34, .4, 0, 1.3, 0, statue); boxMesh(red, .34, .45, .05, 0, 1.0, .21, statue); boxMesh(red, .1, .55, .32, .3, 1.05, 0, statue);
+  boxMesh(gold, .62, .76, .34, 0, 1.78, 0, statue); boxMesh(gold, .2, .1, .2, 0, 2.21, 0, statue);
+  headMesh(.44, gold, new THREE.MeshLambertMaterial({ map: faceTex('statue', true) }), 0, 2.48, 0, statue);
+}
+solid(2, 21, 3, 22, 3);
+const ACU = {
+  hegu: { name: '合谷穴', where: '手背上，大拇指和食指的骨頭中間，靠近食指那根骨頭（第 2 掌骨）的中間點。大拇指和食指併攏時，肉鼓起來最高的地方就在附近。', note: '常用來幫忙舒緩頭痛、牙齒痛的不舒服。（懷孕的媽媽要先問醫師，不要自己按。）' },
+  neiguan: { name: '內關穴', where: '手腕內側（手心那一面），從手腕的橫紋往手肘方向，大約三根手指併攏的寬度（約 2 寸），在兩條筋的中間。', note: '常用來幫忙舒緩暈車、想吐的感覺。' },
+  zusanli: { name: '足三里穴', where: '膝蓋下方外側的小凹洞（外膝眼）往下大約四根手指寬（約 3 寸），再從小腿前面那根骨頭（脛骨）往外大約一根手指寬。', note: '常用來幫忙照顧腸胃、舒緩肚子不舒服，是很有名的保健穴位。' },
+  fengchi: { name: '風池穴', where: '後腦勺頭骨的下緣，脖子後面兩條大肌肉（斜方肌和胸鎖乳突肌）上端中間的凹陷處，左右各一個。', note: '常用來幫忙舒緩頭痛、脖子緊緊的感覺。落枕時醫師也常會注意這裡。' },
+};
+const acuMarkers = [], acuHits = [];
+const statueMeshes = statue.children.slice();
+const acuMarkMat = new THREE.MeshBasicMaterial({ color: 0x3dff7a }), acuGoldMat = new THREE.MeshBasicMaterial({ color: 0xffc400 }), acuHintMat = new THREE.MeshBasicMaterial({ color: 0xff4fa3 });
+{
+  const mm = acuMarkMat, hm = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+  const pts = [['hegu', .535, 1.2, -.03], ['neiguan', .42, 1.42, .125], ['zusanli', .22, .64, .135], ['fengchi', .12, 2.33, -.225]];
+  for (const [key, x, y, z] of pts) for (const s of [-1, 1]) {
+    const m = boxMesh(mm, .085, .085, .085, s * x, y, z, statue); m.visible = false; m.userData.key = key; acuMarkers.push(m);
+    const h = boxMesh(hm, .3, .3, .3, s * x, y, z, statue); h.visible = false; h.userData.key = key; acuHits.push(h);
+  }
+}
+addHit('statue', 2.6, 0, 21.3, 3.8, 2.75, 22.4, { near: true, name: '銅人爺爺' });
+
+/* 動物病人 */
+function makeAnimal(kind) {
+  const g = new THREE.Group(), body = new THREE.Group(); g.add(body); scene.add(g);
+  const happyTex = faceTex(kind, true), hurtTex = faceTex(kind, false);
+  const faceMat = new THREE.MeshLambertMaterial({ map: hurtTex });
+  let head, h;
+  if (kind === 'dog') {
+    const fur = lam('#d9a066'), dark = lam('#8a5a2b');
+    for (const [x, z] of [[-.13, .18], [.13, .18], [-.13, -.18], [.13, -.18]]) boxMesh(fur, .13, .28, .13, x, .14, z, body);
+    boxMesh(lam('#ffffff'), .16, .13, .16, .13, .1, .18, body);
+    boxMesh(fur, .4, .32, .62, 0, .44, 0, body);
+    head = headMesh(.44, fur, faceMat, 0, .8, .3, body);
+    boxMesh(dark, .08, .24, .16, -.26, .8, .3, body); boxMesh(dark, .08, .24, .16, .26, .8, .3, body);
+    const t = boxMesh(fur, .08, .08, .28, 0, .62, -.4, body); t.rotation.x = .6; h = 1.05;
+  } else if (kind === 'owl') {
+    const br = lam('#8b5a2b'), dk = lam('#6a4220');
+    boxMesh(lam('#f2992e'), .12, .06, .16, -.12, .03, .05, body); boxMesh(lam('#f2992e'), .12, .06, .16, .12, .03, .05, body);
+    boxMesh(br, .5, .5, .42, 0, .31, 0, body); boxMesh(lam('#e9cfa0'), .34, .34, .02, 0, .3, .215, body);
+    boxMesh(dk, .08, .4, .32, -.29, .33, 0, body); boxMesh(dk, .08, .4, .32, .29, .33, 0, body);
+    const hp = new THREE.Group(); hp.position.set(0, .56, 0); body.add(hp);
+    head = headMesh(.52, br, faceMat, 0, .26, 0, hp); boxMesh(dk, .1, .14, .1, -.19, .58, 0, hp); boxMesh(dk, .1, .14, .1, .19, .58, 0, hp);
+    head = hp; h = 1.2;
+  } else {
+    const br = lam('#7a4a25');
+    boxMesh(br, .22, .42, .24, -.16, .21, 0, body); boxMesh(br, .22, .42, .24, .16, .21, 0, body);
+    boxMesh(br, .62, .62, .44, 0, .73, 0, body); boxMesh(lam('#c9a27a'), .4, .4, .02, 0, .7, .225, body);
+    boxMesh(br, .18, .5, .2, -.4, .8, 0, body); boxMesh(br, .18, .5, .2, .4, .8, 0, body);
+    head = headMesh(.52, br, faceMat, 0, 1.31, .02, body); boxMesh(br, .14, .14, .1, -.2, 1.6, 0, body); boxMesh(br, .14, .14, .1, .2, 1.6, 0, body);
+    h = 1.7;
+  }
+  const a = { kind, g, body, head, h, happy: false, wiggle: 0,
+    setHappy(v) { a.happy = v; faceMat.map = v ? happyTex : hurtTex; faceMat.needsUpdate = true; } };
+  return a;
+}
+const animals = { dog: makeAnimal('dog'), owl: makeAnimal('owl'), bear: makeAnimal('bear') };
+const ANIMAL_INFO = { dog: { name: '狗狗', av: '🐶', hurt: '扭傷' }, owl: { name: '貓頭鷹', av: '🦉', hurt: '落枕' }, bear: { name: '熊熊', av: '🐻', hurt: '閃到腰' } };
+function placeAnimal(k, x, y, z, ry) { const a = animals[k]; a.g.position.set(x, y, z); a.g.rotation.y = ry; a.baseY = y; }
+for (const k in animals) {
+  const a = animals[k];
+  a.hit = addHit(k, 0, 0, 0, 1, 1, 1, { near: true, name: ANIMAL_INFO[k].name, dyn: a });
+}
+function updateDynHits() { for (const h of hits) if (h.dyn) { const p = h.dyn.g.position; h.box.min.set(p.x - .4, p.y, p.z - .4); h.box.max.set(p.x + .4, p.y + h.dyn.h, p.z + .4); } }
+function animalsToClinic() { placeAnimal('dog', 4.3, 0, 17.1, .5); placeAnimal('owl', 5.6, 0, 17.3, 0); placeAnimal('bear', 7.0, 0, 16.9, -.4); }
+function animalsToTreatment() { placeAnimal('owl', 16.45, .78, 18.2, Math.PI); placeAnimal('bear', 19.45, .78, 18.0, Math.PI); placeAnimal('dog', machineSpecs[0].stool[0], .6, machineSpecs[0].stool[1], 0); }
+animalsToClinic();
+
+/* 紅外線烤燈 */
+const silver = lam('#d3d7db'), darkM = lam('#2a2a2a');
+const lamps = lampSpecs.map((s, i) => {
+  const g = new THREE.Group(); g.position.set(s.x, 0, s.z); scene.add(g);
+  boxMesh(darkM, .5, .04, .06, 0, .04, 0, g); boxMesh(darkM, .06, .04, .5, 0, .04, 0, g);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 1.75, 8), silver); pole.position.y = .9; g.add(pole);
+  boxMesh(darkM, .1, .16, .08, 0, 1.1, .05, g);
+  const arm = boxMesh(silver, .66, .04, .04, s.dir * .3, 1.8, 0, g); arm.rotation.z = s.dir * .15;
+  const head = new THREE.Group(); head.position.set(s.dir * .62, 1.72, 0); head.rotation.z = -s.dir * .35; g.add(head);
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.1, .24, .26, 14, 1, true), new THREE.MeshLambertMaterial({ color: '#d3d7db', side: THREE.DoubleSide })); head.add(bowl);
+  const disk = new THREE.Mesh(new THREE.CircleGeometry(.21, 16), new THREE.MeshBasicMaterial({ color: '#555' })); disk.rotation.x = Math.PI / 2; disk.position.y = -.08; head.add(disk);
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(.55, 1.0, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#ff9a3a', transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  cone.position.y = -.6; cone.visible = false; head.add(cone);
+  const L = { g, disk, cone, bowl, on: false, spec: s, idx: i,
+    set(v) { L.on = v; L.cone.visible = v; L.disk.material.color.set(v ? '#ffb347' : '#555'); L.bowl.material.emissive = new THREE.Color(v ? '#ff7a1a' : '#000'); L.bowl.material.emissiveIntensity = v ? .5 : 0; } };
+  addHit('lamp', s.x - .9, 0, s.z - .3, s.x + .2, 1.95, s.z + .3, { near: true, name: '紅外線烤燈', idx: i, info: 'lamp' });
+  return L;
+});
+const OWL_LAMP = lamps.findIndex(l => l.spec.bed === 16);
+machineSpecs.forEach((m, i) => addHit('machine', m.x - .4, 0, m.z - .35, m.x + .65, 1.0, m.z + .35, { near: true, name: '中藥薰洗機', idx: i, info: 'machine' }));
+addHit('herbCounter', 12.0, 0, -5.5, 12.95, 2.6, .5, { near: true, name: '藥草櫃', info: 'herbCounter' });
+
+/* 蒸氣粒子 */
+const STEAM_N = 80;
+const steamMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(.2, .2, .2), new THREE.MeshBasicMaterial({ color: '#f4fff2', transparent: true, opacity: .8, depthWrite: false }), STEAM_N);
+steamMesh.frustumCulled = false; scene.add(steamMesh);
+const steamP = Array.from({ length: STEAM_N }, () => ({ x: 0, y: -50, z: 0, life: 0, max: 1, s: 1 }));
+const steamSources = [];
+let steamAcc = 0;
+function updateSteam(dt, t) {
+  steamAcc += dt * 50;
+  for (let i = 0; i < STEAM_N; i++) {
+    const p = steamP[i];
+    if (p.life <= 0) {
+      if (steamSources.length && steamAcc >= 1) { steamAcc -= 1; const s = steamSources[(rnd() * steamSources.length) | 0];
+        p.x = s.x + (rnd() - .5) * .3; p.y = s.y; p.z = s.z + (rnd() - .5) * .3; p.max = p.life = 1.4 + rnd() * 1.2; p.s = .6 + rnd() * .8; }
+      else { dummy.position.set(0, -50, 0); dummy.scale.setScalar(.001); dummy.updateMatrix(); steamMesh.setMatrixAt(i, dummy.matrix); continue; }
+    }
+    p.life -= dt; p.y += dt * (.7 + p.s * .3); p.x += Math.sin(t * 2 + i) * dt * .15; p.z += Math.cos(t * 1.7 + i) * dt * .12 + dt * .12;
+    const k = Math.max(0, p.life / p.max); const sc = p.s * (0.4 + (1 - k) * 1.4) * Math.min(1, k * 3);
+    dummy.position.set(p.x, p.y, p.z); dummy.scale.setScalar(sc); dummy.rotation.set(0, t + i, 0); dummy.updateMatrix(); steamMesh.setMatrixAt(i, dummy.matrix);
+  }
+  steamMesh.instanceMatrix.needsUpdate = true; dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1);
+}
+
+/* ================= 建造 ================= */
+const buildMeshes = BUILD_TYPES.map(t => { const m = new THREE.InstancedMesh(boxGeo, new THREE.MeshLambertMaterial({ map: t.tex, transparent: !!t.opacity, opacity: t.opacity || 1 }), 600); m.count = 0; m.frustumCulled = false; scene.add(m); return m; });
+const built = new Map(); const undoStack = [];
+let buildType = 0, buildTool = 'place';
+function rebuildBuilt() {
+  const counts = buildMeshes.map(() => 0);
+  for (const [k, t] of built) { const [x, y, z] = k.split(',').map(Number); if (counts[t] >= 600) continue; dummy.position.set(x + .5, y + .5, z + .5); dummy.updateMatrix(); buildMeshes[t].setMatrixAt(counts[t]++, dummy.matrix); }
+  buildMeshes.forEach((m, i) => { m.count = counts[i]; m.instanceMatrix.needsUpdate = true; });
+}
+function voxelRay(o, d, maxD, pred) {
+  let x = Math.floor(o.x), y = Math.floor(o.y), z = Math.floor(o.z);
+  const sx = d.x > 0 ? 1 : -1, sy = d.y > 0 ? 1 : -1, sz = d.z > 0 ? 1 : -1;
+  const tdx = d.x ? Math.abs(1 / d.x) : Infinity, tdy = d.y ? Math.abs(1 / d.y) : Infinity, tdz = d.z ? Math.abs(1 / d.z) : Infinity;
+  let tmx = d.x ? (sx > 0 ? x + 1 - o.x : o.x - x) * tdx : Infinity, tmy = d.y ? (sy > 0 ? y + 1 - o.y : o.y - y) * tdy : Infinity, tmz = d.z ? (sz > 0 ? z + 1 - o.z : o.z - z) * tdz : Infinity;
+  let t = 0, nx = 0, ny = 0, nz = 0;
+  for (let i = 0; i < 200 && t <= maxD; i++) {
+    const v = getCell(x, y, z); if (v && pred(v)) return { x, y, z, t, nx, ny, nz, v };
+    if (tmx < tmy && tmx < tmz) { x += sx; t = tmx; tmx += tdx; nx = -sx; ny = 0; nz = 0; }
+    else if (tmy < tmz) { y += sy; t = tmy; tmy += tdy; nx = 0; ny = -sy; nz = 0; }
+    else { z += sz; t = tmz; tmz += tdz; nx = 0; ny = 0; nz = -sz; }
+  }
+  return null;
+}
+function buildAt(ray, remove) {
+  const h = voxelRay(ray.origin, ray.direction, 14, v => true);
+  if (!h) { toast('太遠了，靠近一點再建造！'); return; }
+  if (remove || buildTool === 'remove') {
+    if (h.v === 2) { const k = `${h.x},${h.y},${h.z}`; undoStack.push({ op: 'del', k, t: built.get(k) }); built.delete(k); setCell(h.x, h.y, h.z, 0); rebuildBuilt(); sfx('click'); }
+    else toast('診所原本的牆和家具不能拆喔！只能拆你蓋的方塊。');
+    return;
+  }
+  const x = h.x + h.nx, y = h.y + h.ny, z = h.z + h.nz;
+  if (y < 0 || y > 7 || getCell(x, y, z) || cidx(x, y, z) < 0) return;
+  if (x + 1 > pos.x - .3 && x < pos.x + .3 && z + 1 > pos.z - .3 && z < pos.z + .3 && y + 1 > pos.y && y < pos.y + 1.8) { toast('不能把方塊放在自己身上喔！'); return; }
+  const k = `${x},${y},${z}`; built.set(k, buildType); setCell(x, y, z, 2); undoStack.push({ op: 'add', k }); rebuildBuilt(); sfx('pop');
+}
+function undoBuild() {
+  const u = undoStack.pop(); if (!u) { toast('沒有可以復原的建造動作。'); return; }
+  const [x, y, z] = u.k.split(',').map(Number);
+  if (u.op === 'add') { built.delete(u.k); setCell(x, y, z, 0); } else if (!getCell(x, y, z)) { built.set(u.k, u.t); setCell(x, y, z, 2); }
+  rebuildBuilt(); toast('↩️ 已復原上一步'); sfx('click');
+}
+
+/* ================= 衛教資料 ================= */
+const NEEDLE_WARN = '針灸（扎針）一定要由醫師來做，小朋友不可以自己模仿喔！';
+const INFO = {
+  statue: { e: '🏅', t: '針灸銅人', d: '很久以前的宋朝，醫師就用銅做成人體模型，身上標出穴位，用來教學生認識穴位。', r: '銅人點點是穴位，學醫認穴靠它幫', w: NEEDLE_WARN },
+  dispenser: { e: '💧', t: '飲水機', d: '口渴了嗎？記得補充水分，小口慢慢喝溫開水，身體才有精神。', r: '小口慢慢喝，健康又快樂' },
+  tv: { e: '📺', t: '衛教電視', d: '候診時可以看衛教影片，學習怎麼照顧自己的身體。', r: '等待不無聊，學習沒煩惱' },
+  doorSign: { e: '🔢', t: '叫號螢幕', d: '螢幕會顯示「中醫科」和看診號碼。聽到自己的號碼，再進診間喔！', r: '安靜等叫號，輪到再進門' },
+  notice: { e: '📋', t: '看診須知', d: '看醫生時，要說清楚：哪裡痛？痛多久了？怎麼受傷的？', r: '哪裡痛、多久了、怎麼傷，都要說清楚' },
+  chairs: { e: '💺', t: '候診椅', d: '坐著等候時，背靠椅背、坐姿挺直，脊椎才不會累。', r: '坐要挺，背要直' },
+  desk: { e: '🖥️', t: '診療桌', d: '醫師在電腦上寫病歷、開處方，記下你哪裡不舒服。', r: '醫師問什麼，誠實說清楚' },
+  docChair: { e: '🪑', t: '醫師的椅子', d: '醫師坐在這裡聽病人說話，還會摸摸手腕的脈搏，這叫「切脈」。', r: '望聞問切四步驟' },
+  patientChair: { e: '🪑', t: '病人椅', d: '病人坐這裡。醫師會問：哪裡痛？怎麼受傷的？痛多久了？', r: '看病先問哪裡痛' },
+  printer: { e: '🖨️', t: '印表機', d: '印出藥單和衛教單，回家可以照著做。', r: '回家照著做，好得比較快' },
+  sink: { e: '🚰', t: '洗手台', d: '看病前後都要洗手，把細菌洗掉！', r: '濕、搓、沖、捧、擦' },
+  spine: { e: '🦴', t: '脊椎模型', d: '脊椎像一節一節的積木疊起來，撐住身體、保護神經。', r: '坐要挺、站要直，脊椎笑嘻嘻' },
+  miniStatue: { e: '🏅', t: '小銅人模型', d: '這也是穴位模型！醫師用它跟病人說明穴位在哪裡。', r: '穴位地圖，醫師幫你找', w: NEEDLE_WARN },
+  curtainY: { e: '🟨', t: '隱私布簾', d: '拉上布簾可以保護病人的隱私，讓病人安心。', r: '尊重隱私，先問再進來' },
+  bed: { e: '🛏️', t: '治療床', d: '床頭有一個洞！趴著的時候把臉放進去，就能好好呼吸。', r: '上下床慢慢來，小心不跌倒' },
+  cabinet: { e: '🗄️', t: '床邊櫃', d: '放治療用的毛巾和用品，整整齊齊、乾乾淨淨。', r: '東西歸位，不亂丟' },
+  lamp: { e: '💡', t: '紅外線烤燈', d: '烤燈會發出溫暖的紅外線，常用來幫忙促進局部血液循環、放鬆緊緊的肌肉。剛受傷、又紅又腫的時候，通常要先冰敷，不急著烤熱。', r: '烤燈溫溫暖，距離要保持', w: '太燙要馬上說！不可以把燈拉近玩，小心燙傷。' },
+  poster: { e: '🪧', t: '預防跌倒海報', d: '從床上起來時：先坐一下、再站起來、最後才走路。', r: '慢慢起身，不跌倒' },
+  clock: { e: '🕐', t: '時鐘', d: '熱敷、烤燈都要看時間，不可以太久喔！', r: '熱敷有時間，太久會燙傷' },
+  exitDoor: { e: '🚪', t: '出口', d: '遇到緊急狀況，跟著大人從出口離開。', r: '不推、不跑、不講話' },
+  herbCounter: { e: '🌿', t: '藥草櫃', d: '這裡放著各種中藥材，像艾葉、紅花、伸筋草。', r: '中藥醫師開，不可自己亂吃', w: '中藥要由醫師開立，小朋友不可以自己亂吃、亂用！' },
+  fridge: { e: '🧊', t: '冰敷袋冰箱', d: '剛扭傷（大約受傷後 48 小時內）、又紅又腫又熱的時候，可以先冰敷，幫忙減輕腫脹和疼痛。冰敷袋要用毛巾包著，每次大約 15～20 分鐘，中間要休息。<b>不要把冰塊直接貼在皮膚上</b>，會凍傷喔！', r: '剛扭傷先冰敷，腫消了再熱敷', w: '如果很腫、變形、麻麻的，或痛了好幾天都沒有比較好，要請大人帶你去看醫師。' },
+  herbTable: { e: '🩹', t: '藥敷處理台', d: '醫師在這裡把藥膏塗在布上，再敷到受傷的地方。', r: '藥敷貼患處，癢紅要說出', w: '敷藥後皮膚癢、紅、起疹子，要馬上告訴醫師。' },
+  machine: { e: '♨️', t: '中藥薰洗機', d: '把中藥材加水加熱，冒出溫熱的藥氣，薰在痠痛的地方，常用來幫忙活血、放鬆。比較適合腫已經消了、慢慢恢復中的痠痛，剛受傷紅腫時醫師通常不會先薰熱。', r: '藥氣溫溫薰，活血又舒筋', w: '要由醫師評估後才使用。溫度要剛好，覺得太燙或不舒服要馬上說。' },
+  stool: { e: '⚫', t: '圓凳', d: '病人坐在這裡，把痠痛的手或腳靠近薰洗機。', r: '坐穩再治療' },
+  vitals: { e: '📟', t: '生命徵象監測器', d: '可以量血壓、心跳和體溫，確認病人的身體狀況穩定。', r: '量血壓時要放鬆，手不亂動' },
+};
+
+/* ================= 音效 ================= */
+let actx = null;
+const SETTINGS = (() => { try { return Object.assign({ sound: true, ctrl: 'joy' }, JSON.parse(localStorage.getItem('tcmClinic_settings') || '{}')); } catch (e) { return { sound: true, ctrl: 'joy' }; } })();
+function saveSettings() { try { localStorage.setItem('tcmClinic_settings', JSON.stringify(SETTINGS)); } catch (e) { } }
+function sfx(type) {
+  if (!SETTINGS.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    const now = actx.currentTime;
+    const tone = (f, t0, d, wave = 'square', v = .06, f2) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = wave; o.frequency.setValueAtTime(f, now + t0); if (f2) o.frequency.exponentialRampToValueAtTime(f2, now + t0 + d); g.gain.setValueAtTime(v, now + t0); g.gain.exponentialRampToValueAtTime(.0001, now + t0 + d); o.connect(g).connect(actx.destination); o.start(now + t0); o.stop(now + t0 + d + .02); };
+    if (type === 'click') tone(660, 0, .06);
+    else if (type === 'pop') tone(420, 0, .07, 'triangle', .1);
+    else if (type === 'good') { tone(660, 0, .1); tone(880, .1, .15); tone(1175, .22, .2); }
+    else if (type === 'bad') { tone(220, 0, .18, 'sawtooth', .05); }
+    else if (type === 'stamp') { tone(160, 0, .12, 'triangle', .25, 60); tone(90, 0, .2, 'sine', .25, 40); tone(784, .18, .12); tone(1046, .3, .12); tone(1318, .42, .28); }
+    else if (type === 'star') { tone(988, 0, .08, 'triangle', .1); tone(1480, .07, .16, 'triangle', .08); }
+    else if (type === 'fanfare') { [523, 659, 784, 1046].forEach((f, i) => tone(f, i * .12, .18, 'square', .05)); tone(1046, .5, .5, 'triangle', .09); tone(1318, .5, .5, 'triangle', .06); }
+    else if (type === 'whoosh') tone(300, 0, .25, 'sine', .06, 1200);
+  } catch (e) { }
+}
+
+/* ================= UI 小工具 ================= */
+let uiOpen = false;
+function toast(msg, ms = 2600) { const t = $('toast'); t.innerHTML = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms); }
+function openModal(html) {
+  const m = $('modal'); m.innerHTML = `<div class="card">${html}</div>`; m.classList.add('show'); uiOpen = true;
+  if (document.pointerLockElement) document.exitPointerLock(); clearInputs(); return m.firstChild;
+}
+function closeModal() { $('modal').classList.remove('show'); $('modal').innerHTML = ''; uiOpen = false; }
+function talk(seq, done) {
+  let i = 0;
+  const step = () => {
+    const s = seq[i], last = i === seq.length - 1;
+    openModal(`<h2><span class="av">${s.av}</span>${s.who}</h2><p>${s.text}</p>${s.extra || ''}<div class="btns"><button class="btn" id="mNext">${last ? (s.btn || '好！') : '下一句 ▶'}</button></div>`);
+    $('mNext').onclick = () => { sfx('click'); i++; if (i < seq.length) step(); else { closeModal(); done && done(); } };
+  };
+  step();
+}
+function choice(who, av, text, buttons) {
+  openModal(`<h2><span class="av">${av}</span>${who}</h2><p>${text}</p><div class="btns col">${buttons.map((b, i) => `<button class="btn ${b.cls || ''}" data-b="${i}">${b.t}</button>`).join('')}</div>`);
+  $('modal').querySelectorAll('[data-b]').forEach(el => el.onclick = () => { sfx('click'); const b = buttons[+el.dataset.b]; closeModal(); b.cb && b.cb(); });
+}
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; }
+function quiz(q, done) {
+  const order = shuffle(q.opts.map((_, i) => i));
+  openModal(`<h2><span class="av">${q.av || '❓'}</span>${q.who || '小問題'}</h2><p class="q">${q.q}</p><div class="btns col">${order.map(i => `<button class="btn opt" data-i="${i}" ${i === q.ans ? 'data-c="1"' : ''}>${'ABCD'[order.indexOf(i)]}. ${q.opts[i]}</button>`).join('')}</div><div class="hint" id="qHint"></div>`);
+  $('modal').querySelectorAll('[data-i]').forEach(el => el.onclick = () => {
+    const i = +el.dataset.i;
+    if (i === q.ans) {
+      sfx('good');
+      openModal(`<h2><span class="av">🎉</span>答對了！</h2><p>${q.explain || ''}</p>${q.rhyme ? `<div class="rhyme">📣 口訣：${q.rhyme}</div>` : ''}${q.warn ? `<div class="warn">⚠️ ${q.warn}</div>` : ''}<div class="btns"><button class="btn" id="mNext">繼續 ▶</button></div>`);
+      $('mNext').onclick = () => { sfx('click'); closeModal(); done && done(); };
+    } else { sfx('bad'); el.classList.add('wrong'); el.disabled = true; $('qHint').textContent = '💡 提示：' + q.hint + ' 再試一次！'; }
+  });
+}
+function showInfo(key) {
+  const I = INFO[key]; if (!I) return;
+  openModal(`<h2><span class="av">${I.e}</span>${I.t}</h2><p>${I.d}</p>${I.r ? `<div class="rhyme">📣 口訣：${I.r}</div>` : ''}${I.w ? `<div class="warn">⚠️ ${I.w}</div>` : ''}<div class="btns"><button class="btn" id="mNext">知道了！</button></div>`);
+  $('mNext').onclick = () => { sfx('click'); closeModal(); };
+}
+function showZone(r) {
+  openModal(`<h2><span class="av">${r.emoji}</span>${r.name}</h2><p>${r.text}</p><div class="rhyme">📣 口訣：${r.rhyme}</div><div class="btns"><button class="btn alt" id="mGo">📍 傳送過去</button><button class="btn" id="mNext">知道了！</button></div>`);
+  $('mNext').onclick = () => { sfx('click'); closeModal(); };
+  $('mGo').onclick = () => { closeModal(); teleportRoom(r); };
+}
+
+/* ================= 任務 ================= */
+const STAMPS = [
+  { id: 'master', e: '🎓', n: '拜師章' }, { id: 'acu', e: '✨', n: '穴位章' }, { id: 'ask', e: '🩺', n: '問診章' },
+  { id: 'treat', e: '💡', n: '治療章' }, { id: 'herb', e: '🌿', n: '藥草章' }, { id: 'steam', e: '♨️', n: '薰洗章' },
+];
+/* 進階挑戰徽章（不影響 6 印章主線） */
+const BADGES = [
+  { id: 'icehot', e: '🧊', n: '冰熱敷達人', game: '冰敷還是熱敷？', where: '藥敷處理區的冰箱', desc: '判斷什麼時候冰敷、熱敷，或要趕快找醫師。' },
+  { id: 'acufind', e: '🎯', n: '找穴位高手', game: '找穴位挑戰', where: '走廊的銅人爺爺', desc: '在銅人爺爺身上點出指定的穴位，越快越好！' },
+  { id: 'lift', e: '💪', n: '護腰小教練', game: '護腰搬重物', where: '治療大廳的熊熊', desc: '排出安全搬重物的步驟，再回答暖身、姿勢小問題。' },
+];
+const Q = { step: 0, stamps: {}, acuSeen: new Set(), lampDone: false, massageDone: false, certShown: false, best: {}, name: '' };
+const SAVE_KEY = 'tcmClinic_v2';
+function saveGame() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 2, step: Q.step, stamps: Q.stamps, acuSeen: [...Q.acuSeen], lampDone: Q.lampDone, massageDone: Q.massageDone, certShown: Q.certShown, best: Q.best, name: Q.name, ts: Date.now() })); } catch (e) { }
+}
+function loadGame() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (!d || d.v !== 2) return false;
+    Q.step = Math.max(0, Math.min(5, d.step | 0)); Q.stamps = d.stamps || {}; Q.acuSeen = new Set((d.acuSeen || []).filter(k => k in ACU));
+    Q.lampDone = !!d.lampDone; Q.massageDone = !!d.massageDone; Q.certShown = !!d.certShown; Q.best = d.best || {}; Q.name = d.name || '';
+    return Q.step > 0 || Object.keys(Q.best).length > 0;
+  } catch (e) { return false; }
+}
+function resetGame() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { } location.reload(); }
+function confirmReset() {
+  choice('重新開始', '🔄', '確定要<b>清除所有印章、星星和進度</b>，從頭開始嗎？', [{ t: '✅ 確定，重新開始', cls: 'gray', cb: resetGame }, { t: '↩️ 不要，繼續玩', cls: 'alt' }]);
+}
+$('stamps').innerHTML = STAMPS.map(s => `<div class="stamp" id="st_${s.id}" title="${s.n}">${s.e}</div>`).join('');
+$('badges').innerHTML = '進階' + BADGES.map(b => `<div class="badge" id="bd_${b.id}" title="${b.n}">${b.e}</div>`).join('') + '<span id="starSum"></span>';
+const allStamps = () => STAMPS.every(s => Q.stamps[s.id]);
+const starTotal = () => BADGES.reduce((n, b) => n + (Q.best[b.id] || 0), 0);
+const nextBadge = () => BADGES.find(b => !Q.best[b.id]);
+function objective() {
+  const acuTxt = `認識銅人爺爺身上的 4 個穴位（${Q.acuSeen.size}/4）`;
+  switch (Q.step) {
+    case 0: return '去走廊找 <b>「銅人爺爺」</b> 說說話。';
+    case 1: return '到 <b>「163 診間」</b> 問問動物病人哪裡痛。';
+    case 2: return `到 <b>「傷科治療大廳」</b>：${Q.lampDone ? '✅' : '⬜'} 幫貓頭鷹開烤燈　${Q.massageDone ? '✅' : '⬜'} 幫熊熊推拿`;
+    case 3: return '到 <b>「藥敷處理區」</b> 的藥草櫃挑選藥草。';
+    case 4: return '🌿 帶著藥草，到 <b>「薰灸室」</b> 放進中藥薰洗機。';
+    default: {
+      if (!Q.stamps.acu) return `最後一關：${acuTxt}`;
+      const nb = nextBadge();
+      return nb ? `🎉 6 個印章集滿了！<br>🏆 進階挑戰（可自由選）：去 <b>${nb.where}</b> 玩「${nb.game}」` : '🎉 全部完成！你是<b>進階小神醫</b>！（可以再挑戰拿滿星星）';
+    }
+  }
+}
+function updateQuestUI() {
+  let t = `📜 <b>任務</b>：${objective()}`;
+  if (Q.step > 0 && Q.step < 5 && !Q.stamps.acu) t += `<br><span style="font-size:.9em;color:#777">（也別忘了：${Q.acuSeen.size}/4 個穴位）</span>`;
+  $('qText').innerHTML = t;
+  for (const s of STAMPS) $('st_' + s.id).classList.toggle('got', !!Q.stamps[s.id]);
+  for (const b of BADGES) $('bd_' + b.id).classList.toggle('got', !!Q.best[b.id]);
+  const st = starTotal(); $('starSum').textContent = st ? ` ⭐${st}/9` : '';
+  saveGame();
+}
+/* 蓋章動畫：放大→重重蓋下（震動＋墨圈）→飛進任務框的格子 */
+const stampQueue = [];
+function popStamp(e, html, gold, slotId, after) {
+  const el = $('stampPop');
+  el.classList.toggle('gold', !!gold); el.querySelector('.e').textContent = e; $('stampTxt').innerHTML = html;
+  el.classList.remove('show', 'boom'); el.style.transition = 'none'; el.style.opacity = 1;
+  if (!el.animate) { el.classList.add('show'); setTimeout(() => { el.classList.remove('show'); after && after(); }, 1500); return; }
+  const a1 = el.animate([{ transform: 'translate(-50%,-50%) scale(2.6) rotate(12deg)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.92) rotate(-10deg)', opacity: 1, offset: .75 }, { transform: 'translate(-50%,-50%) scale(1) rotate(-10deg)', opacity: 1 }], { duration: 380, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+  sfx('stamp');
+  a1.onfinish = () => {
+    el.classList.add('boom'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 260);
+    burst(innerWidth / 2, innerHeight * .42, gold ? 40 : 26, gold);
+    setTimeout(() => {
+      const slot = $(slotId), r = slot && slot.getBoundingClientRect(), vis = r && r.width > 0;
+      const dx = vis ? r.left + r.width / 2 - innerWidth / 2 : 0, dy = vis ? r.top + r.height / 2 - innerHeight * .42 : -innerHeight * .4;
+      const a2 = el.animate([{ transform: 'translate(-50%,-50%) scale(1) rotate(-10deg)', opacity: 1 }, { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.15) rotate(-10deg)`, opacity: .6 }], { duration: 520, easing: 'cubic-bezier(.6,0,.4,1)', fill: 'forwards' });
+      sfx('whoosh');
+      a2.onfinish = () => { el.style.opacity = 0; a1.cancel(); a2.cancel(); el.classList.remove('boom'); if (slot) { slot.classList.remove('just'); void slot.offsetWidth; slot.classList.add('just'); } after && after(); };
+    }, 800);
+  };
+}
+function giveStamp(id, after) {
+  if (Q.stamps[id]) { after && after(); return; }
+  Q.stamps[id] = true; const s = STAMPS.find(x => x.id === id);
+  $('quest').classList.remove('mini'); updateQuestUI(); saveGame();
+  popStamp(s.e, `獲得<br>「${s.n}」`, false, 'st_' + id, () => { after && after(); checkCert(); });
+}
+function checkCert() { if (!Q.certShown && allStamps()) { Q.certShown = true; saveGame(); setTimeout(() => { confetti(); sfx('fanfare'); setTimeout(showCert, 900); }, 400); } }
+function questTarget() {
+  switch (Q.step) {
+    case 0: return { key: 'statue', p: new THREE.Vector3(3.2, 2.9, 21.85) };
+    case 1: return { key: 'dog', p: animals.dog.g.position };
+    case 2: return Q.lampDone ? { key: 'bear', p: animals.bear.g.position } : { key: 'lamp', p: new THREE.Vector3(lamps[OWL_LAMP].spec.x, 2.2, lamps[OWL_LAMP].spec.z) };
+    case 3: return { key: 'herbCounter', p: new THREE.Vector3(12.5, 2.6, -2.5) };
+    case 4: return { key: 'machine', p: new THREE.Vector3(machineSpecs[0].x, 1.2, machineSpecs[0].z) };
+    default: {
+      if (!Q.stamps.acu) return { key: 'statue', p: new THREE.Vector3(3.2, 2.9, 21.85) };
+      const nb = nextBadge(); if (!nb) return null;
+      if (nb.id === 'icehot') return { key: 'fridge', p: new THREE.Vector3(12.45, 1.9, 2.1) };
+      if (nb.id === 'acufind') return { key: 'statue', p: new THREE.Vector3(3.2, 2.9, 21.85) };
+      return { key: 'bear', p: animals.bear.g.position };
+    }
+  }
+}
+const GRANDPA = { who: '銅人爺爺', av: '👴' };
+function statueTalk() {
+  if (Q.step === 0) {
+    talk([
+      { ...GRANDPA, text: '哈囉，小小中醫師！我是<b>銅人爺爺</b>。歡迎來到中醫傷科診所！' },
+      { ...GRANDPA, text: '我身上有很多<b>「穴位」</b>。很久以前的宋朝，醫師就用銅人來學習穴位喔！' },
+      { ...GRANDPA, text: '今天來了三位動物病人：踢球<b>扭傷</b>的狗狗、<b>落枕</b>的貓頭鷹，還有搬東西<b>閃到腰</b>的熊熊。' },
+      { ...GRANDPA, text: '請你先到 <b>163 診間</b>問問他們哪裡痛，再到<b>治療大廳</b>、<b>藥敷處理區</b>和<b>薰灸室</b>幫忙。' },
+      { ...GRANDPA, text: '每完成一關就能得到一個印章，集滿 <b>6 個印章</b>，你就是「小神醫」！先送你第一個印章！', btn: '收下印章！' },
+    ], () => { Q.step = 1; updateQuestUI(); giveStamp('master', () => statueMenu('要先認識我身上的穴位，還是直接去 163 診間呢？')); });
+  } else statueMenu(Q.step >= 5 && !Q.stamps.acu ? '病人都好多了！最後，來認識我身上的穴位吧！' : '小小中醫師，需要幫忙嗎？');
+}
+function statueMenu(text) {
+  const bs = Q.best.acufind;
+  choice(GRANDPA.who, GRANDPA.av, text, [
+    { t: '✨ 認識穴位', cb: enterAcu },
+    { t: `🎯 找穴位挑戰 ${bs ? '⭐'.repeat(bs) : '（進階）'}`, cls: 'alt', cb: startAcuFind },
+    { t: '🗺️ 任務提示', cls: 'alt', cb: () => talk([{ ...GRANDPA, text: '現在的任務：' + objective() + '<br>看看右上角的小地圖，<b>⭐ 星星</b>就是目標，點地圖可以傳送喔！畫面上的<b>橘色箭頭</b>也會幫你指路。' }]) },
+    { t: '📖 銅人小知識', cls: 'alt', cb: () => showInfo('statue') },
+    { t: '👋 再見', cls: 'gray' },
+  ]);
+}
+/* 穴位模式（認識 / 找穴位挑戰）：鏡頭固定在銅人前方，拖曳畫面＝轉動銅人爺爺 */
+let acuMode = false, acuAng = .35, acuPitch = .1, acuGame = null;
+const acuNames = () => Object.keys(ACU).map(k => (Q.acuSeen.has(k) ? '✅' : '⬜') + ACU[k].name).join('　');
+function acuButtons(list) {
+  $('acuBtns').innerHTML = list.map((b, i) => `<button class="btn ${b.cls || ''}" data-ab="${i}">${b.t}</button>`).join('');
+  $('acuBtns').querySelectorAll('[data-ab]').forEach(el => el.onclick = () => { sfx('click'); list[+el.dataset.ab].cb(); });
+}
+function turnStatue() { acuTurnTo = acuAng + Math.PI; }
+let acuTurnTo = null;
+function openAcuView() {
+  acuMode = true; acuAng = .35; acuPitch = .1; acuTurnTo = null; acuHits.forEach(m => m.visible = true);
+  $('acuBar').style.display = 'block'; $('touch').style.visibility = 'hidden'; $('actBtn').style.display = 'none'; document.body.classList.add('acu');
+}
+function enterAcu() {
+  openAcuView(); acuGame = null;
+  acuMarkers.forEach(m => { m.visible = true; m.material = acuMarkMat; });
+  acuButtons([{ t: '🔄 轉到背面', cls: 'alt', cb: turnStatue }, { t: '⬅ 離開', cb: exitAcu }]);
+  updateAcuMsg();
+  toast('點一點<b style="color:#3dff7a">發光的綠點</b>！拖曳畫面或按「🔄」可以轉動銅人爺爺看背面。', 4000);
+}
+function updateAcuMsg() {
+  if (acuGame) {
+    const g = acuGame, k = g.order[g.i];
+    $('acuMsg').innerHTML = k ? `🎯 第 ${g.i + 1}/4 題：請點出 <span class="tgt">${ACU[k].name}</span><br><span style="font-size:13px;color:#666">⏱ ${((performance.now() - g.t0) / 1000).toFixed(0)} 秒　❌ ${g.miss} 次${g.hinted[k] ? '　💡 已提示（粉紅點）' : ''}</span>` : '完成！';
+    return;
+  }
+  $('acuMsg').innerHTML = `✨ 已認識 ${Q.acuSeen.size}/4 個穴位：<br>${acuNames()}`;
+}
+function exitAcu() {
+  acuMode = false; acuGame = null; acuTurnTo = null; statue.rotation.y = 0;
+  acuMarkers.forEach(m => { m.visible = false; m.material = acuMarkMat; }); acuHits.forEach(m => m.visible = false);
+  $('acuBar').style.display = 'none'; $('touch').style.visibility = ''; document.body.classList.remove('acu');
+}
+function showAcu(key) {
+  const a = ACU[key]; Q.acuSeen.add(key); sfx('good'); updateAcuMsg(); updateQuestUI();
+  openModal(`<h2><span class="av">✨</span>${a.name}</h2><p>📍 <b>在哪裡：</b>${a.where}</p><p>💬 <b>小知識：</b>${a.note}</p><div class="warn">⚠️ 按壓穴位要輕輕的，會痛就停下來。${NEEDLE_WARN}</div><div class="btns"><button class="btn" id="mNext">知道了！</button></div>`);
+  $('mNext').onclick = () => { sfx('click'); closeModal(); if (Q.acuSeen.size === 4 && !Q.stamps.acu) giveStamp('acu', () => talk([{ ...GRANDPA, text: '太厲害了！你認識了合谷、內關、足三里和風池。記得：' + NEEDLE_WARN + '<br>想再挑戰的話，可以玩<b>🎯 找穴位挑戰</b>，比比看誰最快！' }])); };
+}
+/* 🎯 找穴位挑戰 */
+function startAcuFind() {
+  const go = () => {
+    openAcuView();
+    acuGame = { order: shuffle(Object.keys(ACU)), i: 0, miss: 0, hints: 0, t0: performance.now(), hinted: {}, missNow: 0 };
+    acuMarkers.forEach(m => { m.visible = false; m.material = acuMarkMat; });
+    acuButtons([{ t: '🔄 轉身', cls: 'alt', cb: turnStatue }, { t: '💡 提示', cls: 'alt', cb: acuHint }, { t: '⬅ 離開', cls: 'gray', cb: exitAcu }]);
+    updateAcuMsg(); toast('🎯 綠點都藏起來了！看清楚題目，在銅人爺爺身上點出穴位。', 3500);
+  };
+  const intro = Q.acuSeen.size < 4 ? '<div class="warn">建議先用「✨ 認識穴位」看過 4 個穴位，再來挑戰喔！</div>' : '';
+  openModal(`<h2><span class="av">🎯</span>找穴位挑戰</h2><p>銅人爺爺會出題：<b>合谷、內關、足三里、風池</b>，請在他身上點出正確位置！</p><p>⭐⭐⭐：錯 1 次以內、45 秒內完成<br>不會的話按 <b>💡 提示</b>，穴位會亮粉紅色。<br>風池在後腦勺，要按 <b>🔄 轉身</b> 看背面。</p>${intro}<div class="btns"><button class="btn" id="mGo">▶ 開始挑戰</button><button class="btn gray" id="mNo">下次再說</button></div>`);
+  $('mGo').onclick = () => { sfx('click'); closeModal(); go(); }; $('mNo').onclick = () => { sfx('click'); closeModal(); };
+}
+function acuHint() {
+  const g = acuGame; if (!g) return; const k = g.order[g.i]; if (!k) return;
+  if (!g.hinted[k]) { g.hinted[k] = true; g.hints++; }
+  acuMarkers.forEach(m => { if (m.userData.key === k) { m.visible = true; m.material = acuHintMat; } });
+  toast(`💡 ${ACU[k].name}：${ACU[k].where}`, 5000); updateAcuMsg();
+}
+function acuFindPick(key) {
+  const g = acuGame; const want = g.order[g.i];
+  if (key === want) {
+    sfx('good'); acuMarkers.forEach(m => { if (m.userData.key === key) { m.visible = true; m.material = acuGoldMat; } });
+    g.i++; g.missNow = 0; burst(innerWidth / 2, innerHeight / 2, 14, true);
+    if (g.i >= g.order.length) {
+      const sec = (performance.now() - g.t0) / 1000, bad = g.miss + g.hints * 2;
+      const stars = bad <= 1 && sec <= 45 ? 3 : bad <= 4 && sec <= 90 ? 2 : 1;
+      setTimeout(() => { exitAcu(); finishChallenge('acufind', stars, `用了 <b>${sec.toFixed(0)} 秒</b>，點錯 <b>${g.miss}</b> 次，提示 <b>${g.hints}</b> 次。`); }, 700);
+    } else { toast(`✅ 答對了！下一題：<b>${ACU[g.order[g.i]].name}</b>${g.order[g.i] === 'fengchi' ? '（在後腦勺，記得轉身）' : ''}`, 2500); }
+  } else {
+    sfx('bad'); g.miss++; g.missNow++;
+    toast(key ? `❌ 那是<b>${ACU[key].name}</b>喔！再找找 ${ACU[want].name}。` : `❌ 不是這裡喔！再找找 <b>${ACU[want].name}</b>。`);
+    if (g.missNow >= 3 && !g.hinted[want]) acuHint();
+  }
+  updateAcuMsg();
+}
+function acuTap() {
+  statue.updateMatrixWorld(true);
+  const r = raycaster.intersectObjects(acuHits, false), body = raycaster.intersectObjects(statueMeshes, false);
+  const bd = body.length ? body[0].distance : Infinity;
+  const hit = r.find(x => x.distance <= bd + .02);
+  if (acuGame) { if (hit) acuFindPick(hit.object.userData.key); else if (body.length) acuFindPick(null); return; }
+  if (hit) showAcu(hit.object.userData.key);
+}
+/* 問診 */
+const QZ = {
+  sizhen: { who: '銅人爺爺的考題', av: '👴', q: '中醫看病的四個方法是什麼？', opts: ['望、聞、問、切', '吃、喝、玩、樂', '東、南、西、北'], ans: 0, hint: '看一看、聽一聽聞一聞、問一問、摸摸脈。', explain: '望（看氣色）、聞（聽聲音、聞味道）、問（問哪裡不舒服）、切（摸脈搏）。', rhyme: '望聞問切四步驟，看病先問哪裡痛' },
+  dogWhere: { who: '狗狗', av: '🐶', q: '狗狗說：「我踢球的時候跌倒，腳腳扭了一下。」狗狗最可能哪裡受傷？', opts: ['腳踝', '耳朵', '尾巴'], ans: 0, hint: '踢球扭到，通常是腳和腿連接的地方。', explain: '踢球、跑跳時腳一拐，最容易扭傷腳踝。' },
+  ice: { who: '狗狗', av: '🐶', q: '扭傷的第一天，又紅又腫，應該冰敷還是熱敷？', opts: ['冰敷', '熱敷'], ans: 0, hint: '剛受傷會腫起來，要先讓它「冷靜」下來。', explain: '剛受傷（大約 48 小時內）又紅又腫，先冰敷可以幫忙減輕腫痛：冰敷袋用毛巾包著，每次約 15～20 分鐘，不要讓冰塊直接碰皮膚。等不腫了，醫師可能會改用溫熱的方法幫助循環。', rhyme: '剛扭傷先冰敷，腫消了再熱敷', warn: '如果很腫、變形、麻麻的，或痛很久都沒好，一定要去看醫師。' },
+  owl: { who: '貓頭鷹', av: '🦉', q: '貓頭鷹早上醒來，脖子卡卡的、轉不過去，這叫做什麼？', opts: ['落枕', '感冒', '蛀牙'], ans: 0, hint: '和「睡覺」跟「枕頭」有關喔！', explain: '睡姿不好或枕頭不合適，脖子的肌肉整晚緊繃，早上就「落枕」了。', rhyme: '枕頭高低要剛好，睡姿正確不落枕' },
+  bear: { who: '熊熊', av: '🐻', q: '熊熊搬箱子閃到腰。下次搬重的東西，怎麼做比較安全？', opts: ['蹲下來、背打直，東西靠近身體再站起來', '彎腰直接用力拉起來', '一邊轉身一邊搬'], ans: 0, hint: '用腿的力氣，不要讓腰彎著出力。', explain: '蹲下、背打直、東西靠近身體，用腿的力量站起來；要轉彎時移動腳步，不要扭腰。這樣腰比較不容易受傷。太重的東西要請大人幫忙！', rhyme: '蹲下背打直，搬重不閃腰' },
+  lamp: { who: '貓頭鷹', av: '🦉', q: '照紅外線烤燈的時候，要注意什麼？', opts: ['保持距離，覺得太燙要馬上說', '燈越近越好', '可以把燈拉過來玩'], ans: 0, hint: '烤燈很溫暖，但太近會燙傷。', explain: '烤燈要保持適當距離，時間也不能太久，太燙一定要說出來。', rhyme: '烤燈溫溫暖，距離要保持' },
+  massage: { who: '熊熊', av: '🐻', q: '真實生活中，推拿應該由誰來做？', opts: ['專業的醫師或治療師', '小朋友自己用力壓', '隨便找人踩背'], ans: 0, hint: '推拿需要學過、懂身體構造的人。', explain: '推拿要由專業的人用適當的力道來做。在遊戲裡你是小小中醫師，可以幫熊熊試試看！', warn: '真實生活中，小朋友不可以自己用力幫別人推拿或踩背喔！' },
+  steam: { who: '狗狗', av: '🐶', q: '用中藥薰洗機薰洗的時候，要注意什麼？', opts: ['溫度剛好、保持距離，太燙要說', '把腳直接放進滾燙的水裡', '越熱越好，忍耐一下'], ans: 0, hint: '溫熱很舒服，但太燙會受傷。', explain: '薰洗時溫度要剛好，跟機器保持距離，覺得太燙或不舒服要馬上說。', rhyme: '藥氣溫溫薰，活血又舒筋' },
+};
+function chainQuiz(keys, done) { const k = keys.shift(); if (!k) return done(); if (typeof k === 'function') return k(() => chainQuiz(keys, done)); quiz(QZ[k], () => chainQuiz(keys, done)); }
+function askFlow() {
+  talk([{ who: '狗狗', av: '🐶', text: '汪！醫師好～我們三個都受傷了，請幫我們看看！' }, { ...GRANDPA, who: '銅人爺爺（遠遠的聲音）', text: '小小中醫師，看病之前先考考你！' }], () => {
+    chainQuiz(['sizhen', 'dogWhere', 'ice',
+      cb => talk([{ who: '狗狗', av: '🐶', text: '我是<b>上禮拜</b>扭到的，第一天有冰敷。現在已經<b>不腫了</b>，只是還痠痠的。' }], cb),
+      'owl', 'bear'], () => {
+      giveStamp('ask', () => {
+        Q.step = 2; animalsToTreatment(); updateQuestUI();
+        talk([{ who: '小提醒', av: '📣', text: '貓頭鷹和熊熊到<b>「傷科治療大廳」</b>的床上休息了；狗狗先去<b>「薰灸室」</b>等你。<br>從診間右邊的門可以直接走到治療大廳！' }]);
+      });
+    });
+  });
+}
+function animalTalk(k) {
+  const A = ANIMAL_INFO[k], say = t => talk([{ who: A.name, av: A.av, text: t }]);
+  if (Q.step === 0) return say(`我${A.hurt}了，好痛喔……請先去走廊找<b>銅人爺爺</b>！`);
+  if (Q.step === 1) return askFlow();
+  if (k === 'bear' && animals.bear.happy && Q.step >= 3) return choice('熊熊', '🐻', '腰好多了，謝謝小小中醫師！😊<br>可以再教我<b>怎麼搬東西才不會閃到腰</b>嗎？' + (Q.best.lift ? `（最佳：${'⭐'.repeat(Q.best.lift)}）` : ''), [{ t: '💪 護腰小教練挑戰', cb: () => startLift() }, { t: '👋 下次再說', cls: 'gray' }]);
+  if (Q.step >= 5 || animals[k].happy) return say(k === 'dog' && Q.step >= 5 ? '溫熱的藥氣幫忙活血、舒緩痠痛，我的腳舒服多了！謝謝你！' : '我好多了，謝謝小小中醫師！😊');
+  if (k === 'owl') return Q.step === 2 ? say('我的脖子好緊……可以幫我打開床邊的<b>紅外線烤燈</b>嗎？（點一下烤燈）') : say('脖子暖暖的，好多了！');
+  if (k === 'bear') return Q.step === 2 ? massageFlow() : say('腰好多了，謝謝你！');
+  if (k === 'dog') {
+    if (Q.step === 4) return steamFlow();
+    if (Q.step === 3) return say('醫師，請先去<b>藥敷處理區</b>拿藥草，再回來幫我薰洗！');
+    return say('我在薰灸室等你喔！先去治療大廳幫貓頭鷹和熊熊吧！');
+  }
+}
+function lampTap(i) {
+  const L = lamps[i];
+  if (Q.step === 2 && i === OWL_LAMP && !Q.lampDone) {
+    return quiz(QZ.lamp, () => { L.set(true); animals.owl.setHappy(true); Q.lampDone = true; updateQuestUI();
+      talk([{ who: '貓頭鷹', av: '🦉', text: '哇～暖暖的！脖子的肌肉放鬆多了，可以慢慢轉頭了！' }], checkTreat); });
+  }
+  if (mode === 'info') return showInfo('lamp');
+  L.set(!L.on); sfx('click'); toast(L.on ? '💡 烤燈打開了！溫溫的，要保持距離喔。' : '烤燈關掉了。');
+}
+function massageFlow() {
+  quiz(QZ.massage, () => {
+    let n = 0;
+    const render = () => {
+      openModal(`<h2><span class="av">👐</span>幫熊熊推拿</h2><p>輕輕的、慢慢的，放鬆熊熊的腰部肌肉。按下按鈕 3 次！</p><p style="font-size:26px;text-align:center">${'🟢'.repeat(n)}${'⚪'.repeat(3 - n)}</p><div class="btns"><button class="btn" id="mPush" style="font-size:22px">👐 推拿（${n}/3）</button></div>`);
+      $('mPush').onclick = () => { n++; sfx('pop'); animals.bear.wiggle = .6; if (n < 3) render(); else { closeModal(); animals.bear.setHappy(true); Q.massageDone = true; updateQuestUI();
+        talk([{ who: '熊熊', av: '🐻', text: '呼～腰鬆開了！下次搬東西，我會<b>蹲下來、背打直</b>！' }], checkTreat); } };
+    };
+    render();
+  });
+}
+function checkTreat() {
+  if (Q.lampDone && Q.massageDone && !Q.stamps.treat) giveStamp('treat', () => { Q.step = 3; updateQuestUI();
+    talk([{ who: '小提醒', av: '📣', text: '太棒了！接下來去<b>「藥敷處理區」</b>（治療大廳左上方的門），到藥草櫃準備薰洗用的藥草。' }]); });
+}
+const HERBS = [
+  { n: '艾葉', e: '🌿', ok: true, d: '溫溫的，常用在艾灸和薰洗。' }, { n: '紅花', e: '🌺', ok: true, d: '幫助活血、化瘀。' }, { n: '伸筋草', e: '🌱', ok: true, d: '名字就是「讓筋伸展」，幫忙舒筋。' },
+  { n: '珍珠奶茶', e: '🧋', ok: false, d: '這是飲料，不是藥材喔！' }, { n: '炸雞', e: '🍗', ok: false, d: '這是點心，不是藥材喔！' }, { n: '棒棒糖', e: '🍭', ok: false, d: '糖果不能拿來薰洗喔！' },
+];
+function herbTap() {
+  if (Q.step !== 3) {
+    if (Q.step < 3) return talk([{ who: '藥草櫃', av: '🌿', text: '這裡是藥草櫃。等治療大廳的工作完成，再來準備藥草吧！' }], () => mode === 'info' && showInfo('herbCounter'));
+    return showInfo('herbCounter');
+  }
+  const sel = new Set(); const order = shuffle(HERBS.map((_, i) => i));
+  const render = (msg = '') => {
+    openModal(`<h2><span class="av">🌿</span>挑選薰洗藥草</h2><p>狗狗的腳已經不腫，但還痠痠的。請選出 <b>3 種</b>可以幫忙<b>活血、舒筋</b>的藥材！</p>
+      <div class="herbs">${order.map(i => `<div class="herb ${sel.has(i) ? (HERBS[i].ok ? 'sel' : 'bad') : ''}" data-h="${i}"><span class="e">${HERBS[i].e}</span>${HERBS[i].n}</div>`).join('')}</div>
+      <div class="hint" id="hMsg">${msg}</div><div class="warn">⚠️ 中藥要由醫師開立，小朋友不可以自己亂吃、亂用！</div>
+      <div class="btns"><button class="btn" id="hGo">🧺 放進藥袋（${[...sel].filter(i => HERBS[i].ok).length}/3）</button></div>`);
+    $('modal').querySelectorAll('[data-h]').forEach(el => el.onclick = () => {
+      const i = +el.dataset.h, H = HERBS[i];
+      if (sel.has(i)) { sel.delete(i); render(); return; }
+      sel.add(i); if (H.ok) sfx('pop'); else sfx('bad');
+      render((H.ok ? '✅ ' : '❌ ') + H.n + '：' + H.d + (H.ok ? '' : '（再點一次可以拿掉）'));
+    });
+    $('hGo').onclick = () => {
+      const good = [...sel].filter(i => HERBS[i].ok).length, bad = [...sel].filter(i => !HERBS[i].ok).length;
+      if (bad) { sfx('bad'); return render('💡 提示：藥袋裡有不是藥材的東西，點一下拿掉它！'); }
+      if (good < 3) { sfx('bad'); return render(`💡 提示：還差 ${3 - good} 種藥材喔！`); }
+      sfx('good'); closeModal();
+      giveStamp('herb', () => { Q.step = 4; updateQuestUI(); talk([{ who: '小提醒', av: '📣', text: '藥草準備好了！🌿 帶去<b>「薰灸室」</b>，放進狗狗前面的<b>中藥薰洗機</b>吧！' }]); });
+    };
+  };
+  render();
+}
+function machineTap(i) {
+  if (Q.step === 4) return steamFlow();
+  if (mode === 'info' || Q.step > 4) return showInfo('machine');
+  toast('♨️ 中藥薰洗機：要先準備好藥草才能使用喔！');
+}
+function steamFlow() {
+  quiz(QZ.steam, () => {
+    const m = machineSpecs[0]; steamSources.push(new THREE.Vector3(m.x, m.top + .05, m.z)); sfx('pop');
+    toast('♨️ 藥草放進去了！溫熱的藥氣冒出來了～', 2500);
+    setTimeout(() => {
+      animals.dog.setHappy(true); animals.owl.setHappy(true); animals.bear.setHappy(true);
+      talk([{ who: '狗狗', av: '🐶', text: '<b>溫熱的藥氣幫忙活血、舒緩痠痛</b>，我的腳舒服多了！謝謝小小中醫師！😊' }], () =>
+        giveStamp('steam', () => { Q.step = 5; updateQuestUI();
+          if (!Q.stamps.acu) talk([{ ...GRANDPA, who: '銅人爺爺（遠遠的聲音）', text: '病人都笑了！最後一個印章：回到走廊來找我，認識我身上的 4 個穴位吧！' }]); }));
+    }, 1800);
+  });
+}
+/* ================= 進階挑戰 ================= */
+const starsHtml = n => `<div class="stars">${[0, 1, 2].map(i => `<span class="${i < n ? '' : 'off'}" style="animation-delay:${.25 + i * .3}s">⭐</span>`).join('')}</div>`;
+function finishChallenge(id, stars, summary) {
+  const b = BADGES.find(x => x.id === id), first = !Q.best[id], prev = Q.best[id] || 0;
+  if (stars > prev) Q.best[id] = stars;
+  updateQuestUI();
+  confetti(); sfx('fanfare'); for (let i = 0; i < stars; i++) setTimeout(() => sfx('star'), 450 + i * 300);
+  const allDone = BADGES.every(x => Q.best[x.id]);
+  const show = () => {
+    openModal(`<h2><span class="av">${b.e}</span>${b.game}　完成！</h2>${starsHtml(stars)}<p style="text-align:center">${summary}</p>
+      ${stars > prev && prev ? '<p style="text-align:center;color:#2e7d32;font-weight:900">🆙 刷新最佳紀錄！</p>' : ''}
+      ${stars < 3 ? '<p style="text-align:center;font-size:15px;color:#777">再挑戰一次，看看能不能拿到 ⭐⭐⭐！</p>' : '<p style="text-align:center;font-weight:900;color:#b35400">滿分！太厲害了！</p>'}
+      ${allDone && first ? '<div class="rhyme" style="text-align:center">🌟 3 個進階徽章都拿到了！證書上會出現「進階小神醫」！</div>' : ''}
+      <div class="btns"><button class="btn alt" id="mAgain">🔁 再玩一次</button><button class="btn" id="mNext">${allStamps() ? '📜 看證書' : '好！'}</button></div>`);
+    $('mAgain').onclick = () => { sfx('click'); closeModal(); startChallenge(id, true); };
+    $('mNext').onclick = () => { sfx('click'); closeModal(); if (allStamps()) showCert(); };
+  };
+  if (first) setTimeout(() => popStamp(b.e, `進階徽章<br>「${b.n}」`, true, 'bd_' + id, show), 300); else show();
+}
+function startChallenge(id, skipIntro) {
+  exitAcu();
+  if (id === 'icehot') return startIceHot(skipIntro);
+  if (id === 'acufind') { teleport(3.4, 24.0, 0); return startAcuFind(); }
+  if (id === 'lift') return startLift(skipIntro);
+}
+/* 🧊 冰敷還是熱敷？（一般原則，不絕對；特殊情況要找醫師） */
+const ICE_CARDS = [
+  { e: '⚽', s: '踢球時腳踝扭了一下，<b>剛剛才發生</b>，腳踝又紅、又腫、熱熱的。', a: 'ice', x: '剛受傷（大約 48 小時內）紅腫熱痛，先冰敷：冰敷袋用毛巾包著，每次約 15～20 分鐘。' },
+  { e: '🚪', s: '手指<b>剛剛</b>被門輕輕夾到，紅紅腫腫的，但手指形狀正常、可以慢慢動。', a: 'ice', x: '剛撞到、夾到又腫起來，可以先隔著毛巾冰敷。如果越來越腫或不能動，要給醫師看。' },
+  { e: '🏀', s: '<b>今天</b>打籃球撞到大腿，有一塊紅紅腫腫、按了會痛。', a: 'ice', x: '剛撞傷的瘀腫先冰敷，不要用力揉，也不要馬上熱敷。' },
+  { e: '📚', s: '常常低頭寫功課、滑手機，肩膀<b>痠痠緊緊好幾天</b>了，沒有紅腫、也沒有受傷。', a: 'hot', x: '慢性的痠痛、沒有紅腫，可以溫熱敷幫忙放鬆；溫溫的就好，請大人幫忙，小心燙傷。也要記得常起來動一動！' },
+  { e: '🐶', s: '狗狗<b>上禮拜</b>扭到腳，冰敷過了，現在<b>已經不腫</b>，只是還有點痠痠的。', a: 'hot', x: '腫消了、進入恢復期的痠痛，可以用溫熱的方法幫助循環（就像遊戲裡的中藥薰洗）。' },
+  { e: '🥶', s: '天氣變冷，腰背常常<b>痠痠緊緊</b>的，沒有受傷、沒有紅腫。', a: 'hot', x: '沒有紅腫的慢性痠緊，可以溫熱敷放鬆，每次約 15～20 分鐘，不要太燙。' },
+  { e: '🦴', s: '跌倒後手腕<b>歪歪的、變形了</b>，非常痛，不能動。', a: 'doc', x: '變形可能是骨折或脫臼！不要自己亂動、亂扳，請大人<b>馬上</b>帶去看醫師（必要時去急診）。' },
+  { e: '😵', s: '扭到腳以後，腳趾頭<b>麻麻的、沒什麼感覺</b>，腳越來越腫。', a: 'doc', x: '麻、沒感覺、越來越腫，可能傷到神經或血管，要<b>趕快</b>找醫師。' },
+  { e: '📅', s: '膝蓋撞到後，<b>過了一個多禮拜</b>還是很腫、很痛，走路一拐一拐。', a: 'doc', x: '痛很久、腫不消、影響走路，不能只靠冰敷熱敷，要請醫師檢查。' },
+];
+const ICE_OPTS = { ice: { t: '❄️ 冰敷', cls: 'ice' }, hot: { t: '♨️ 熱敷', cls: 'hot' }, doc: { t: '🏥 趕快<br>找醫師', cls: 'doc' } };
+function startIceHot(skipIntro) {
+  const pick = shuffle([...shuffle(ICE_CARDS.filter(c => c.a === 'ice')).slice(0, 2), ...shuffle(ICE_CARDS.filter(c => c.a === 'hot')).slice(0, 2), ...shuffle(ICE_CARDS.filter(c => c.a === 'doc')).slice(0, 2)]);
+  const g = { cards: pick, i: 0, right: 0 }; window.__game && (__game.iceGame = g);
+  const card = () => {
+    const c = g.cards[g.i];
+    openModal(`<h2><span class="av">🧊</span>冰敷還是熱敷？（${g.i + 1}/${g.cards.length}）</h2><div class="prog"><i style="width:${g.i / g.cards.length * 100}%"></i></div>
+      <div class="scn"><span class="e">${c.e}</span>${c.s}</div><p style="margin:4px 0;font-size:15px;color:#666">你覺得應該怎麼做？</p>
+      <div class="choice3">${['ice', 'hot', 'doc'].map(k => `<button class="btn ${ICE_OPTS[k].cls}" data-o="${k}">${ICE_OPTS[k].t}</button>`).join('')}</div>`);
+    $('modal').querySelectorAll('[data-o]').forEach(el => el.onclick = () => answer(el.dataset.o));
+  };
+  const answer = o => {
+    const c = g.cards[g.i], ok = o === c.a; if (ok) g.right++; sfx(ok ? 'good' : 'bad');
+    openModal(`<h2><span class="av">${ok ? '🎉' : '🤔'}</span>${ok ? '答對了！' : '差一點！'}</h2><div class="prog"><i style="width:${(g.i + 1) / g.cards.length * 100}%"></i></div>
+      <div class="scn" style="font-size:15px"><span class="e">${c.e}</span>${c.s}</div>
+      <div class="fb ${ok ? 'ok' : 'no'}">${ok ? '✅' : '👉 比較好的做法是：' + ICE_OPTS[c.a].t.replace('<br>', '') + '<br>'} ${c.x}</div>
+      <div class="btns"><button class="btn" id="mNext">${g.i + 1 < g.cards.length ? '下一題 ▶' : '看成績 ⭐'}</button></div>`);
+    $('mNext').onclick = () => { sfx('click'); g.i++; if (g.i < g.cards.length) card(); else done(); };
+  };
+  const done = () => {
+    closeModal(); const n = g.cards.length, stars = g.right === n ? 3 : g.right >= n - 2 ? 2 : 1;
+    finishChallenge('icehot', stars, `答對 <b>${g.right}/${n}</b> 題！<br><span style="font-size:14px">📣 剛扭傷紅腫→先冰敷（隔毛巾 15～20 分鐘）；腫消後的痠痛→可以溫熱敷；變形、麻、很腫或痛很久→找醫師！</span>`);
+  };
+  if (skipIntro) return card();
+  openModal(`<h2><span class="av">🧊</span>冰敷還是熱敷？</h2><p>冰箱裡有冰敷袋，旁邊還有熱敷包。看看每位小朋友的狀況，選出比較好的做法：</p>
+    <div class="choice3" style="pointer-events:none"><div class="btn ice">❄️ 冰敷</div><div class="btn hot">♨️ 熱敷</div><div class="btn doc">🏥 找醫師</div></div>
+    <p style="font-size:15px">⭐⭐⭐ 要全部答對喔！</p><div class="warn">⚠️ 這是一般的原則。每個人的狀況不一樣，不確定的時候，先問醫師或大人。冰塊不可以直接貼在皮膚上；熱敷要小心燙傷。</div>
+    <div class="btns"><button class="btn" id="mGo">▶ 開始</button><button class="btn gray" id="mNo">下次再說</button></div>`);
+  $('mGo').onclick = () => { sfx('click'); card(); }; $('mNo').onclick = () => { sfx('click'); closeModal(); };
+}
+/* 💪 護腰搬重物：排順序＋是非題 */
+const LIFT_STEPS = ['🦶 走近箱子，雙腳打開和肩膀差不多寬', '🧎 彎膝蓋蹲下來，背保持挺直', '🤗 雙手抱穩箱子，讓箱子貼近身體', '🦵 用腿的力氣，慢慢站起來', '🔄 要轉彎時，移動腳步一起轉，不要扭腰'];
+const LIFT_TF = [
+  { q: '運動或比賽前，先做暖身（像慢跑、轉轉手腳、伸展），可以減少受傷。', a: true, x: '暖身讓肌肉和關節準備好，比較不容易拉傷、扭傷。' },
+  { q: '箱子太重搬不動，也要咬牙自己硬搬。', a: false, x: '太重的東西要請大人幫忙，或分成好幾次搬。' },
+  { q: '書包只用一邊肩膀背，比較方便又不會累。', a: false, x: '兩邊肩帶都要背好、調整到書包貼近背部，書包也不要裝太重。' },
+  { q: '寫功課坐久了，每隔一段時間起來動一動、伸伸懶腰。', a: true, x: '久坐會讓肩頸、腰背緊緊的，常起來動一動比較舒服。' },
+  { q: '彎著腰、膝蓋打直，直接把地上的重物拉起來最省力。', a: false, x: '彎腰硬拉最容易閃到腰！要蹲下來、背打直，用腿出力。' },
+];
+function startLift(skipIntro) {
+  const g = { order: shuffle(LIFT_STEPS.map((_, i) => i)), next: 0, miss: 0, tf: shuffle(LIFT_TF).slice(0, 3), ti: 0 }; window.__game && (__game.liftGame = g);
+  const steps = (msg = '') => {
+    openModal(`<h2><span class="av">💪</span>護腰搬重物（排順序）</h2><p>熊熊要搬一箱書。請<b>依照正確順序</b>點出搬重物的步驟！</p>
+      <div class="steps">${LIFT_STEPS.slice(0, g.next).map((t, i) => `<div class="done">${i + 1}. ${t}</div>`).join('')}</div>
+      <div class="btns col">${g.order.filter(i => i >= g.next).map(i => `<button class="btn opt" data-s="${i}">${LIFT_STEPS[i]}</button>`).join('')}</div><div class="hint" id="lMsg">${msg}</div>`);
+    $('modal').querySelectorAll('[data-s]').forEach(el => el.onclick = () => {
+      const i = +el.dataset.s;
+      if (i === g.next) { sfx('pop'); g.next++; animals.bear.wiggle = .4; if (g.next >= LIFT_STEPS.length) { sfx('good'); tf(); } else steps('✅ 對！下一步是什麼呢？'); }
+      else { sfx('bad'); g.miss++; el.classList.remove('shk'); void el.offsetWidth; el.classList.add('shk'); $('lMsg').textContent = '💡 想一想：要先蹲低，最後才站起來、轉身喔！'; }
+    });
+  };
+  const tf = () => {
+    const t = g.tf[g.ti];
+    openModal(`<h2><span class="av">🙆</span>對還是錯？（${g.ti + 1}/${g.tf.length}）</h2><div class="scn">${t.q}</div>
+      <div class="btns"><button class="btn" data-t="1" style="font-size:22px">⭕ 對</button><button class="btn gray" data-t="0" style="font-size:22px;background:#e57373;box-shadow:0 4px 0 #b23b3b">❌ 錯</button></div>`);
+    $('modal').querySelectorAll('[data-t]').forEach(el => el.onclick = () => {
+      const ok = (el.dataset.t === '1') === t.a; if (!ok) g.miss++; sfx(ok ? 'good' : 'bad');
+      openModal(`<h2><span class="av">${ok ? '🎉' : '🤔'}</span>${ok ? '答對了！' : '再想想～'}</h2><div class="scn" style="font-size:15px">${t.q}</div><div class="fb ${ok ? 'ok' : 'no'}">答案是「${t.a ? '⭕ 對' : '❌ 錯'}」：${t.x}</div><div class="btns"><button class="btn" id="mNext">${g.ti + 1 < g.tf.length ? '下一題 ▶' : '看成績 ⭐'}</button></div>`);
+      $('mNext').onclick = () => { sfx('click'); g.ti++; if (g.ti < g.tf.length) tf(); else { closeModal(); const stars = g.miss === 0 ? 3 : g.miss <= 2 ? 2 : 1; finishChallenge('lift', stars, `錯了 <b>${g.miss}</b> 次。<br><span style="font-size:14px">📣 蹲下背打直，東西貼身體，用腿站起來，轉身動腳步！</span>`); } };
+    });
+  };
+  if (skipIntro) return steps();
+  talk([{ who: '熊熊', av: '🐻', text: '小小中醫師，上次我就是<b>彎腰硬搬</b>箱子才閃到腰的……<br>你可以當我的<b>護腰小教練</b>，教我正確搬東西的方法嗎？', btn: '▶ 好，開始！' }], () => steps());
+}
+/* 🏆 挑戰選單 */
+function challengeMenu() {
+  if (acuMode) exitAcu();
+  const rows = BADGES.map(b => `<div class="chalRow"><span class="e">${b.e}</span><div class="t">${b.game} <span style="color:#e0a000">${Q.best[b.id] ? '⭐'.repeat(Q.best[b.id]) + '☆'.repeat(3 - Q.best[b.id]) : '☆☆☆'}</span><small>${b.desc}<br>📍 也可以在「${b.where}」開始</small></div><button class="btn" data-c="${b.id}">▶ 玩</button></div>`).join('');
+  openModal(`<h2><span class="av">🏆</span>進階挑戰</h2><p style="font-size:15px">隨時都可以玩，不會影響 6 個印章的任務。完成可以拿到<b>進階徽章</b>和星星，最好成績會寫在證書上！</p>${rows}
+    <p style="text-align:center;font-weight:900">目前星星：⭐ ${starTotal()} / 9　印章：${STAMPS.filter(x => Q.stamps[x.id]).length} / 6</p>
+    <div class="btns">${allStamps() ? '<button class="btn alt" id="mCert">📜 看證書</button>' : ''}<button class="btn gray" id="mReset">🔄 重新開始</button><button class="btn" id="mNext">關閉</button></div>`);
+  $('modal').querySelectorAll('[data-c]').forEach(el => el.onclick = () => { sfx('click'); closeModal(); startChallenge(el.dataset.c); });
+  $('mNext').onclick = () => { sfx('click'); closeModal(); };
+  $('mReset').onclick = () => { sfx('click'); confirmReset(); };
+  if ($('mCert')) $('mCert').onclick = () => { sfx('click'); closeModal(); showCert(); };
+}
+function fridgeTap() {
+  if (mode === 'info') return showInfo('fridge');
+  choice('冰敷袋冰箱', '🧊', '冰箱裡有冰敷袋。要玩<b>「冰敷還是熱敷？」</b>挑戰嗎？' + (Q.best.icehot ? `（最佳：${'⭐'.repeat(Q.best.icehot)}）` : ''), [
+    { t: '🧊 開始挑戰', cb: () => startIceHot() }, { t: '📖 冰敷小知識', cls: 'alt', cb: () => showInfo('fridge') }, { t: '👋 先不要', cls: 'gray' }]);
+}
+/* 彩帶／星星粒子（2D 疊加層，只有播放時才跑） */
+const fxC = $('fx'), fxG = fxC.getContext('2d'); let fxP = [], fxRun = false;
+function fxStart() {
+  if (fxRun) return; fxRun = true; fxC.style.display = 'block'; fxC.width = innerWidth; fxC.height = innerHeight; let lt = performance.now();
+  const step = now => {
+    const dt = Math.min(.05, (now - lt) / 1000); lt = now; fxG.clearRect(0, 0, fxC.width, fxC.height);
+    fxP = fxP.filter(p => (p.life -= dt) > 0);
+    for (const p of fxP) { p.vy += 900 * dt * p.g; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; fxG.save(); fxG.globalAlpha = Math.min(1, p.life * 2); fxG.translate(p.x, p.y); fxG.rotate(p.r); fxG.fillStyle = p.c; if (p.star) { fxG.font = `${p.s * 3}px sans-serif`; fxG.fillText('⭐', -p.s, p.s); } else fxG.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); fxG.restore(); }
+    if (fxP.length) requestAnimationFrame(step); else { fxRun = false; fxC.style.display = 'none'; }
+  };
+  requestAnimationFrame(step);
+}
+const FX_COL = ['#ff5252', '#ffd54a', '#4caf50', '#42a5f5', '#ab47bc', '#ff7a45'];
+function confetti() { for (let i = 0; i < 110; i++) fxP.push({ x: Math.random() * innerWidth, y: -20 - Math.random() * innerHeight * .4, vx: (Math.random() - .5) * 160, vy: 60 + Math.random() * 160, g: .25, r: Math.random() * 6, vr: (Math.random() - .5) * 10, s: 8 + Math.random() * 8, c: FX_COL[i % 6], life: 2.6 + Math.random() }); fxStart(); }
+function burst(x, y, n, gold) { for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = 180 + Math.random() * 260; fxP.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 120, g: .6, r: 0, vr: (Math.random() - .5) * 8, s: gold ? 9 : 7 + Math.random() * 5, c: gold ? '#ffc400' : FX_COL[i % 6], star: gold && i % 3 === 0, life: .9 + Math.random() * .5 }); } fxStart(); }
+function onInteract(h, viaTap) {
+  if (mode === 'build') return;
+  const k = h.key;
+  if (k === 'statue') return mode === 'info' && Q.step > 0 ? showInfo('statue') : statueTalk();
+  if (animals[k]) return animalTalk(k);
+  if (k === 'lamp') return lampTap(h.idx);
+  if (k === 'herbCounter') return herbTap();
+  if (k === 'machine') return machineTap(h.idx);
+  if (k === 'fridge') return fridgeTap();
+  if (mode === 'info' || !viaTap) return showInfo(h.info);
+  const I = INFO[h.info]; if (I) toast(`${I.e} ${I.t}　<span style="opacity:.8">（按「🔍 查看設施」看說明）</span>`);
+}
+function showCert() {
+  const d = new Date(); const date = `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+  const adv = BADGES.every(b => Q.best[b.id]), st = starTotal();
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  $('cert').innerHTML = `<div class="certCard"><div style="font-size:46px">🏅</div><h1>小神醫證書</h1>
+    ${adv ? '<div class="ribbon">🌟 進階小神醫 🌟</div>' : ''}
+    <p style="font-size:18px">恭喜 <input id="certName" placeholder="寫上你的名字" maxlength="10" value="${esc(Q.name)}"> 小朋友</p>
+    <p style="font-size:17px;line-height:1.7">完成「中醫傷科診所大冒險」，<br>學會了問診、熱療、推拿、藥草和薰洗的知識，<br>幫助狗狗、貓頭鷹和熊熊恢復健康！<br>特頒「<b style="color:#c0392b">小神醫</b>」證書，以資鼓勵。</p>
+    <div style="font-size:30px;letter-spacing:6px">${STAMPS.map(s => s.e).join('')}</div>
+    <div class="certScore"><b>🏆 進階挑戰成績</b>${BADGES.map(b => `<div><span>${b.e} ${b.game}</span><span>${Q.best[b.id] ? '⭐'.repeat(Q.best[b.id]) + '☆'.repeat(3 - Q.best[b.id]) : '（還沒挑戰）'}</span></div>`).join('')}<div style="border-top:1px dashed #e0c070;margin-top:4px;padding-top:4px"><b>總星星</b><b>⭐ ${st} / 9</b></div></div>
+    <p style="color:#8a6a2a">中醫傷科診所　${date}</p>
+    <div class="rhyme" style="text-align:left">📣 記住：剛扭傷先冰敷，腫消了再熱敷；很腫、變形、麻麻的或痛很久，要找醫師喔！</div>
+    <div class="btns">${adv ? '' : '<button class="btn alt" id="cChal">🏆 去挑戰拿星星</button>'}<button class="btn" id="cGo">🚶 繼續探索</button><button class="btn gray" id="cRe">🔄 重新開始</button></div></div>`;
+  $('cert').style.display = 'flex'; sfx('good'); uiOpen = true; if (document.pointerLockElement) document.exitPointerLock();
+  $('certName').oninput = e => { Q.name = e.target.value; saveGame(); };
+  const close = () => { $('cert').style.display = 'none'; uiOpen = false; };
+  $('cGo').onclick = close;
+  if ($('cChal')) $('cChal').onclick = () => { close(); challengeMenu(); };
+  $('cRe').onclick = () => { close(); confirmReset(); };
+}
+
+/* ================= 浮動標籤 ================= */
+const labels = [];
+function addLabel(html, opt) {
+  const el = document.createElement('div'); el.className = 'lbl' + (opt.npc ? ' npc' : ''); el.innerHTML = html;
+  if (opt.color) el.style.background = opt.color;
+  $('labels').appendChild(el);
+  const L = { el, ...opt }; if (opt.onClick) el.addEventListener('click', e => { e.stopPropagation(); if (!uiOpen && !acuMode) opt.onClick(); });
+  labels.push(L); return L;
+}
+for (const r of ROOMS) addLabel(`${r.emoji} ${r.name}`, { color: r.color, pos: new THREE.Vector3(r.label[0], 4.7, r.label[1]), maxD: 70, onClick: () => showZone(r) });
+const npcLabels = {
+  statue: addLabel('👴 銅人爺爺', { npc: true, pos: new THREE.Vector3(3.2, 2.95, 21.85), maxD: 22, occl: true, onClick: () => statueTalk() }),
+  dog: addLabel('', { npc: true, obj: animals.dog, maxD: 18, occl: true, onClick: () => animalTalk('dog') }),
+  owl: addLabel('', { npc: true, obj: animals.owl, maxD: 18, occl: true, onClick: () => animalTalk('owl') }),
+  bear: addLabel('', { npc: true, obj: animals.bear, maxD: 18, occl: true, onClick: () => animalTalk('bear') }),
+  lamp: addLabel('💡 烤燈', { npc: true, pos: new THREE.Vector3(lamps[OWL_LAMP].spec.x - .4, 2.25, lamps[OWL_LAMP].spec.z), maxD: 16, occl: true, onlyTarget: true, onClick: () => lampTap(OWL_LAMP) }),
+  herbCounter: addLabel('🌿 藥草櫃', { npc: true, pos: new THREE.Vector3(12.6, 3.25, -2.5), maxD: 18, occl: true, onClick: () => herbTap() }),
+  machine: addLabel('♨️ 中藥薰洗機', { npc: true, pos: new THREE.Vector3(machineSpecs[0].x, 1.35, machineSpecs[0].z), maxD: 16, occl: true, onClick: () => machineTap(0) }),
+  fridge: addLabel('🧊 冰敷還是熱敷？', { npc: true, pos: new THREE.Vector3(12.6, 1.95, 2.1), maxD: 14, occl: true, onClick: () => fridgeTap() }),
+};
+const NPC_BASE = { statue: '👴 銅人爺爺', lamp: '💡 烤燈', herbCounter: '🌿 藥草櫃', machine: '♨️ 中藥薰洗機', fridge: '🧊 冰敷還是熱敷？' };
+const tmpV = new THREE.Vector3();
+function updateLabels() {
+  const tgt = questTarget(); const tk = tgt && tgt.key;
+  for (const k of ['dog', 'owl', 'bear']) { const a = animals[k], A = ANIMAL_INFO[k]; const html = `${A.av} ${A.name} ${a.happy ? '😊' : '😣 痛痛'}${tk === k ? '<span class="mark">❗</span>' : ''}`; if (npcLabels[k]._h !== html) { npcLabels[k].el.innerHTML = html; npcLabels[k]._h = html; } }
+  for (const k in NPC_BASE) { const L = npcLabels[k]; const base = NPC_BASE[k]; const html = base + (tk === k ? '<span class="mark">❗</span>' : ''); if (L._h !== html) { L.el.innerHTML = html; L._h = html; } }
+  const W2 = innerWidth / 2, H2 = innerHeight / 2;
+  for (const L of labels) {
+    let show = !acuMode || L === npcLabels.statue && false;
+    if (L.onlyTarget && tk !== 'lamp') show = false;
+    if (L.obj) tmpV.set(L.obj.g.position.x, L.obj.g.position.y + L.obj.h + .35, L.obj.g.position.z); else tmpV.copy(L.pos);
+    const world = tmpV.clone();
+    tmpV.applyMatrix4(camera.matrixWorldInverse);
+    const dist = -tmpV.z;
+    if (dist < .3 || dist > L.maxD) show = false;
+    if (show && L.occl) { const dir = world.clone().sub(camera.position); const len = dir.length(); dir.normalize(); const hit = voxelRay(camera.position, dir, len - .3, v => v === 1); if (hit) show = false; }
+    if (!show) { if (L._vis !== false) { L.el.style.display = 'none'; L._vis = false; } continue; }
+    tmpV.applyMatrix4(camera.projectionMatrix);
+    const x = (tmpV.x * W2 + W2), y = (-tmpV.y * H2 + H2);
+    if (L._vis !== true) { L.el.style.display = 'block'; L._vis = true; }
+    L.el.style.transform = `translate(-50%,-100%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;
+  }
+  updateGuide(tgt);
+}
+/* 指路箭頭：目標在畫面外 → 邊緣橘色箭頭（點一下傳送到目標房間）；在畫面內但較遠 → 小星星與距離 */
+const guideEl = $('guide'), guideTxt = guideEl.querySelector('.gTxt'), guideArrow = guideEl.querySelector('.gArrow'); let guideTarget = null;
+function updateGuide(tgt) {
+  const startOpen = $('start').style.display !== 'none';
+  if (!tgt || uiOpen || acuMode || startOpen || mode === 'build') { if (guideEl._v !== 0) { guideEl.style.display = 'none'; guideEl._v = 0; } return; }
+  const wp = tmpV, world = tgt.p.clone(); if (animals[tgt.key]) world.y += animals[tgt.key].h + .2;
+  const dist = Math.hypot(world.x - pos.x, world.z - pos.z);
+  if (dist < 3.2) { if (guideEl._v !== 0) { guideEl.style.display = 'none'; guideEl._v = 0; } return; }
+  wp.copy(world).applyMatrix4(camera.matrixWorldInverse); const behind = wp.z > -.1; wp.applyMatrix4(camera.projectionMatrix);
+  let nx = wp.x, ny = wp.y; if (behind) { nx = -nx; ny = -ny; }
+  const top = $('toolbar').offsetHeight + 40, bot = isTouch ? 200 : 100, side = 46;
+  const W = innerWidth, H = innerHeight, cx = W / 2, cy = (top + H - bot) / 2;
+  let x = (nx * .5 + .5) * W, y = (-ny * .5 + .5) * H;
+  const inside = !behind && x > side && x < W - side && y > top && y < H - bot;
+  guideTarget = tgt;
+  if (inside && dist < 9) { if (guideEl._v !== 0) { guideEl.style.display = 'none'; guideEl._v = 0; } return; }
+  if (inside) {
+    guideEl.className = 'on'; guideArrow.textContent = '⭐'; guideArrow.style.transform = '';
+    guideTxt.textContent = `${dist.toFixed(0)} 公尺`; y -= 70;
+  } else {
+    let dx = x - cx, dy = y - cy; if (behind && Math.abs(dx) < 1 && Math.abs(dy) < 1) dy = 1;
+    const sx = (W / 2 - side) / Math.abs(dx || 1e-6), sy = ((H - bot - top) / 2) / Math.abs(dy || 1e-6), k = Math.min(sx, sy);
+    x = cx + dx * k; y = cy + dy * k;
+    guideEl.className = 'edge'; guideArrow.textContent = '➤'; guideArrow.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+    const r = roomAt(world.x, world.z); guideTxt.textContent = (r && r !== curRoom ? `往${r.short}` : '目標') + ` ${dist.toFixed(0)}m`;
+  }
+  if (guideEl._v !== 1) { guideEl.style.display = 'block'; guideEl._v = 1; }
+  guideEl.style.transform = `translate(${(x - 27).toFixed(1)}px,${(y - 27).toFixed(1)}px)`;
+}
+guideEl.addEventListener('click', () => {
+  if (!guideTarget || uiOpen || acuMode || guideEl.className !== 'edge') return;
+  const p = guideTarget.p, r = roomAt(p.x, p.z);
+  if (r && r !== curRoom) teleportRoom(r); else toast('⭐ 目標就在這個房間裡，轉一轉找找看！');
+});
+
+/* ================= 模式與工具列 ================= */
+let mode = 'walk', flying = false, thirdPerson = true, crossMode = false;
+function setMode(m) {
+  mode = m; ['bInfo', 'bWalk', 'bBuild'].forEach(id => $(id).classList.remove('on'));
+  $({ info: 'bInfo', walk: 'bWalk', build: 'bBuild' }[m]).classList.add('on');
+  $('palette').classList.toggle('show', m === 'build');
+  toast({ info: '🔍 查看設施：點一下物品，看看它是做什麼的！', walk: '🚶 自由走動：到處逛逛，點動物和銅人爺爺可以對話。', build: '🧱 麥塊建造：點地板或方塊放方塊；選「拆除」或按右鍵可以拆掉。' }[m]);
+}
+$('bInfo').onclick = () => setMode('info'); $('bWalk').onclick = () => setMode('walk'); $('bBuild').onclick = () => setMode('build');
+function setFly(v) { flying = v; vel.y = 0; $('bFly').textContent = '🕊️ 飛行：' + (v ? '開' : '關'); $('bFly').classList.toggle('on', v); document.body.classList.toggle('flying', v); toast(v ? '🕊️ 飛行開啟！空白鍵/上升 往上，Shift/下降 往下。' : '🕊️ 飛行關閉，慢慢落地。'); }
+$('bFly').onclick = () => setFly(!flying);
+function setView(tp) { thirdPerson = tp; $('bView').textContent = tp ? '🎥 第三人稱' : '👀 第一人稱'; }
+$('bView').onclick = () => setView(!thirdPerson);
+$('bCross').onclick = () => { crossMode = !crossMode; $('bCross').classList.toggle('on', crossMode); $('crosshair').style.display = crossMode ? 'block' : 'none'; if (!crossMode && document.pointerLockElement) document.exitPointerLock(); toast(crossMode ? (isTouch ? '➕ 準星開啟：點畫面會對準中間的準星。' : '➕ 準星開啟：點一下畫面鎖定滑鼠，移動滑鼠轉視角，按 Esc 解除。') : '準星關閉'); };
+$('bUndo').onclick = undoBuild;
+/* v2：工具列收合（窄螢幕／橫向手機）、音效、操作方式、挑戰 */
+const TB = $('toolbar');
+let tbOpen = false;
+function layoutToolbar() {
+  // 先用完整工具列量高度；換行（超過一排）或螢幕很窄/很矮就收合
+  TB.classList.remove('narrow', 'collapsed');
+  const narrow = innerWidth < 760 || innerHeight < 520 || TB.offsetHeight > 70;
+  TB.classList.toggle('narrow', narrow); TB.classList.toggle('collapsed', narrow && !tbOpen);
+  $('bMenu').textContent = tbOpen ? '✖ 收起' : '☰ 工具';
+}
+$('bMenu').onclick = () => { sfx('click'); tbOpen = !tbOpen; layoutToolbar(); layoutUI(); };
+TB.addEventListener('click', e => { const b = e.target.closest('.tb'); if (b && !b.classList.contains('keep') && TB.classList.contains('narrow') && tbOpen) { tbOpen = false; layoutToolbar(); layoutUI(); } });
+function setSound(v) { SETTINGS.sound = v; saveSettings(); $('bSound').textContent = v ? '🔊 音效' : '🔇 靜音'; $('bSound').classList.toggle('on', !v); }
+$('bSound').onclick = () => { setSound(!SETTINGS.sound); sfx('click'); toast(SETTINGS.sound ? '🔊 音效開啟' : '🔇 音效關閉'); };
+function setCtrl(c) { SETTINGS.ctrl = c; saveSettings(); document.body.classList.toggle('ctrl-pad', c === 'pad'); $('bCtrl').textContent = c === 'pad' ? '🎮 方向鍵' : '🕹️ 搖桿'; clearInputs(); }
+$('bCtrl').onclick = () => { setCtrl(SETTINGS.ctrl === 'pad' ? 'joy' : 'pad'); toast(SETTINGS.ctrl === 'pad' ? '🎮 改用九宮格方向鍵（可以左轉、右轉）' : '🕹️ 改用虛擬搖桿：拖曳搖桿走路，拖曳畫面轉視角'); };
+if (!isTouch) $('bCtrl').style.display = 'none';
+$('bChal').onclick = () => { sfx('click'); challengeMenu(); };
+$('quest').addEventListener('click', () => { $('quest').classList.toggle('mini'); });
+$('bHelp').onclick = () => openModal(`<h2><span class="av">❓</span>怎麼玩</h2>
+  <p><b>💻 電腦</b>：W A S D 或方向鍵走路（←→ 轉向）、拖曳滑鼠轉視角、空白鍵跳躍、E 互動、F 飛行、V 切換視角、Ctrl+Z 復原、1～8 選方塊。</p>
+  <p><b>📱 手機/平板</b>：左下<b>搖桿</b>走路（往哪推就往哪走）、拖曳畫面轉視角、右下跳躍、點一下物品或「互動」按鈕。想用九宮格方向鍵，可在「☰ 工具」裡切換「🕹️ 搖桿／🎮 方向鍵」。</p>
+  <p><b>📜 任務框</b>：點一下可以縮小/展開。<b>➤ 橘色箭頭</b>指向下一個目標，點箭頭可以傳送過去。</p>
+  <p><b>🏆 挑戰</b>：3 個進階小遊戲（冰敷還是熱敷？、找穴位、護腰搬重物），拿星星和進階徽章。進度會自動存在這台裝置上。</p>
+  <p><b>🔊 音效</b>：可以開關聲音。</p>
+  <p><b>🗺️ 小地圖</b>：點地圖上的房間就能傳送；⭐ 是任務目標。</p>
+  <p><b>🔍 查看設施</b>：點物品看說明和口訣。<b>🧱 麥塊建造</b>：放方塊、拆方塊，「復原」可以取消上一步。</p>
+  <div class="warn">⚠️ 本遊戲為衛教用途，身體不舒服請找醫師。${NEEDLE_WARN}</div>
+  <div class="btns"><button class="btn" id="mNext">開始玩！</button></div>`) && ($('mNext').onclick = closeModal);
+/* 調色盤 */
+$('palette').innerHTML = BUILD_TYPES.map((t, i) => `<div class="sw ${i === 0 ? 'sel' : ''}" data-t="${i}" title="${t.name}" style="background-image:url(${t.tex.userData.canvas.toDataURL()})">${t.name}</div>`).join('') + `<div class="sw" data-t="rm" style="background:#c0392b">拆除</div>`;
+function selectBuild(t) {
+  $('palette').querySelectorAll('.sw').forEach(e => e.classList.remove('sel'));
+  if (t === 'rm') { buildTool = 'remove'; $('palette').querySelector('[data-t="rm"]').classList.add('sel'); }
+  else { buildTool = 'place'; buildType = t; $('palette').querySelector(`[data-t="${t}"]`).classList.add('sel'); }
+}
+$('palette').querySelectorAll('.sw').forEach(el => el.onclick = () => { sfx('click'); selectBuild(el.dataset.t === 'rm' ? 'rm' : +el.dataset.t); });
+
+/* ================= 輸入 ================= */
+const keys = {}, tin = {};
+const joy = { x: 0, y: 0, id: null };
+function joyReset() { joy.x = joy.y = 0; joy.id = null; const k = $('joyKnob'); if (k) k.style.transform = ''; $('joy') && $('joy').classList.remove('act'); }
+function clearInputs() { for (const k in keys) keys[k] = false; for (const k in tin) tin[k] = false; document.querySelectorAll('.tbtn.act').forEach(b => b.classList.remove('act')); joyReset(); }
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Escape') { if (acuMode) exitAcu(); else if (uiOpen && $('modal').classList.contains('show')) closeModal(); return; }
+  if (uiOpen) return;
+  keys[e.code] = true;
+  if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+  if (e.code === 'KeyF') setFly(!flying);
+  if (e.code === 'KeyV') setView(!thirdPerson);
+  if (e.code === 'KeyE' && nearest) onInteract(nearest, false);
+  if (e.code === 'KeyZ' && (e.ctrlKey || e.metaKey)) undoBuild();
+  if (/^Digit[1-8]$/.test(e.code) && mode === 'build') selectBuild(+e.code.slice(5) - 1);
+});
+addEventListener('keyup', e => { keys[e.code] = false; });
+addEventListener('blur', clearInputs);
+document.querySelectorAll('.tbtn[data-k]').forEach(b => {
+  const k = b.dataset.k;
+  const on = e => { e.preventDefault(); tin[k] = true; b.classList.add('act'); try { b.setPointerCapture(e.pointerId); } catch (_) { } };
+  const off = e => { tin[k] = false; b.classList.remove('act'); };
+  b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+});
+/* 虛擬搖桿：往哪推就往哪走（相對於鏡頭方向），推越遠走越快 */
+{
+  const J = $('joy'), K = $('joyKnob');
+  const upd = e => {
+    const r = J.getBoundingClientRect(), R = r.width * .38;
+    let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2); const l = Math.hypot(dx, dy);
+    if (l > R) { dx *= R / l; dy *= R / l; }
+    joy.x = dx / R; joy.y = dy / R; K.style.transform = `translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
+  };
+  J.addEventListener('pointerdown', e => { e.preventDefault(); if (joy.id !== null) return; joy.id = e.pointerId; J.classList.add('act'); try { J.setPointerCapture(e.pointerId); } catch (_) { } upd(e); });
+  J.addEventListener('pointermove', e => { if (e.pointerId === joy.id) upd(e); });
+  const end = e => { if (e.pointerId === joy.id) joyReset(); };
+  J.addEventListener('pointerup', end); J.addEventListener('pointercancel', end); J.addEventListener('lostpointercapture', end);
+  J.addEventListener('contextmenu', e => e.preventDefault());
+}
+/* 防止雙指縮放、雙擊放大、長按選單（modal 內仍可捲動） */
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => { const n = Date.now(); if (n - lastTouchEnd < 300 && !e.target.closest('input,button,.btn,.herb,.tb,.tbtn,#joy')) e.preventDefault(); lastTouchEnd = n; }, { passive: false });
+document.addEventListener('contextmenu', e => { if (e.target.tagName !== 'INPUT') e.preventDefault(); });
+$('actBtn').onclick = () => { if (nearest && !uiOpen) onInteract(nearest, false); };
+let yaw = 0, pitch = -.2;
+function look(dx, dy) {
+  if (acuMode) { acuTurnTo = null; acuAng -= dx * .01; acuPitch = Math.max(-.4, Math.min(.6, acuPitch + dy * .005)); return; }
+  yaw -= dx * .0045; pitch = Math.max(-1.35, Math.min(1.2, pitch - dy * .0045));
+}
+let drag = null;
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('pointerdown', e => {
+  if (uiOpen) return;
+  if (document.pointerLockElement === canvas) { handleTap(innerWidth / 2, innerHeight / 2, e.button); return; }
+  if (crossMode && !isTouch && e.pointerType === 'mouse' && !acuMode) { canvas.requestPointerLock && canvas.requestPointerLock(); return; }
+  if (drag) return;
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false, button: e.button };
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) { }
+});
+canvas.addEventListener('pointermove', e => {
+  if (document.pointerLockElement === canvas) { look(e.movementX, e.movementY); return; }
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY;
+  if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 8) drag.moved = true;
+  if (drag.moved) look(dx * (isTouch ? 1.2 : 1), dy * (isTouch ? 1.2 : 1));
+});
+const endDrag = e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  if (!d.moved && performance.now() - d.t < 600 && e.type === 'pointerup') handleTap(crossMode ? innerWidth / 2 : e.clientX, crossMode ? innerHeight / 2 : e.clientY, d.button);
+};
+canvas.addEventListener('pointerup', endDrag); canvas.addEventListener('pointercancel', endDrag);
+const raycaster = new THREE.Raycaster(); const ndc = new THREE.Vector2();
+function handleTap(sx, sy, button = 0) {
+  if (uiOpen) return;
+  ndc.set(sx / innerWidth * 2 - 1, -(sy / innerHeight) * 2 + 1); raycaster.setFromCamera(ndc, camera);
+  if (acuMode) { acuTap(); return; }
+  if (mode === 'build') { buildAt(raycaster.ray, button === 2); return; }
+  const h = pickHit(raycaster.ray); if (h) onInteract(h, true);
+}
+function pickHit(ray) {
+  updateDynHits(); let best = null, bd = Infinity; const p = new THREE.Vector3();
+  for (const h of hits) if (ray.intersectBox(h.box, p)) { const d = p.distanceTo(ray.origin); if (d < bd) { bd = d; best = h; } }
+  if (!best || bd > 16) return null;
+  const wall = voxelRay(ray.origin, ray.direction, bd, v => v === 1 || v === 2);
+  if (wall && wall.t < bd - .05) return null;
+  return best;
+}
+
+/* ================= 玩家物理 ================= */
+const pos = new THREE.Vector3(5.5, 0, 25.5), vel = new THREE.Vector3(); let onGround = false;
+const PR = .3, PH = 1.8;
+function collides() {
+  for (let x = Math.floor(pos.x - PR); x <= Math.floor(pos.x + PR - 1e-4); x++)
+    for (let y = Math.floor(pos.y); y <= Math.floor(pos.y + PH - 1e-4); y++)
+      for (let z = Math.floor(pos.z - PR); z <= Math.floor(pos.z + PR - 1e-4); z++) if (getCell(x, y, z)) return true;
+  return false;
+}
+function moveAxis(ax, d) {
+  const steps = Math.ceil(Math.abs(d) / .2) || 1, s = d / steps;
+  for (let i = 0; i < steps; i++) { pos[ax] += s; if (collides()) { pos[ax] -= s; if (ax === 'y') { if (s < 0) onGround = true; vel.y = 0; } return false; } }
+  return true;
+}
+function teleport(x, z, ry) { pos.set(x, 0.01, z); vel.set(0, 0, 0); if (ry !== undefined) { yaw = ry; facing = ry + Math.PI; } if (collides()) pos.y = 1.01; }
+function teleportRoom(r) { teleport(r.spawn[0], r.spawn[1], r.spawn[2] * Math.PI); toast(`📍 傳送到「${r.name}」`); sfx('pop'); }
+let walkPhase = 0, curRoom = null, facing = Math.PI; const seenRooms = new Set();
+function updatePlayer(dt) {
+  const k = uiOpen || acuMode ? {} : keys, t = uiOpen || acuMode ? {} : tin;
+  const turn = ((k.ArrowLeft || t.turnL) ? 1 : 0) - ((k.ArrowRight || t.turnR) ? 1 : 0);
+  yaw += turn * 2.2 * dt;
+  const fwd = ((k.KeyW || k.ArrowUp || t.fwd) ? 1 : 0) - ((k.KeyS || k.ArrowDown || t.back) ? 1 : 0);
+  let str = ((k.KeyD || t.right) ? 1 : 0) - ((k.KeyA || t.left) ? 1 : 0), fw = fwd;
+  const jm = uiOpen || acuMode ? 0 : Math.hypot(joy.x, joy.y);
+  if (jm > .18) { const s2 = Math.min(1, (jm - .18) / .7) / jm; fw += -joy.y * s2; str += joy.x * s2; }
+  const fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+  let mx = fx * fw + rx * str, mz = fz * fw + rz * str; let ml = Math.hypot(mx, mz);
+  const speed = flying ? 7 : 4.2;
+  if (ml > 1) { mx /= ml; mz /= ml; ml = 1; }
+  if (ml > 0.02) { const ta = Math.atan2(mx, mz); let d = ta - facing; d = Math.atan2(Math.sin(d), Math.cos(d)); facing += d * Math.min(1, dt * 12); }
+  else if (turn) facing = yaw + Math.PI;
+  mx *= speed; mz *= speed;
+  if (flying) { vel.y = (((k.Space || t.up || t.jump) ? 1 : 0) - ((k.ShiftLeft || k.ShiftRight || t.down) ? 1 : 0)) * speed; }
+  else { vel.y -= 24 * dt; if ((k.Space || t.jump) && onGround) { vel.y = 7.8; onGround = false; } }
+  vel.y = Math.max(vel.y, -25);
+  moveAxis('x', mx * dt); moveAxis('z', mz * dt);
+  onGround = false; moveAxis('y', vel.y * dt);
+  if (flying && pos.y > 12) pos.y = 12;
+  if (pos.y < -8) { const r = ROOMS[0]; teleport(r.spawn[0], r.spawn[1]); }
+  const moving = ml > 0 && (onGround || flying);
+  walkPhase += dt * (moving ? 4 + 6 * ml : 0);
+  const sw = moving ? Math.sin(walkPhase) * .6 : 0;
+  legL.rotation.x = sw; legR.rotation.x = -sw; armL.rotation.x = -sw * .8; armR.rotation.x = sw * .8;
+  player.position.copy(pos); player.rotation.y = facing;
+  const r = roomAt(pos.x, pos.z);
+  if (r !== curRoom) { curRoom = r; if (r && !seenRooms.has(r.id)) { seenRooms.add(r.id); if (performance.now() > 3000) toast(`${r.emoji} 來到「${r.name}」<br>📣 ${r.rhyme}`, 3500); } }
+}
+
+/* ================= 相機 ================= */
+const camTarget = new THREE.Vector3();
+let camDist = 4.2, camBack = null;
+function updateCamera(dt) {
+  if (acuMode) {
+    // 鏡頭固定在銅人前方（走廊這一側），改成轉動銅人本身，背面也看得到、不會穿牆
+    if (acuTurnTo !== null) { const d = acuTurnTo - acuAng; acuAng += d * Math.min(1, dt * 6); if (Math.abs(d) < .01) { acuAng = acuTurnTo; acuTurnTo = null; } }
+    statue.rotation.y = -acuAng;
+    const c = new THREE.Vector3(3.2, 1.45, 21.85), dist = camera.aspect < .7 ? 3.0 : 3.2;
+    camera.position.set(c.x, c.y + .3 + acuPitch * 2, c.z + dist);
+    camera.lookAt(c); player.visible = false; return;
+  }
+  if (!thirdPerson) {
+    camera.position.set(pos.x, pos.y + 1.62, pos.z); camera.rotation.set(pitch, yaw, 0); player.visible = false; return;
+  }
+  camTarget.set(pos.x, pos.y + 1.55, pos.z);
+  const p = Math.max(-1.2, Math.min(.9, pitch));
+  const dx = -Math.sin(yaw) * Math.cos(p), dy = Math.sin(p), dz = -Math.cos(yaw) * Math.cos(p);
+  const freeDist = (bk) => {
+    for (let s = .2; s <= 4.4; s += .1) {
+      const x = camTarget.x + bk.x * s, y = camTarget.y + bk.y * s, z = camTarget.z + bk.z * s;
+      for (const [ox, oz] of [[0, 0], [.2, 0], [-.2, 0], [0, .2], [0, -.2]]) if (getCell(Math.floor(x + ox), Math.floor(y), Math.floor(z + oz)) & 1) return Math.max(.35, s - .3);
+    }
+    return 4.4;
+  };
+  // 後面被牆擋住時，相機往上抬（診所沒有天花板），避免卡在牆裡
+  let back = null, want = 0;
+  for (const lift of [0, .35, .7, 1.1, 1.6]) {
+    const bk = new THREE.Vector3(-dx, -dy + .25 + lift, -dz).normalize(); const d = freeDist(bk);
+    if (d > want + .3 || !back) { want = d; back = bk; }
+    if (d >= 3.6) break;
+  }
+  if (!camBack) camBack = back.clone(); else camBack.lerp(back, Math.min(1, dt * 6)).normalize();
+  want = Math.min(want, freeDist(camBack));
+  back = camBack;
+  camDist += (want - camDist) * Math.min(1, dt * (want < camDist ? 30 : 4));
+  camera.position.set(camTarget.x + back.x * camDist, camTarget.y + back.y * camDist, camTarget.z + back.z * camDist);
+  const lift = Math.max(0, back.y - .3); camera.lookAt(camTarget.x + dx * (2 + lift * 4), camTarget.y + dy * 2 - .2, camTarget.z + dz * (2 + lift * 4));
+  player.visible = camDist > .8;
+}
+
+/* ================= 小地圖 ================= */
+const mm = $('minimap'), mg = mm.getContext('2d');
+const MAP = { x0: -1, z0: -8, size: 37 };
+function mapXY(x, z) { const s = mm.width / MAP.size; return [(x - MAP.x0) * s, (z - MAP.z0) * s]; }
+function drawMinimap(t) {
+  const s = mm.width / MAP.size; mg.fillStyle = '#e8eef5'; mg.fillRect(0, 0, mm.width, mm.height);
+  for (const r of ROOMS) {
+    const [x, y] = mapXY(r.x0, r.z0); const w = (r.x1 - r.x0 + 1) * s, h = (r.z1 - r.z0 + 1) * s;
+    mg.fillStyle = r.color + (curRoom === r ? 'ff' : 'b0'); mg.fillRect(x, y, w, h);
+    mg.strokeStyle = '#2b3a55'; mg.lineWidth = 3; mg.strokeRect(x, y, w, h);
+    mg.font = '900 26px "Noto Sans CJK TC","PingFang TC",sans-serif'; mg.textAlign = 'center'; mg.textBaseline = 'middle';
+    mg.lineWidth = 5; mg.strokeStyle = '#0008'; mg.strokeText(r.short, x + w / 2, y + h / 2); mg.fillStyle = '#fff'; mg.fillText(r.short, x + w / 2, y + h / 2);
+  }
+  const tg = questTarget();
+  if (tg) { const [x, y] = mapXY(tg.p.x, tg.p.z); mg.font = `${22 + Math.sin(t * 6) * 5}px sans-serif`; mg.fillText('⭐', x, y); }
+  const [px, py] = mapXY(pos.x, pos.z); const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+  mg.save(); mg.translate(px, py); mg.rotate(Math.atan2(fx, -fz));
+  mg.fillStyle = '#fff'; mg.strokeStyle = '#d0312d'; mg.lineWidth = 4; mg.beginPath(); mg.moveTo(0, -14); mg.lineTo(10, 10); mg.lineTo(0, 5); mg.lineTo(-10, 10); mg.closePath(); mg.fill(); mg.stroke(); mg.restore();
+}
+mm.addEventListener('click', e => {
+  if (uiOpen || acuMode) return;
+  const rc = mm.getBoundingClientRect(); const x = (e.clientX - rc.left) / rc.width * MAP.size + MAP.x0, z = (e.clientY - rc.top) / rc.height * MAP.size + MAP.z0;
+  const r = roomAt(x, z); if (!r) { toast('點彩色的房間才能傳送喔！'); return; }
+  const fx = Math.floor(x), fz = Math.floor(z);
+  if (!getCell(fx, 0, fz) && !getCell(fx, 1, fz)) { teleport(fx + .5, fz + .5); toast(`📍 傳送到「${r.name}」`); sfx('pop'); } else teleportRoom(r);
+});
+
+/* ================= 主迴圈 ================= */
+let nearest = null, nearT = 0, last = performance.now(), frame = 0;
+function updateNearest() {
+  updateDynHits(); nearest = null; let bd = 1.6; const c = new THREE.Vector3(pos.x, pos.y + .9, pos.z);
+  if (!acuMode && mode !== 'build') for (const h of hits) if (h.near) { const d = h.box.distanceToPoint(c); if (d < bd) { bd = d; nearest = h; } }
+  const b = $('actBtn');
+  if (nearest && !uiOpen) { const icon = animals[nearest.key] || nearest.key === 'statue' ? '💬' : '👆'; b.textContent = `${icon} ${nearest.name}${isTouch ? '' : '（E）'}`; b.style.display = 'block'; }
+  else b.style.display = 'none';
+}
+function tick(now) {
+  requestAnimationFrame(tick);
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000; frame++;
+  updatePlayer(dt); updateCamera(dt);
+  for (const k in animals) {
+    const a = animals[k];
+    a.g.position.y = (a.baseY || 0) + (a.happy ? Math.abs(Math.sin(t * 4 + k.length)) * .06 : 0);
+    if (k === 'owl') a.head.rotation.z = a.happy ? Math.sin(t * 2) * .15 : .45;
+    if (k === 'bear') a.body.rotation.x = a.happy ? 0 : .22;
+    if (k === 'dog') a.body.rotation.z = a.happy ? Math.sin(t * 8) * .04 : 0;
+    if (a.wiggle > 0) { a.wiggle -= dt; a.body.rotation.z = Math.sin(t * 40) * .08; } else if (k !== 'dog') a.body.rotation.z = 0;
+  }
+  if (acuMode) { const sc = 1 + Math.sin(t * 6) * .35; acuMarkers.forEach(m => m.scale.setScalar(sc)); if (acuGame && frame % 15 === 0) updateAcuMsg(); }
+  lamps.forEach(L => { if (L.on) L.cone.material.opacity = .18 + Math.sin(t * 5 + L.idx) * .05; });
+  updateSteam(dt, t);
+  nearT -= dt; if (nearT <= 0) { nearT = .15; updateNearest(); }
+  renderer.render(scene, camera);
+  updateLabels();
+  if (frame % 3 === 0) drawMinimap(t);
+}
+function layoutUI() { layoutToolbar(); document.documentElement.style.setProperty('--tbh', $('toolbar').offsetHeight + 'px'); }
+function onResize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.fov = camera.aspect < 1 ? 82 : 70; camera.updateProjectionMatrix(); layoutUI(); }
+addEventListener('resize', onResize); onResize();
+setSound(SETTINGS.sound); setCtrl(SETTINGS.ctrl);
+/* 讀取存檔並還原場景 */
+const hasSave = loadGame();
+function restoreWorld() {
+  if (Q.step >= 2) animalsToTreatment();
+  if (Q.lampDone) { lamps[OWL_LAMP].set(true); animals.owl.setHappy(true); }
+  if (Q.massageDone) animals.bear.setHappy(true);
+  if (Q.step >= 5) { for (const k in animals) animals[k].setHappy(true); const m = machineSpecs[0]; steamSources.push(new THREE.Vector3(m.x, m.top + .05, m.z)); }
+}
+restoreWorld();
+if (innerHeight < 520) $('quest').classList.add('mini');
+layoutUI(); updateQuestUI();
+teleport(5.6, 24.4, .2);
+requestAnimationFrame(tick);
+$('startBtn').disabled = false; $('startBtn').textContent = hasSave ? '▶ 繼續冒險' : '▶ 開始遊戲';
+if (hasSave) {
+  $('saveInfo').style.display = 'block';
+  $('saveInfo').textContent = `💾 已有進度：印章 ${STAMPS.filter(x => Q.stamps[x.id]).length}/6、進階星星 ⭐${starTotal()}/9`;
+  $('resetBtn').style.display = 'block'; $('resetBtn').onclick = () => { sfx('click'); $('start').style.display = 'none'; confirmReset(); };
+}
+$('startBtn').onclick = () => {
+  sfx('click'); $('start').style.display = 'none'; layoutUI();
+  toast(hasSave ? '💾 歡迎回來！看看左上角的任務，跟著 <b>➤ 箭頭</b> 走。' : '👴 先去找<b>銅人爺爺</b>！點他或走近按「互動」。', 4000);
+};
+
+/* 測試用介面 */
+window.__game = { Q, teleport, teleportRoom, ROOMS, animals, lamps, onInteract, hits, setView, setMode, setFly, steamSources,
+  setLook: (y, p) => { yaw = y; pitch = p; }, get pos() { return pos; }, interactKey: (key, idx) => { const h = hits.find(h => h.key === key && (idx === undefined || h.idx === idx)); if (h) onInteract(h, true); },
+  enterAcu, exitAcu, built, showAcu, buildAt, raycaster, camera, handleTap,
+  startChallenge, challengeMenu, finishChallenge, startAcuFind, acuFindPick, get acuGame() { return acuGame; }, get acuMode() { return acuMode; },
+  ICE_CARDS, LIFT_STEPS, LIFT_TF, BADGES, STAMPS, saveGame, loadGame, resetGame, showCert, joy, SETTINGS, statue, acuHits, questTarget,
+  get uiOpen() { return uiOpen; } };
+</script>
+</body>
+</html>
